@@ -1,0 +1,42 @@
+{
+  "name": "OpenOctopus_Analysis_Pipeline",
+  "properties": {
+    "description": "Trigger the OpenOctopus equity analysis notebook for a given ticker. Results are saved to the Lakehouse equity_reports folder.",
+    "activities": [
+      {
+        "name": "RunAnalysisNotebook",
+        "description": "Run the OpenOctopus analysis notebook with the specified ticker",
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "<REPLACE_WITH_NOTEBOOK_WORKSPACE_ID>",
+          "parameters": {
+            "TICKER": {
+              "value": "@pipeline().parameters.ticker",
+              "type": "string"
+            },
+            "SAVE_TO_LAKEHOUSE": {
+              "value": "true",
+              "type": "bool"
+            },
+            "LAKEHOUSE_PATH": {
+              "value": "@pipeline().parameters.lakehouse_path",
+              "type": "string"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "ticker": {
+        "type": "string",
+        "defaultValue": "AAPL",
+        "description": "Stock ticker symbol (e.g. AAPL, MSFT, NVDA)"
+      },
+      "lakehouse_path": {
+        "type": "string",
+        "defaultValue": "Files/equity_reports",
+        "description": "OneLake path where reports are saved"
+      }
+    }
+  }
+}

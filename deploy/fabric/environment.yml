@@ -1,0 +1,21 @@
+# Fabric Environment package specification
+# Upload this file to a Fabric Environment (Workspace > Environments > New)
+# and publish it. Attach the environment to the notebook before running.
+#
+# Note: python-dotenv and rich are intentionally excluded —
+#   dotenv is not needed (secrets come from Key Vault via mssparkutils)
+#   rich requires a terminal, not available in Spark notebook context
+
+name: openoctopus-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - openai>=1.0.0
+    - yfinance>=1.2.0
+    - pandas>=2.0.0
+    - requests>=2.31.0
+    - edgartools>=2.0.0

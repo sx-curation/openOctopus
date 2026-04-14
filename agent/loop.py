@@ -1,24 +1,48 @@
 """
 Core agentic loop: drives the LLM with tool use until finish_reason == 'stop'.
-Uses the OpenAI client — works with any OpenAI-compatible model (gpt-4o, etc.).
+Supports both standard OpenAI and Azure OpenAI via the PROVIDER setting.
 """
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 
 from config import settings
 from agent.system_prompt import SYSTEM_PROMPT
 from tools.definitions import TOOL_DEFINITIONS
 from tools.dispatcher import dispatch
 
-if not settings.OPENAI_API_KEY:
-    raise EnvironmentError(
-        "OPENAI_API_KEY is not set. Add your OpenAI API key to .env."
+
+def _build_client():
+    """Return an OpenAI-compatible client based on PROVIDER setting."""
+    if settings.PROVIDER == "azure_openai":
+        if not settings.AZURE_OPENAI_API_KEY:
+            raise EnvironmentError(
+                "AZURE_OPENAI_API_KEY is not set. "
+                "Add it to .env or your container environment."
+            )
+        return AzureOpenAI(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+        )
+    # Default: standard OpenAI or any OpenAI-compatible endpoint (Ollama, etc.)
+    if not settings.OPENAI_API_KEY:
+        raise EnvironmentError(
+            "OPENAI_API_KEY is not set. Add your API key to .env."
+        )
+    return OpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        base_url=settings.BASE_URL or None,
     )
 
-client = OpenAI(
-    api_key=settings.OPENAI_API_KEY,
-    base_url=settings.BASE_URL or None,
+
+client = _build_client()
+
+# Azure OpenAI uses deployment name instead of model name in API calls
+_model = (
+    settings.AZURE_OPENAI_DEPLOYMENT
+    if settings.PROVIDER == "azure_openai"
+    else settings.MODEL
 )
 
 
@@ -35,7 +59,7 @@ def run_analysis(user_query: str) -> str:
 
     while iterations < settings.MAX_AGENT_ITERATIONS:
         response = client.chat.completions.create(
-            model=settings.MODEL,
+            model=_model,
             tools=TOOL_DEFINITIONS,
             messages=messages,
             max_tokens=8096,
