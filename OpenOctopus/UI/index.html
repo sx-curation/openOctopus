@@ -134,21 +134,15 @@
     </div>
   </div>
 
-  <!-- Market Switcher -->
-  <div class="px-6 mb-6 flex gap-2">
-    <button id="market-btn-us" class="flex-1 py-2 px-3 text-xs font-bold uppercase rounded transition-colors"
-            onclick="switchMarket('us')"
-            style="background:#000f27;color:#ffffff;">US Stocks</button>
-    <button id="market-btn-tw" class="flex-1 py-2 px-3 text-xs font-bold uppercase rounded transition-colors"
-            onclick="switchMarket('tw')"
-            style="background:#e9e7eb;color:#1b1b1e;">Taiwan</button>
-  </div>
-
   <!-- Navigation -->
   <nav class="flex-1 space-y-0.5 pr-4" id="main-nav">
     <a class="nav-link nav-active flex items-center px-6 py-3 cursor-pointer" data-page="dashboard">
       <span class="material-symbols-outlined mr-3 text-primary">dashboard</span>
-      <span class="font-label text-[11px] uppercase tracking-widest font-bold" data-i18n="nav.dashboard">Dashboard</span>
+      <span class="font-label text-[11px] uppercase tracking-widest font-bold" data-i18n="nav.dashboard">US Dashboard</span>
+    </a>
+    <a href="/dashboard/tw" class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer">
+      <span class="material-symbols-outlined mr-3">public</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.taiwan">Taiwan Dashboard</span>
     </a>
     <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="portfolio">
       <span class="material-symbols-outlined mr-3">account_balance_wallet</span>
@@ -915,7 +909,6 @@
   const analysisText = document.getElementById('analysis-text');
   const tickerUniverse = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'AVGO', 'JPM', 'XOM', 'TSLA'];
   let currentTicker = 'AAPL';
-  let currentMarket = localStorage.getItem('currentMarket') || 'us';
   let currentTrinityTab = 'ai';
 
   function showPage(page) {
@@ -932,34 +925,6 @@
     document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
-  }
-
-  function switchMarket(market) {
-    currentMarket = market;
-    localStorage.setItem('currentMarket', market);
-
-    // Update button states
-    const usBtn = document.getElementById('market-btn-us');
-    const twBtn = document.getElementById('market-btn-tw');
-
-    if (market === 'us') {
-      usBtn.style.background = '#000f27';
-      usBtn.style.color = '#ffffff';
-      twBtn.style.background = '#e9e7eb';
-      twBtn.style.color = '#1b1b1e';
-      // Reset to US default ticker
-      currentTicker = 'AAPL';
-    } else {
-      usBtn.style.background = '#e9e7eb';
-      usBtn.style.color = '#1b1b1e';
-      twBtn.style.background = '#0b6b3d';
-      twBtn.style.color = '#ffffff';
-      // Reset to TW default ticker
-      currentTicker = '2330';
-    }
-
-    // Reload dashboard with market-appropriate ticker
-    loadDashboardData(currentTicker);
   }
 
   async function fetchJson(url) {
@@ -1853,52 +1818,14 @@
     renderDashboardLoading(currentTicker);
     try {
       const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
-      const isTW = currentMarket === 'tw';
-      const apiPrefix = isTW ? '/api/tw' : '/api';
-
-      const requests = [
-        fetchJson(`${apiPrefix}/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
+      const [summary, earnings, management, portfolio, market, documents] = await Promise.all([
+        fetchJson(`/api/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
+        fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
+        fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`),
         fetchJson('/api/portfolio/overview'),
-        fetchJson(isTW ? '/api/tw/market/overview' : '/api/market/overview'),
-      ];
-
-      // Only fetch US-specific endpoints for US market
-      if (!isTW) {
-        requests.push(
-          fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
-          fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`),
-          fetchJson(`/api/documents/recent-filings?ticker=${encodeURIComponent(currentTicker)}`)
-        );
-      } else {
-        requests.push(
-          Promise.resolve({ error: 'Not available for Taiwan market' }),
-          Promise.resolve({ error: 'Not available for Taiwan market' }),
-          fetchJson(`/api/tw/documents/recent-announcements?ticker=${encodeURIComponent(currentTicker)}`)
-        );
-      }
-
-      let [summary, portfolio, market, earnings, management, documents] = await Promise.all(requests);
-
-      // Normalize Taiwan data structure to match US structure for render functions
-      if (isTW && summary.summary) {
-        const tw_summary = summary;
-        summary = {
-          ...tw_summary,
-          ticker_snapshot: {
-            price: tw_summary.summary.price_data?.price,
-            change_pct: tw_summary.summary.price_data?.change_pct,
-            ticker: currentTicker,
-          },
-          key_financials: tw_summary.summary.financials || {},
-          raw_data: {
-            technicals: tw_summary.summary.technicals,
-            recent_news: tw_summary.summary.recent_news,
-          },
-          trinity: { value: 'N/A', status: 'taiwan_limited' },
-          trinity_source_meta: { note: tw_summary.note }
-        };
-      }
-
+        fetchJson('/api/market/overview'),
+        fetchJson(`/api/documents/recent-filings?ticker=${encodeURIComponent(currentTicker)}`),
+      ]);
       window._ooMgmtCache = {};  // clear cache when ticker changes
       window._ooMgmtCache[lang] = management;
       window._ooCache = { summary, earnings, management, portfolio, market, documents };
@@ -2019,17 +1946,6 @@
 
   // ── i18n init ──
   if (typeof I18N !== 'undefined') I18N.init();
-
-  // Initialize market button states
-  const usBtn = document.getElementById('market-btn-us');
-  const twBtn = document.getElementById('market-btn-tw');
-  if (currentMarket === 'us') {
-    if (usBtn) { usBtn.style.background = '#000f27'; usBtn.style.color = '#ffffff'; }
-    if (twBtn) { twBtn.style.background = '#e9e7eb'; twBtn.style.color = '#1b1b1e'; }
-  } else {
-    if (usBtn) { usBtn.style.background = '#e9e7eb'; usBtn.style.color = '#1b1b1e'; }
-    if (twBtn) { twBtn.style.background = '#0b6b3d'; twBtn.style.color = '#ffffff'; }
-  }
 
   loadDashboardData(currentTicker);
 

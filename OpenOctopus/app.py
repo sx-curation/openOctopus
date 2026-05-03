@@ -53,6 +53,16 @@ def index() -> Response:
     return send_file(UI_DIR / "index.html")
 
 
+@app.route("/dashboard/us")
+def dashboard_us() -> Response:
+    return send_file(UI_DIR / "index.html")
+
+
+@app.route("/dashboard/tw")
+def dashboard_tw() -> Response:
+    return send_file(UI_DIR / "dashboard-tw.html")
+
+
 @app.route("/test")
 def test_dashboard() -> Response:
     """Test dashboard with US/TW switcher"""

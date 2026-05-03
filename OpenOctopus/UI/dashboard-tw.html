@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OpenOctopus | Taiwan Stocks Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#000f27",
+          "performance-green": "#10AC84",
+          "performance-red": "#EE5253",
+        },
+        fontFamily: {
+          headline: ["Manrope", "system-ui", "sans-serif"],
+          body: ["Inter", "system-ui", "sans-serif"],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+  }
+  * { transition-property: background-color, color, opacity; transition-duration: 150ms; }
+</style>
+</head>
+<body class="bg-gray-50 font-body text-gray-900 flex min-h-screen">
+
+<!-- SIDEBAR -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-6 z-50 w-60 bg-gray-100" style="background:#f5f3f6;">
+  <div class="px-6 mb-10 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#000f27,#0b2447);">
+      <span class="material-symbols-outlined text-white" style="font-size:18px;">account_balance</span>
+    </div>
+    <div>
+      <p class="font-headline font-bold text-primary leading-tight text-sm">Taiwan Dashboard</p>
+      <p class="font-label text-[9px] uppercase tracking-widest text-slate-400">Taiwan Stocks</p>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-0.5 pr-4 mb-6">
+    <a href="/" class="flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer">
+      <span class="material-symbols-outlined mr-3">dashboard</span>
+      <span class="font-label text-[11px] uppercase tracking-widest">US Dashboard</span>
+    </a>
+  </nav>
+
+  <div class="px-6 space-y-3">
+    <a class="flex items-center gap-2 text-slate-400 hover:text-primary cursor-pointer">
+      <span class="material-symbols-outlined" style="font-size:16px;">help_outline</span>
+      <span class="font-label text-[10px] uppercase tracking-widest">Help</span>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="ml-60 flex-1 flex flex-col min-w-0">
+  <header class="flex justify-between items-center px-8 h-14 sticky top-0 z-40 bg-white border-b border-gray-200">
+    <h1 class="text-base font-headline font-bold tracking-widest text-primary uppercase">Taiwan Stocks</h1>
+    <div class="flex items-center gap-4">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="font-size:15px;">search</span>
+        <input id="ticker-input" class="pl-9 pr-4 py-1.5 bg-gray-100 rounded text-xs border-none w-56 placeholder:text-slate-400 focus:bg-white focus:outline-1" placeholder="Stock code (e.g., 2330)" type="text">
+      </div>
+      <button onclick="loadData()" class="px-4 py-1.5 bg-primary text-white rounded text-xs font-bold hover:opacity-90">Load</button>
+    </div>
+  </header>
+
+  <div class="p-8">
+    <!-- Hero Section -->
+    <section class="bg-white rounded-lg p-6 shadow-sm mb-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-xs text-slate-500 uppercase tracking-widest mb-1">Taiwan Stock</p>
+          <h2 class="text-3xl font-bold text-primary" id="hero-ticker">—</h2>
+          <p class="text-xs text-slate-600 mt-2" id="hero-name"></p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-slate-600 mb-1">Current Price</p>
+          <p class="text-3xl font-bold" id="hero-price">—</p>
+          <p class="text-sm" id="hero-change">—</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Grid -->
+    <div class="grid grid-cols-2 gap-6">
+      <!-- Price Data -->
+      <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined">trending_up</span> Price Data
+        </h3>
+        <div class="space-y-3 text-sm" id="price-section">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Financials -->
+      <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined">account_balance</span> Financials
+        </h3>
+        <div class="space-y-2 text-sm" id="financials-section">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Technicals -->
+      <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined">show_chart</span> Technical Analysis
+        </h3>
+        <div class="space-y-2 text-sm" id="technicals-section">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h3 class="font-bold text-base mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined">newspaper</span> Latest News
+        </h3>
+        <div class="space-y-2 text-sm" id="news-section">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let currentTicker = '2330';
+
+  async function loadData() {
+    const ticker = document.getElementById('ticker-input').value.trim() || currentTicker;
+    if (!ticker) {
+      alert('Please enter a stock code');
+      return;
+    }
+
+    currentTicker = ticker;
+    document.getElementById('ticker-input').value = ticker;
+
+    // Show loading state
+    document.getElementById('hero-ticker').textContent = ticker;
+    document.getElementById('hero-price').textContent = 'Loading...';
+    document.getElementById('price-section').innerHTML = '<p class="text-slate-500">Loading...</p>';
+    document.getElementById('financials-section').innerHTML = '<p class="text-slate-500">Loading...</p>';
+    document.getElementById('technicals-section').innerHTML = '<p class="text-slate-500">Loading...</p>';
+    document.getElementById('news-section').innerHTML = '<p class="text-slate-500">Loading...</p>';
+
+    try {
+      const response = await fetch(`/api/tw/dashboard/summary?ticker=${encodeURIComponent(ticker)}`);
+      const data = await response.json();
+
+      if (data.error) {
+        document.getElementById('hero-price').textContent = 'ERROR';
+        document.getElementById('price-section').innerHTML = `<p class="text-red-600">Error: ${data.error}</p>`;
+        return;
+      }
+
+      // Render data
+      renderTWData(data);
+    } catch (error) {
+      document.getElementById('hero-price').textContent = 'ERROR';
+      document.getElementById('price-section').innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+    }
+  }
+
+  function renderTWData(data) {
+    const summary = data.summary || {};
+    const priceData = summary.price_data || {};
+    const financials = summary.financials || {};
+    const technicals = summary.technicals || {};
+    const news = summary.recent_news || [];
+
+    // Hero section
+    document.getElementById('hero-ticker').textContent = data.ticker || currentTicker;
+    document.getElementById('hero-name').textContent = financials.company_name || 'Taiwan Stock';
+
+    if (priceData.price) {
+      document.getElementById('hero-price').textContent = `NT$ ${priceData.price}`;
+      const changeColor = priceData.change_pct >= 0 ? 'text-green-600' : 'text-red-600';
+      const changeSymbol = priceData.change_pct >= 0 ? '+' : '';
+      document.getElementById('hero-change').innerHTML = `<span class="${changeColor}">${changeSymbol}${priceData.change_pct}%</span>`;
+    }
+
+    // Price section
+    let priceHtml = '';
+    if (priceData.price) {
+      priceHtml += `<div class="flex justify-between"><span class="text-slate-600">Volume:</span><span class="font-semibold">${(priceData.volume || 0).toLocaleString()}</span></div>`;
+      priceHtml += `<div class="flex justify-between"><span class="text-slate-600">52W High:</span><span class="font-semibold">NT$ ${priceData.week_52_high || 'N/A'}</span></div>`;
+      priceHtml += `<div class="flex justify-between"><span class="text-slate-600">52W Low:</span><span class="font-semibold">NT$ ${priceData.week_52_low || 'N/A'}</span></div>`;
+    } else {
+      priceHtml = '<p class="text-slate-500">No price data available</p>';
+    }
+    document.getElementById('price-section').innerHTML = priceHtml;
+
+    // Financials section
+    let finHtml = '';
+    if (financials.pe_ratio_trailing || financials.return_on_equity_pct) {
+      finHtml += `<div class="flex justify-between"><span class="text-slate-600">P/E Ratio:</span><span class="font-semibold">${(financials.pe_ratio_trailing || 'N/A').toFixed(1)}</span></div>`;
+      finHtml += `<div class="flex justify-between"><span class="text-slate-600">ROE:</span><span class="font-semibold">${(financials.return_on_equity_pct || 'N/A').toFixed(1)}%</span></div>`;
+      finHtml += `<div class="flex justify-between"><span class="text-slate-600">Debt/Equity:</span><span class="font-semibold">${(financials.debt_to_equity || 'N/A').toFixed(2)}</span></div>`;
+      finHtml += `<div class="flex justify-between"><span class="text-slate-600">Div Yield:</span><span class="font-semibold">${(financials.dividend_yield_pct || 'N/A').toFixed(2)}%</span></div>`;
+    } else {
+      finHtml = '<p class="text-slate-500">No financial data available</p>';
+    }
+    document.getElementById('financials-section').innerHTML = finHtml;
+
+    // Technicals section
+    let techHtml = '';
+    if (technicals.signal) {
+      techHtml += `<div class="flex justify-between"><span class="text-slate-600">Signal:</span><span class="font-semibold">${technicals.signal}</span></div>`;
+      techHtml += `<div class="flex justify-between"><span class="text-slate-600">MA50:</span><span class="font-semibold">NT$ ${(technicals.ma50 || 'N/A').toFixed(0)}</span></div>`;
+      techHtml += `<div class="flex justify-between"><span class="text-slate-600">MA120:</span><span class="font-semibold">NT$ ${(technicals.ma120 || 'N/A').toFixed(0)}</span></div>`;
+      techHtml += `<div class="flex justify-between"><span class="text-slate-600">vs MA50:</span><span class="font-semibold">${(technicals.price_vs_ma50_pct || 'N/A').toFixed(1)}%</span></div>`;
+    } else {
+      techHtml = '<p class="text-slate-500">No technical data available</p>';
+    }
+    document.getElementById('technicals-section').innerHTML = techHtml;
+
+    // News section
+    let newsHtml = '';
+    if (news && news.length > 0) {
+      newsHtml = news.slice(0, 5).map(item =>
+        `<a href="${item.url || '#'}" target="_blank" class="block p-2 hover:bg-gray-50 rounded border-l-2 border-slate-300 hover:border-primary">
+          <p class="text-xs text-slate-500">${item.date || 'N/A'}</p>
+          <p class="text-xs font-semibold text-primary hover:underline">${item.title}</p>
+        </a>`
+      ).join('');
+    } else {
+      newsHtml = '<p class="text-slate-500">No news available</p>';
+    }
+    document.getElementById('news-section').innerHTML = newsHtml;
+  }
+
+  // Initialize
+  document.getElementById('ticker-input').value = currentTicker;
+  document.getElementById('ticker-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') loadData();
+  });
+  loadData();
+</script>
+</body>
+</html>
