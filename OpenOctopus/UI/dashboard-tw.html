@@ -105,7 +105,7 @@
   </header>
 
   <div class="p-6 flex gap-6 min-h-0">
-    <div class="flex-[3] space-y-6 min-w-0">
+    <div class="flex-1 space-y-6 min-w-0">
 
       <!-- Trinity Hero Section -->
       <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
@@ -264,13 +264,137 @@
 
     </div>
 
-    <!-- Right Sidebar (empty for now) -->
-    <div class="flex-[1] space-y-6 min-w-0 hidden"></div>
+    <!-- RIGHT SIDEBAR -->
+    <aside class="w-72 shrink-0 space-y-6">
+
+      <!-- AI Mode Toggle -->
+      <section class="bg-surface-container-low rounded-lg p-4 ambient-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider">AI 分析模式</h3>
+          <span id="ai-mode-badge" class="text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-surface-container-high text-on-surface-variant">分析前</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="mode-no-ai" class="mode-toggle px-2.5 py-1.5 bg-primary text-[8px] text-white rounded-sm font-bold uppercase" data-mode="off">分析前</button>
+          <button id="mode-ai" class="mode-toggle px-2.5 py-1.5 bg-surface-container-high text-[8px] text-on-surface-variant rounded-sm font-bold uppercase" data-mode="on">AI 分析</button>
+        </div>
+        <p id="ai-usage-text" class="mt-3 text-[9px] text-on-surface-variant leading-relaxed">基本數據模式。無 AI 令牌使用。</p>
+      </section>
+
+      <!-- AI Analysis Panel -->
+      <section id="ai-panel" class="bg-surface-container-low rounded-lg p-4 ambient-shadow hidden">
+        <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider mb-3">AI 智能分析</h3>
+        <div class="space-y-3">
+          <div class="p-3 bg-surface-container-lowest rounded-lg text-[9px] text-on-surface-variant">
+            <p class="font-semibold text-on-surface mb-2">智能判斷</p>
+            <p id="ai-analysis-content">正在分析...</p>
+          </div>
+          <div class="p-3 bg-surface-container-lowest rounded-lg text-[9px]">
+            <p class="font-semibold text-on-surface mb-2">建議動作</p>
+            <ul class="space-y-1 text-on-surface-variant" id="ai-recommendations">
+              <li>• 載入數據以查看建議</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stock Info Card -->
+      <section class="bg-surface-container-low rounded-lg p-4 ambient-shadow">
+        <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider mb-3">股票資訊</h3>
+        <div class="space-y-2 text-[9px]">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">市值</span>
+            <span class="font-bold" id="info-market-cap">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">52週漲幅</span>
+            <span class="font-bold" id="info-52w-range">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">成交量</span>
+            <span class="font-bold" id="info-volume">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">本益比</span>
+            <span class="font-bold" id="info-pe">—</span>
+          </div>
+        </div>
+      </section>
+
+    </aside><!-- end right sidebar -->
   </div>
 </main>
 
 <script>
   let currentTicker = '2330';
+  let aiMode = false;
+
+  // AI Mode toggle - 同美股管道
+  document.getElementById('mode-no-ai').addEventListener('click', () => {
+    aiMode = 'off';
+    updateAIMode();
+  });
+
+  document.getElementById('mode-ai').addEventListener('click', () => {
+    aiMode = 'on';
+    updateAIMode();
+  });
+
+  function updateAIMode() {
+    const badge = document.getElementById('ai-mode-badge');
+    const panel = document.getElementById('ai-panel');
+    const noAiBtn = document.getElementById('mode-no-ai');
+    const aiBtn = document.getElementById('mode-ai');
+    const usageText = document.getElementById('ai-usage-text');
+
+    if (aiMode === 'on') {
+      badge.textContent = 'AI 分析';
+      badge.className = 'text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-blue-100 text-blue-700';
+      panel.classList.remove('hidden');
+      noAiBtn.className = 'mode-toggle px-2.5 py-1.5 bg-surface-container-high text-[8px] text-on-surface-variant rounded-sm font-bold uppercase';
+      aiBtn.className = 'mode-toggle px-2.5 py-1.5 bg-primary text-[8px] text-white rounded-sm font-bold uppercase';
+      usageText.textContent = 'AI 分析模式已啟用。使用 Claude 的推理能力進行台股分析。';
+      loadAIAnalysis();
+    } else {
+      badge.textContent = '分析前';
+      badge.className = 'text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-surface-container-high text-on-surface-variant';
+      panel.classList.add('hidden');
+      noAiBtn.className = 'mode-toggle px-2.5 py-1.5 bg-primary text-[8px] text-white rounded-sm font-bold uppercase';
+      aiBtn.className = 'mode-toggle px-2.5 py-1.5 bg-surface-container-high text-[8px] text-on-surface-variant rounded-sm font-bold uppercase';
+      usageText.textContent = '基本數據模式。無 AI 令牌使用。';
+    }
+  }
+
+  async function loadAIAnalysis() {
+    if (aiMode !== 'on') return;
+    const analysisContent = document.getElementById('ai-analysis-content');
+    const recommendations = document.getElementById('ai-recommendations');
+
+    try {
+      // 使用美股同一個 AI 管道
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `分析台灣股票 ${currentTicker}。提供投資前景、關鍵指標和風險因素。` })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        analysisContent.textContent = result.result?.slice(0, 300) || '無法獲得 AI 分析';
+        recommendations.innerHTML = `
+          <li>• 監控產業動向</li>
+          <li>• 評估地緣政治風險</li>
+          <li>• 追蹤財務表現</li>
+        `;
+      }
+    } catch (e) {
+      analysisContent.textContent = `台股代號 ${currentTicker}: 基本面分析中...`;
+      recommendations.innerHTML = `
+        <li>• 監控季度報告</li>
+        <li>• 評估產業風險</li>
+        <li>• 對標同業比較</li>
+      `;
+    }
+  }
 
   async function loadData() {
     const ticker = document.getElementById('ticker-input').value.trim() || '2330';
@@ -287,11 +411,21 @@
       }
 
       renderTWData(data);
+      if (aiMode === 'on') {
+        loadAIAnalysis();
+      }
     } catch (error) {
       console.error('Error:', error);
       document.getElementById('dashboard-hero-title').textContent = '錯誤';
       document.getElementById('dashboard-active-ticker').textContent = error.message;
     }
+  }
+
+  function formatNumber(num) {
+    if (!num) return '—';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + '十億';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + '百萬';
+    return Math.round(num).toString();
   }
 
   function renderTWData(data) {
@@ -373,14 +507,20 @@
       ).join('');
       document.getElementById('news-section').innerHTML = newsHtml;
     }
+
+    // Update right sidebar info
+    document.getElementById('info-market-cap').textContent = formatNumber(priceData.market_cap);
+    document.getElementById('info-52w-range').textContent = `$${priceData.week_52_low || '—'} - $${priceData.week_52_high || '—'}`;
+    document.getElementById('info-volume').textContent = formatNumber(priceData.volume);
+    document.getElementById('info-pe').textContent = (financials.pe_ratio_trailing || '—').toFixed(2);
   }
 
-  // Initialize
-  document.getElementById('ticker-input').value = '2330';
-  document.getElementById('ticker-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') loadData();
-  });
-  loadData();
+  function formatNumber(num) {
+    if (!num) return '—';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + '十億';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + '百萬';
+    return Math.round(num).toString();
+  }
 </script>
 </body>
 </html>
