@@ -37,6 +37,7 @@ from services.portfolio.overview import build_portfolio_overview
 # Taiwan services
 from services.tw.dashboard.summary import build_dashboard_summary as tw_build_dashboard_summary
 from services.tw.dashboard.summary import build_market_overview as tw_build_market_overview
+from services.tw.dashboard.management import build_management_snapshot as tw_build_management_snapshot
 from services.tw.documents.recent_announcements import build_recent_announcements
 from services.tw.documents.financial_statements import build_financial_statements, build_annual_report_summary
 from services.tw.market.overview import build_market_overview as tw_build_market_index
@@ -320,6 +321,18 @@ def tw_dashboard_summary() -> Response:
 def tw_market_overview() -> Response:
     """Taiwan market overview (TAIEX, OTC)."""
     result = tw_build_market_index()
+    status_code = 200 if "error" not in result else 502
+    return jsonify(result), status_code
+
+
+@app.route("/api/tw/dashboard/management")
+def tw_dashboard_management() -> Response:
+    """Taiwan stock management quality metrics."""
+    ticker = (request.args.get("ticker") or "").strip()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    result = tw_build_management_snapshot(ticker)
     status_code = 200 if "error" not in result else 502
     return jsonify(result), status_code
 

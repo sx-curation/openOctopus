@@ -128,54 +128,54 @@
 
         <!-- Three Gauges -->
         <div class="grid grid-cols-3 gap-8">
-          <!-- Gauge 1 -->
+          <!-- Gauge 1: Guidance Accuracy -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle cx="64" cy="64" r="56" fill="none" stroke="#000f27" stroke-width="7"
+                <circle id="gauge1-circle" cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
                   stroke-dasharray="351.86"
-                  stroke-dashoffset="56.3"
+                  stroke-dashoffset="88"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">施工中</span>
+              <span id="gauge1-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">本益比指標</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">目標達成度</p>
             <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge1-note">—</p>
           </div>
 
-          <!-- Gauge 2 -->
+          <!-- Gauge 2: Strategy Execution -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
+                <circle id="gauge2-circle" cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
                   stroke-dasharray="351.86"
                   stroke-dashoffset="112.6"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">施工中</span>
+              <span id="gauge2-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">股東權益報酬率</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">策略執行力</p>
             <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge2-note">—</p>
           </div>
 
-          <!-- Gauge 3 -->
+          <!-- Gauge 3: Management Transparency -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
+                <circle id="gauge3-circle" cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
                   stroke-dasharray="351.86"
                   stroke-dashoffset="28.15"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">施工中</span>
+              <span id="gauge3-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">技術指標一致性</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">管理透明度</p>
             <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge3-note">—</p>
           </div>
         </div>
@@ -411,6 +411,12 @@
       }
 
       renderTWData(data);
+
+      // Fetch management metrics
+      const mgmtResponse = await fetch(`/api/tw/dashboard/management?ticker=${encodeURIComponent(ticker)}`);
+      const mgmtData = await mgmtResponse.json();
+      renderManagementMetrics(mgmtData);
+
       if (aiMode === 'on') {
         loadAIAnalysis();
       }
@@ -513,6 +519,57 @@
     document.getElementById('info-52w-range').textContent = `$${priceData.week_52_low || '—'} - $${priceData.week_52_high || '—'}`;
     document.getElementById('info-volume').textContent = formatNumber(priceData.volume);
     document.getElementById('info-pe').textContent = (financials.pe_ratio_trailing || '—').toFixed(2);
+  }
+
+  function getGaugeColor(score) {
+    if (score >= 80) return '#10AC84';  // Green
+    if (score >= 50) return '#FFA500';  // Orange
+    return '#EE5253';                    // Red
+  }
+
+  function renderManagementMetrics(data) {
+    if (data.error || !data.cards) return;
+
+    const cards = data.cards || [];
+
+    // Map cards to gauges
+    const metricsMap = {
+      '目標達成度': 1,
+      '策略執行力': 2,
+      '管理透明度': 3
+    };
+
+    cards.forEach(card => {
+      const gaugeNum = metricsMap[card.type];
+      if (!gaugeNum) return;
+
+      const score = card.score || 0;
+      const label = card.label || '—';
+      const detail = card.detail || '';
+
+      // Calculate stroke offset (351.86 is the circumference, offset from 0 to 351.86)
+      const offset = 351.86 * (1 - score / 100);
+      const color = getGaugeColor(score);
+
+      // Update gauge circle
+      const circle = document.getElementById(`gauge${gaugeNum}-circle`);
+      if (circle) {
+        circle.setAttribute('stroke-dashoffset', offset.toFixed(2));
+        circle.setAttribute('stroke', color);
+      }
+
+      // Update gauge score
+      const scoreEl = document.getElementById(`gauge${gaugeNum}-score`);
+      if (scoreEl) {
+        scoreEl.textContent = `${Math.round(score)}`;
+      }
+
+      // Update gauge note
+      const noteEl = document.getElementById(`gauge${gaugeNum}-note`);
+      if (noteEl) {
+        noteEl.textContent = label;
+      }
+    });
   }
 
   function formatNumber(num) {
