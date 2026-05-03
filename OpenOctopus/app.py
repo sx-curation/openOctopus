@@ -50,7 +50,7 @@ _policy_agent = PolicyMonitoringAgent()
 
 @app.route("/")
 def index() -> Response:
-    html_path = str(UI_DIR / "index.html")
+    html_path = str(UI_DIR / "market-selector.html")
     with open(html_path, "r", encoding="utf-8") as f:
         return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
