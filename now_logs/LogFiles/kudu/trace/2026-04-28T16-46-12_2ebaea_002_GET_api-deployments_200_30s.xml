@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2026-04-28T16:46:12.718" instance="2ebaea" url="/api/deployments?warmup=true" method="GET" type="request" pid="835,1,15" Accept="*/*" Host="openoctopus-gxcab7hqfmbkfzfg.scm.canadacentral-01.azurewebsites.net" User-Agent="AZURECLI/2.85.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cookie="ARRAffinity=2ebaea0b253f5165daf3ffe9d2db6809fcf8714ea592cf11b0c7e00709509b10; ARRAffinitySameSite=2ebaea0b253f5165daf3ffe9d2db6809fcf8714ea592cf11b0c7e00709509b10" x-ms-client-request-id="bb37a51b-4321-11f1-b749-286b350b3ece" X-ARR-LOG-ID="bb37a51b-4321-11f1-b749-286b350b3ece" CLIENT-IP="149.224.245.83:64895" X-SITE-DEPLOYMENT-ID="OpenOctopus" WAS-DEFAULT-HOSTNAME="openoctopus-gxcab7hqfmbkfzfg.scm.canadacentral-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments?warmup=true" X-Client-IP="149.224.245.83" X-Client-Port="64895" >
+  <step title="DeploymentService.GetCurrentEtag" date="2026-04-28T16:46:32.328" >
+    <step title="Current Etag: &quot;f7215abb1b25f4f8&quot;, Cached Etag: " date="2026-04-28T16:46:37.228" /><!-- duration: 183ms -->
+  </step><!-- duration: 5111ms -->
+  <step title="DeploymentService.GetDeployResults" date="2026-04-28T16:46:37.490" >
+    <step title="DeploymentManager.GetResults" date="2026-04-28T16:46:37.509" /><!-- duration: 3780ms -->
+  </step><!-- duration: 3931ms -->
+  <step title="Outgoing response" date="2026-04-28T16:46:43.085" type="response" statusCode="200" statusText="OK" /><!-- duration: 107ms -->
+</step><!-- duration: 30494ms -->

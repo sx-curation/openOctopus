@@ -1,0 +1,452 @@
+2026-04-28T16:23:27.5420814Z State: Starting, Action: EstablishingSiteNetworks, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-04-28T16:23:30.1697394Z State: Starting, Action: StartingSiteContainers, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: , DetailsLevel: INFO
+2026-04-28T16:23:30.1712522Z Container start method called.
+2026-04-28T16:23:30.1805609Z State: Starting, Action: PullingImage, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pulling image 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:23:30.1817780Z Establishing network.
+2026-04-28T16:23:30.2006921Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:23:31.1409378Z Image appsvc/python:3.11_20260203.2.tuxprod is pulled from registry 10.1.0.5:13209
+2026-04-28T16:23:31.1564761Z Container is starting.
+2026-04-28T16:23:31.1574519Z State: Starting, Action: MountingVolumes, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:23:31.1580107Z Establishing user namespace if not established already.
+2026-04-28T16:23:31.1582167Z Establishing network if not established already.
+2026-04-28T16:23:31.1583164Z Mounting volumes.
+2026-04-28T16:23:31.1634108Z Nested mountpoint 
+2026-04-28T16:23:31.2223965Z Nested mountpoint volatile/logs
+2026-04-28T16:23:31.3032093Z Nested mountpoint 
+2026-04-28T16:23:31.4914233Z Nested mountpoint 
+2026-04-28T16:23:31.5714674Z Nested mountpoint 
+2026-04-28T16:23:32.1666903Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:23:32.1690149Z Creating container.
+2026-04-28T16:23:32.1693268Z Creating pipes for streaming container io.
+2026-04-28T16:23:32.1694581Z Creating stdout named pipe at /podr/container/pipe/af9402fe5916_openoctopus/stdout_3d83380a0f1d44229362c042e467d3dc.
+2026-04-28T16:23:32.1890260Z Successfully created stdout named pipe at: /podr/container/pipe/af9402fe5916_openoctopus/stdout_3d83380a0f1d44229362c042e467d3dc.
+2026-04-28T16:23:32.1894148Z Opening named pipe /podr/container/pipe/af9402fe5916_openoctopus/stdout_3d83380a0f1d44229362c042e467d3dc for reading in non-blocking mode.
+2026-04-28T16:23:32.1896588Z Successfully opened named pipe: /podr/container/pipe/af9402fe5916_openoctopus/stdout_3d83380a0f1d44229362c042e467d3dc.
+2026-04-28T16:23:32.2090492Z Successfully removed non-blocking flag from /podr/container/pipe/af9402fe5916_openoctopus/stdout_3d83380a0f1d44229362c042e467d3dc.
+2026-04-28T16:23:32.2276494Z Creating stderr named pipe at /podr/container/pipe/af9402fe5916_openoctopus/stderr_6bcbb5123d224338aa0e2c10bf53ca9f.
+2026-04-28T16:23:32.2278587Z Successfully created stderr named pipe at: /podr/container/pipe/af9402fe5916_openoctopus/stderr_6bcbb5123d224338aa0e2c10bf53ca9f.
+2026-04-28T16:23:32.2279311Z Opening named pipe /podr/container/pipe/af9402fe5916_openoctopus/stderr_6bcbb5123d224338aa0e2c10bf53ca9f for reading in non-blocking mode.
+2026-04-28T16:23:32.2280284Z Successfully opened named pipe: /podr/container/pipe/af9402fe5916_openoctopus/stderr_6bcbb5123d224338aa0e2c10bf53ca9f.
+2026-04-28T16:23:32.2281176Z Successfully removed non-blocking flag from /podr/container/pipe/af9402fe5916_openoctopus/stderr_6bcbb5123d224338aa0e2c10bf53ca9f.
+2026-04-28T16:23:32.2389311Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:23:32.9087769Z Starting container: af9402fe5916_openoctopus.
+2026-04-28T16:23:33.0455043Z Starting watchers and probes.
+2026-04-28T16:23:33.0562921Z Starting metrics collection.
+2026-04-28T16:23:33.0670163Z Container is running.
+2026-04-28T16:23:33.0671916Z State: Starting, Action: CreatingContainer, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:23:33.3868040Z Container start method finished after 3194 ms.
+2026-04-28T16:23:33.3885839Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:23:33.3886644Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:24:37.8400152Z Container has finished running with exit code: 3.
+2026-04-28T16:24:37.8419721Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:24:37.8533414Z Stop and delete container. Retry count = 0
+2026-04-28T16:24:37.8595920Z Stopping container: af9402fe5916_openoctopus.
+2026-04-28T16:24:37.9402269Z Deleting container: af9402fe5916_openoctopus. Retry count = 0
+2026-04-28T16:24:39.5375377Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:24:39.5468942Z Container is terminated. Total time elapsed: 1696 ms.
+2026-04-28T16:24:39.5470646Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:24:39.5703694Z State: Stopping, Action: CancellingStartup, LastError: , LastErrorTimestamp: 01/01/0001 00:00:00, LastErrorDetails: , Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:39.6487620Z Site startup probe failed after 66.1655691 seconds.
+2026-04-28T16:24:39.9106242Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:39.9467162Z Failed to start site. Revert by stopping site.
+2026-04-28T16:24:39.9572182Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:40.0077874Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:40.0086097Z Site: openoctopus stopped.
+2026-04-28T16:24:40.0392476Z State: Stopping, Action: UnmountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:40.5217183Z State: Stopping, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:24:40.6710564Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:24:40 (UTC), DetailsLevel: ERR
+2026-04-28T16:24:40.9528248Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:24:40 (UTC), DetailsLevel: ERR
+2026-04-28T16:24:46.2929091Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:24:40 (UTC), DetailsLevel: ERR
+2026-04-28T16:24:48.0372956Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:24:40 (UTC), DetailsLevel: ERR
+2026-04-28T16:24:48.0374283Z Container start method called.
+2026-04-28T16:24:48.0374779Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:24:48.0375545Z Establishing network.
+2026-04-28T16:24:48.0376570Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:24:48.3801774Z Container is starting.
+2026-04-28T16:24:48.3807180Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:24:48.3808691Z Establishing user namespace if not established already.
+2026-04-28T16:24:48.3811013Z Establishing network if not established already.
+2026-04-28T16:24:48.3812444Z Mounting volumes.
+2026-04-28T16:24:48.3897349Z Nested mountpoint 
+2026-04-28T16:24:48.4093988Z Nested mountpoint volatile/logs
+2026-04-28T16:24:48.4487838Z Nested mountpoint 
+2026-04-28T16:24:48.4497751Z Nested mountpoint 
+2026-04-28T16:24:48.4516957Z Nested mountpoint 
+2026-04-28T16:24:48.9852587Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:24:49.0036469Z Creating container.
+2026-04-28T16:24:49.0039316Z Creating pipes for streaming container io.
+2026-04-28T16:24:49.0040561Z Creating stdout named pipe at /podr/container/pipe/e4cdb57fd411_openoctopus/stdout_e8471f87f2504724a28407fa003270a9.
+2026-04-28T16:24:49.0146733Z Successfully created stdout named pipe at: /podr/container/pipe/e4cdb57fd411_openoctopus/stdout_e8471f87f2504724a28407fa003270a9.
+2026-04-28T16:24:49.0153656Z Opening named pipe /podr/container/pipe/e4cdb57fd411_openoctopus/stdout_e8471f87f2504724a28407fa003270a9 for reading in non-blocking mode.
+2026-04-28T16:24:49.0230183Z Successfully opened named pipe: /podr/container/pipe/e4cdb57fd411_openoctopus/stdout_e8471f87f2504724a28407fa003270a9.
+2026-04-28T16:24:49.0234216Z Successfully removed non-blocking flag from /podr/container/pipe/e4cdb57fd411_openoctopus/stdout_e8471f87f2504724a28407fa003270a9.
+2026-04-28T16:24:49.0236095Z Creating stderr named pipe at /podr/container/pipe/e4cdb57fd411_openoctopus/stderr_dc1bf679c6e347a3bb27d3224db5eeb5.
+2026-04-28T16:24:49.0245237Z Successfully created stderr named pipe at: /podr/container/pipe/e4cdb57fd411_openoctopus/stderr_dc1bf679c6e347a3bb27d3224db5eeb5.
+2026-04-28T16:24:49.0246380Z Opening named pipe /podr/container/pipe/e4cdb57fd411_openoctopus/stderr_dc1bf679c6e347a3bb27d3224db5eeb5 for reading in non-blocking mode.
+2026-04-28T16:24:49.0247471Z Successfully opened named pipe: /podr/container/pipe/e4cdb57fd411_openoctopus/stderr_dc1bf679c6e347a3bb27d3224db5eeb5.
+2026-04-28T16:24:49.0248243Z Successfully removed non-blocking flag from /podr/container/pipe/e4cdb57fd411_openoctopus/stderr_dc1bf679c6e347a3bb27d3224db5eeb5.
+2026-04-28T16:24:49.0249581Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:24:49.6033431Z Starting container: e4cdb57fd411_openoctopus.
+2026-04-28T16:24:49.6985495Z Starting watchers and probes.
+2026-04-28T16:24:49.6988950Z Starting metrics collection.
+2026-04-28T16:24:49.6990131Z Container is running.
+2026-04-28T16:24:49.6990946Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:24:49.9898098Z Container start method finished after 1932 ms.
+2026-04-28T16:24:49.9901509Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:24:49.9901738Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:25:44.8228681Z Container has finished running with exit code: 3.
+2026-04-28T16:25:44.8415589Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:25:44.8526228Z Stop and delete container. Retry count = 0
+2026-04-28T16:25:44.9115749Z Stopping container: e4cdb57fd411_openoctopus.
+2026-04-28T16:25:45.0419312Z Deleting container: e4cdb57fd411_openoctopus. Retry count = 0
+2026-04-28T16:25:48.7785265Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:25:48.7986220Z Container is terminated. Total time elapsed: 3936 ms.
+2026-04-28T16:25:48.8078477Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:25:48.8582258Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:24:39, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:48.8887386Z Site startup probe failed after 58.8794838 seconds.
+2026-04-28T16:25:49.2319608Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:49.2511647Z Failed to start site. Revert by stopping site.
+2026-04-28T16:25:49.2515655Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:49.2522371Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:49.2522631Z Site: openoctopus stopped.
+2026-04-28T16:25:49.2715966Z State: Stopping, Action: UnmountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:49.8326535Z State: Stopping, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:25:50.1463392Z Site: openoctopus will be blocked for 1 minutes till 04/28/2026 16:26:50
+2026-04-28T16:25:50.1744615Z State: Blocked, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site: openoctopus will be blocked for 1 minutes till 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:50.2372968Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:25:50 (UTC), DetailsLevel: WARN
+2026-04-28T16:25:50.5777744Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:25:50 (UTC), DetailsLevel: WARN
+2026-04-28T16:25:50.7971116Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:50.7971951Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:25:51.0858754Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:51.0860105Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:25:55.5844703Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:55.5845571Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:25:57.1495610Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:57.1496123Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:25:57.6538987Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:25:57.6539210Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:00.7554424Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:00.7554681Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:05.9352193Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:05.9356873Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:11.0309576Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:11.0309869Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:16.2883188Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:16.2884911Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:22.0560664Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:22.0561006Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:28.1038840Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:28.1040150Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:33.3459639Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:33.3728707Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:38.5530640Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:38.5530907Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:43.8141132Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:43.8142635Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:48.9390458Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:48.9390745Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:26:50.1490156Z Site: openoctopus is unblocked.
+2026-04-28T16:26:54.0469141Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:55.7826404Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:26:50, DetailsLevel: WARN
+2026-04-28T16:26:55.7827551Z Container start method called.
+2026-04-28T16:26:55.7913202Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:26:55.7916368Z Establishing network.
+2026-04-28T16:26:55.7917660Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:26:56.6917165Z Image appsvc/python:3.11_20260203.2.tuxprod is pulled from registry 10.1.0.5:13209
+2026-04-28T16:26:56.6918689Z Container is starting.
+2026-04-28T16:26:56.7316171Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:26:56.7320278Z Establishing user namespace if not established already.
+2026-04-28T16:26:56.7324094Z Establishing network if not established already.
+2026-04-28T16:26:56.7412228Z Mounting volumes.
+2026-04-28T16:26:56.7416421Z Nested mountpoint 
+2026-04-28T16:26:56.8113474Z Nested mountpoint volatile/logs
+2026-04-28T16:26:56.8418791Z Nested mountpoint 
+2026-04-28T16:26:56.8508923Z Nested mountpoint 
+2026-04-28T16:26:56.9323802Z Nested mountpoint 
+2026-04-28T16:26:57.4831162Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:26:57.4842734Z Creating container.
+2026-04-28T16:26:57.5008551Z Creating pipes for streaming container io.
+2026-04-28T16:26:57.5011480Z Creating stdout named pipe at /podr/container/pipe/49b01501b6f3_openoctopus/stdout_e662f97120634baa81b6b6c880c68855.
+2026-04-28T16:26:57.5025615Z Successfully created stdout named pipe at: /podr/container/pipe/49b01501b6f3_openoctopus/stdout_e662f97120634baa81b6b6c880c68855.
+2026-04-28T16:26:57.5030084Z Opening named pipe /podr/container/pipe/49b01501b6f3_openoctopus/stdout_e662f97120634baa81b6b6c880c68855 for reading in non-blocking mode.
+2026-04-28T16:26:57.5099883Z Successfully opened named pipe: /podr/container/pipe/49b01501b6f3_openoctopus/stdout_e662f97120634baa81b6b6c880c68855.
+2026-04-28T16:26:57.5101452Z Successfully removed non-blocking flag from /podr/container/pipe/49b01501b6f3_openoctopus/stdout_e662f97120634baa81b6b6c880c68855.
+2026-04-28T16:26:57.5102994Z Creating stderr named pipe at /podr/container/pipe/49b01501b6f3_openoctopus/stderr_26a0c4cf32034684a7f237466419c9df.
+2026-04-28T16:26:57.5104723Z Successfully created stderr named pipe at: /podr/container/pipe/49b01501b6f3_openoctopus/stderr_26a0c4cf32034684a7f237466419c9df.
+2026-04-28T16:26:57.5105573Z Opening named pipe /podr/container/pipe/49b01501b6f3_openoctopus/stderr_26a0c4cf32034684a7f237466419c9df for reading in non-blocking mode.
+2026-04-28T16:26:57.5106677Z Successfully opened named pipe: /podr/container/pipe/49b01501b6f3_openoctopus/stderr_26a0c4cf32034684a7f237466419c9df.
+2026-04-28T16:26:57.5107449Z Successfully removed non-blocking flag from /podr/container/pipe/49b01501b6f3_openoctopus/stderr_26a0c4cf32034684a7f237466419c9df.
+2026-04-28T16:26:57.5108603Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:26:58.1098210Z Starting container: 49b01501b6f3_openoctopus.
+2026-04-28T16:26:58.2176270Z Starting watchers and probes.
+2026-04-28T16:26:58.2276226Z Starting metrics collection.
+2026-04-28T16:26:58.2278523Z Container is running.
+2026-04-28T16:26:58.2363904Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:26:58.5976027Z Container start method finished after 2756 ms.
+2026-04-28T16:26:58.5984206Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:26:58.5984850Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:28:13.7561001Z Container has finished running with exit code: 3.
+2026-04-28T16:28:13.7571076Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:28:13.7653573Z Stop and delete container. Retry count = 0
+2026-04-28T16:28:13.7656494Z Stopping container: 49b01501b6f3_openoctopus.
+2026-04-28T16:28:13.9145178Z Deleting container: 49b01501b6f3_openoctopus. Retry count = 0
+2026-04-28T16:28:16.5366314Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:28:16.5679965Z Container is terminated. Total time elapsed: 2799 ms.
+2026-04-28T16:28:16.6053350Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:28:16.6173923Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:25:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:28:16.7085825Z Site startup probe failed after 78.0310838 seconds.
+2026-04-28T16:28:17.0484139Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:28:17.0890291Z Failed to start site. Revert by stopping site.
+2026-04-28T16:28:17.0904106Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:28:17.1100052Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:28:17.1100433Z Site: openoctopus stopped.
+2026-04-28T16:28:44.2070398Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:28:17 (UTC), DetailsLevel: WARN
+2026-04-28T16:28:46.7669467Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:28:17 (UTC), DetailsLevel: WARN
+2026-04-28T16:28:46.7670531Z Container start method called.
+2026-04-28T16:28:46.7671080Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:28:46.7671835Z Establishing network.
+2026-04-28T16:28:46.7672652Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:28:47.9587987Z Image appsvc/python:3.11_20260203.2.tuxprod is pulled from registry 10.1.0.4:13209
+2026-04-28T16:28:47.9590700Z Container is starting.
+2026-04-28T16:28:47.9592128Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:28:47.9593424Z Establishing user namespace if not established already.
+2026-04-28T16:28:47.9594625Z Establishing network if not established already.
+2026-04-28T16:28:47.9677895Z Mounting volumes.
+2026-04-28T16:28:47.9680004Z Nested mountpoint 
+2026-04-28T16:28:48.0101935Z Nested mountpoint volatile/logs
+2026-04-28T16:28:48.0982785Z Nested mountpoint 
+2026-04-28T16:28:48.0994225Z Nested mountpoint 
+2026-04-28T16:28:48.1010603Z Nested mountpoint 
+2026-04-28T16:28:49.0844009Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:28:49.0850966Z Creating container.
+2026-04-28T16:28:49.1244467Z Creating pipes for streaming container io.
+2026-04-28T16:28:49.1250083Z Creating stdout named pipe at /podr/container/pipe/fd5d7652ac5e_openoctopus/stdout_72dda567291f441cab7db118ac17241e.
+2026-04-28T16:28:49.1362411Z Successfully created stdout named pipe at: /podr/container/pipe/fd5d7652ac5e_openoctopus/stdout_72dda567291f441cab7db118ac17241e.
+2026-04-28T16:28:49.1544258Z Opening named pipe /podr/container/pipe/fd5d7652ac5e_openoctopus/stdout_72dda567291f441cab7db118ac17241e for reading in non-blocking mode.
+2026-04-28T16:28:49.1546892Z Successfully opened named pipe: /podr/container/pipe/fd5d7652ac5e_openoctopus/stdout_72dda567291f441cab7db118ac17241e.
+2026-04-28T16:28:49.1547719Z Successfully removed non-blocking flag from /podr/container/pipe/fd5d7652ac5e_openoctopus/stdout_72dda567291f441cab7db118ac17241e.
+2026-04-28T16:28:49.1549576Z Creating stderr named pipe at /podr/container/pipe/fd5d7652ac5e_openoctopus/stderr_1cc793797bb7465289394241fa9a717b.
+2026-04-28T16:28:49.1551002Z Successfully created stderr named pipe at: /podr/container/pipe/fd5d7652ac5e_openoctopus/stderr_1cc793797bb7465289394241fa9a717b.
+2026-04-28T16:28:49.1551709Z Opening named pipe /podr/container/pipe/fd5d7652ac5e_openoctopus/stderr_1cc793797bb7465289394241fa9a717b for reading in non-blocking mode.
+2026-04-28T16:28:49.1552595Z Successfully opened named pipe: /podr/container/pipe/fd5d7652ac5e_openoctopus/stderr_1cc793797bb7465289394241fa9a717b.
+2026-04-28T16:28:49.1553285Z Successfully removed non-blocking flag from /podr/container/pipe/fd5d7652ac5e_openoctopus/stderr_1cc793797bb7465289394241fa9a717b.
+2026-04-28T16:28:49.1841039Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:28:50.0793284Z Starting container: fd5d7652ac5e_openoctopus.
+2026-04-28T16:28:50.2193122Z Starting watchers and probes.
+2026-04-28T16:28:50.2197294Z Starting metrics collection.
+2026-04-28T16:28:50.2198731Z Container is running.
+2026-04-28T16:28:50.2199644Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:28:50.4008730Z Container start method finished after 3633 ms.
+2026-04-28T16:28:50.4011216Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:28:50.4011743Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:30:32.8689368Z Container has finished running with exit code: 3.
+2026-04-28T16:30:32.8774499Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:30:32.9083429Z Stop and delete container. Retry count = 0
+2026-04-28T16:30:32.9086834Z Stopping container: fd5d7652ac5e_openoctopus.
+2026-04-28T16:30:33.0191857Z Deleting container: fd5d7652ac5e_openoctopus. Retry count = 0
+2026-04-28T16:30:36.6398448Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:30:36.6493540Z Container is terminated. Total time elapsed: 3741 ms.
+2026-04-28T16:30:36.6499905Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:30:36.6807296Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:28:17, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:36.7607615Z Site startup probe failed after 106.3289036 seconds.
+2026-04-28T16:30:37.3736711Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:37.4398072Z Failed to start site. Revert by stopping site.
+2026-04-28T16:30:37.4504611Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:37.5185003Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:37.5185368Z Site: openoctopus stopped.
+2026-04-28T16:30:37.5396356Z State: Stopping, Action: UnmountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:38.3334395Z State: Stopping, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:30:38.8233312Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:30:38 (UTC), DetailsLevel: ERR
+2026-04-28T16:30:39.0937941Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:30:38 (UTC), DetailsLevel: ERR
+2026-04-28T16:30:44.5329298Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:30:38 (UTC), DetailsLevel: ERR
+2026-04-28T16:30:47.6629113Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:30:38 (UTC), DetailsLevel: ERR
+2026-04-28T16:30:47.6817269Z Container start method called.
+2026-04-28T16:30:47.7008977Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:30:47.7011962Z Establishing network.
+2026-04-28T16:30:47.7013184Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:30:48.8833025Z Container is starting.
+2026-04-28T16:30:48.8837612Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:30:48.9023450Z Establishing user namespace if not established already.
+2026-04-28T16:30:48.9123050Z Establishing network if not established already.
+2026-04-28T16:30:48.9139040Z Mounting volumes.
+2026-04-28T16:30:48.9240785Z Nested mountpoint 
+2026-04-28T16:30:49.0441646Z Nested mountpoint volatile/logs
+2026-04-28T16:30:49.0744661Z Nested mountpoint 
+2026-04-28T16:30:49.1142829Z Nested mountpoint 
+2026-04-28T16:30:49.1225261Z Nested mountpoint 
+2026-04-28T16:30:50.2487021Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:30:50.2489828Z Creating container.
+2026-04-28T16:30:50.2490865Z Creating pipes for streaming container io.
+2026-04-28T16:30:50.2491724Z Creating stdout named pipe at /podr/container/pipe/47bccf7ddf12_openoctopus/stdout_eb75abbb913642a6bfb2ff07e5c2edc2.
+2026-04-28T16:30:50.2503013Z Successfully created stdout named pipe at: /podr/container/pipe/47bccf7ddf12_openoctopus/stdout_eb75abbb913642a6bfb2ff07e5c2edc2.
+2026-04-28T16:30:50.2503965Z Opening named pipe /podr/container/pipe/47bccf7ddf12_openoctopus/stdout_eb75abbb913642a6bfb2ff07e5c2edc2 for reading in non-blocking mode.
+2026-04-28T16:30:50.2505015Z Successfully opened named pipe: /podr/container/pipe/47bccf7ddf12_openoctopus/stdout_eb75abbb913642a6bfb2ff07e5c2edc2.
+2026-04-28T16:30:50.2505766Z Successfully removed non-blocking flag from /podr/container/pipe/47bccf7ddf12_openoctopus/stdout_eb75abbb913642a6bfb2ff07e5c2edc2.
+2026-04-28T16:30:50.2507063Z Creating stderr named pipe at /podr/container/pipe/47bccf7ddf12_openoctopus/stderr_5fa5d6bb7adb454cb8118d8b5ca7ab15.
+2026-04-28T16:30:50.2508205Z Successfully created stderr named pipe at: /podr/container/pipe/47bccf7ddf12_openoctopus/stderr_5fa5d6bb7adb454cb8118d8b5ca7ab15.
+2026-04-28T16:30:50.2588262Z Opening named pipe /podr/container/pipe/47bccf7ddf12_openoctopus/stderr_5fa5d6bb7adb454cb8118d8b5ca7ab15 for reading in non-blocking mode.
+2026-04-28T16:30:50.2591886Z Successfully opened named pipe: /podr/container/pipe/47bccf7ddf12_openoctopus/stderr_5fa5d6bb7adb454cb8118d8b5ca7ab15.
+2026-04-28T16:30:50.2593211Z Successfully removed non-blocking flag from /podr/container/pipe/47bccf7ddf12_openoctopus/stderr_5fa5d6bb7adb454cb8118d8b5ca7ab15.
+2026-04-28T16:30:50.2595401Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:30:51.5287266Z Starting container: 47bccf7ddf12_openoctopus.
+2026-04-28T16:30:51.6593292Z Starting watchers and probes.
+2026-04-28T16:30:51.6793827Z Starting metrics collection.
+2026-04-28T16:30:51.6890935Z Container is running.
+2026-04-28T16:30:51.6990153Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:30:52.1400218Z Container start method finished after 4457 ms.
+2026-04-28T16:30:52.1403961Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:30:52.1404208Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:31:49.4724768Z Container has finished running with exit code: 3.
+2026-04-28T16:31:49.4728199Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:31:49.4920998Z Stop and delete container. Retry count = 0
+2026-04-28T16:31:49.4926943Z Stopping container: 47bccf7ddf12_openoctopus.
+2026-04-28T16:31:49.6526860Z Deleting container: 47bccf7ddf12_openoctopus. Retry count = 0
+2026-04-28T16:31:50.3070164Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:31:50.3480579Z Container is terminated. Total time elapsed: 872 ms.
+2026-04-28T16:31:50.3485646Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:31:50.3565574Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:30:37, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:50.4578832Z Site startup probe failed after 58.2984726 seconds.
+2026-04-28T16:31:50.7378875Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:50.7707904Z Failed to start site. Revert by stopping site.
+2026-04-28T16:31:50.7709327Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:50.7712174Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:50.7712365Z Site: openoctopus stopped.
+2026-04-28T16:31:50.8311368Z State: Stopping, Action: UnmountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:51.3735912Z State: Stopping, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:31:51.6872760Z Site: openoctopus will be blocked for 1 minutes till 04/28/2026 16:32:51
+2026-04-28T16:31:51.6877778Z State: Blocked, Action: StoppingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site: openoctopus will be blocked for 1 minutes till 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:31:51.7188594Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:31:51 (UTC), DetailsLevel: WARN
+2026-04-28T16:31:52.0305094Z State: Stopped, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:31:51 (UTC), DetailsLevel: WARN
+2026-04-28T16:31:57.2784220Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:31:57.2784735Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:02.5764225Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:02.5764713Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:08.1284593Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:08.1285641Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:13.5790919Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:13.5792128Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:18.8570091Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:18.8570654Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:19.5306987Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:19.5307487Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:20.4343341Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:20.4343846Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:24.3231889Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:24.3239133Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:25.2564157Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:25.2567060Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:30.0686315Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:30.0686934Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:36.2697678Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:36.2698201Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:41.6457805Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:41.6458334Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:46.8387227Z State: Blocked, Action: None, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:46.8392213Z Start site prohibitted because the site is being blocked.
+2026-04-28T16:32:51.6878730Z Site: openoctopus is unblocked.
+2026-04-28T16:32:52.0476038Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:55.4020444Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site is blocked due to multiple, consecutive cold start failures. Site scheduled to be unblocked at 04/28/2026 16:32:51, DetailsLevel: WARN
+2026-04-28T16:32:55.4024014Z Container start method called.
+2026-04-28T16:32:55.4025657Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:32:55.4026808Z Establishing network.
+2026-04-28T16:32:55.4027934Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:32:56.2037732Z Container is starting.
+2026-04-28T16:32:56.2049285Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:32:56.2051457Z Establishing user namespace if not established already.
+2026-04-28T16:32:56.2052422Z Establishing network if not established already.
+2026-04-28T16:32:56.2053524Z Mounting volumes.
+2026-04-28T16:32:56.2254830Z Nested mountpoint 
+2026-04-28T16:32:56.2639139Z Nested mountpoint volatile/logs
+2026-04-28T16:32:56.4157845Z Nested mountpoint 
+2026-04-28T16:32:56.4355383Z Nested mountpoint 
+2026-04-28T16:32:56.5457959Z Nested mountpoint 
+2026-04-28T16:32:57.5327055Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:32:57.5912882Z Creating container.
+2026-04-28T16:32:57.5918679Z Creating pipes for streaming container io.
+2026-04-28T16:32:57.5927593Z Creating stdout named pipe at /podr/container/pipe/a1d5af265851_openoctopus/stdout_0a7fb440d42f4af2aa2f24cb5daacf01.
+2026-04-28T16:32:57.6120530Z Successfully created stdout named pipe at: /podr/container/pipe/a1d5af265851_openoctopus/stdout_0a7fb440d42f4af2aa2f24cb5daacf01.
+2026-04-28T16:32:57.6121630Z Opening named pipe /podr/container/pipe/a1d5af265851_openoctopus/stdout_0a7fb440d42f4af2aa2f24cb5daacf01 for reading in non-blocking mode.
+2026-04-28T16:32:57.6123601Z Successfully opened named pipe: /podr/container/pipe/a1d5af265851_openoctopus/stdout_0a7fb440d42f4af2aa2f24cb5daacf01.
+2026-04-28T16:32:57.6124425Z Successfully removed non-blocking flag from /podr/container/pipe/a1d5af265851_openoctopus/stdout_0a7fb440d42f4af2aa2f24cb5daacf01.
+2026-04-28T16:32:57.6128923Z Creating stderr named pipe at /podr/container/pipe/a1d5af265851_openoctopus/stderr_685a83b9d29d424e820cd50f0d83c92c.
+2026-04-28T16:32:57.6130434Z Successfully created stderr named pipe at: /podr/container/pipe/a1d5af265851_openoctopus/stderr_685a83b9d29d424e820cd50f0d83c92c.
+2026-04-28T16:32:57.6131153Z Opening named pipe /podr/container/pipe/a1d5af265851_openoctopus/stderr_685a83b9d29d424e820cd50f0d83c92c for reading in non-blocking mode.
+2026-04-28T16:32:57.6132038Z Successfully opened named pipe: /podr/container/pipe/a1d5af265851_openoctopus/stderr_685a83b9d29d424e820cd50f0d83c92c.
+2026-04-28T16:32:57.6521379Z Successfully removed non-blocking flag from /podr/container/pipe/a1d5af265851_openoctopus/stderr_685a83b9d29d424e820cd50f0d83c92c.
+2026-04-28T16:32:57.6530964Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:32:59.0540291Z Starting container: a1d5af265851_openoctopus.
+2026-04-28T16:32:59.1534678Z Starting watchers and probes.
+2026-04-28T16:32:59.1543794Z Starting metrics collection.
+2026-04-28T16:32:59.1546136Z Container is running.
+2026-04-28T16:32:59.1547480Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:32:59.4267332Z Container start method finished after 4023 ms.
+2026-04-28T16:32:59.4468132Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:32:59.4539875Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:33:48.7251685Z Container has finished running with exit code: 3.
+2026-04-28T16:33:48.7255629Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:33:48.7265881Z Stop and delete container. Retry count = 0
+2026-04-28T16:33:48.7273331Z Stopping container: a1d5af265851_openoctopus.
+2026-04-28T16:33:48.8073320Z Deleting container: a1d5af265851_openoctopus. Retry count = 0
+2026-04-28T16:33:49.1870650Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:33:49.2070103Z Container is terminated. Total time elapsed: 471 ms.
+2026-04-28T16:33:49.2073138Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:33:49.2074516Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:31:50, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:33:49.2591762Z Site startup probe failed after 49.7855618 seconds.
+2026-04-28T16:33:49.4896957Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:33:49.5910145Z Failed to start site. Revert by stopping site.
+2026-04-28T16:33:49.6202805Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:33:49.6212605Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:33:49.6212873Z Site: openoctopus stopped.
+2026-04-28T16:35:36.0661862Z State: Starting, Action: EstablishingSiteNetworks, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:33:50 (UTC), DetailsLevel: WARN
+2026-04-28T16:35:37.7680261Z State: Starting, Action: StartingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site stopped at 04/28/2026 16:33:50 (UTC), DetailsLevel: WARN
+2026-04-28T16:35:37.7687655Z Container start method called.
+2026-04-28T16:35:37.7765405Z State: Starting, Action: PullingImage, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pulling image 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod for openoctopus., DetailsLevel: INFO
+2026-04-28T16:35:37.7770298Z Establishing network.
+2026-04-28T16:35:37.7782006Z Pulling image: appsvc/python:3.11_20260203.2.tuxprod.
+2026-04-28T16:35:38.1098347Z Container is starting.
+2026-04-28T16:35:38.1100101Z State: Starting, Action: MountingVolumes, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Mounting volumes for openoctopus., DetailsLevel: INFO
+2026-04-28T16:35:38.1189913Z Establishing user namespace if not established already.
+2026-04-28T16:35:38.1196308Z Establishing network if not established already.
+2026-04-28T16:35:38.1200853Z Mounting volumes.
+2026-04-28T16:35:38.1284549Z Nested mountpoint 
+2026-04-28T16:35:38.1398104Z Nested mountpoint volatile/logs
+2026-04-28T16:35:38.1684270Z Nested mountpoint 
+2026-04-28T16:35:38.1779241Z Nested mountpoint 
+2026-04-28T16:35:38.1790787Z Nested mountpoint 
+2026-04-28T16:35:38.4991379Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Finished pulling container image and mounting volumes for openoctopus. Allocatinng the rest of the container resources to finish container creation., DetailsLevel: INFO
+2026-04-28T16:35:38.4995758Z Creating container.
+2026-04-28T16:35:38.4997085Z Creating pipes for streaming container io.
+2026-04-28T16:35:38.5006081Z Creating stdout named pipe at /podr/container/pipe/e2436c7df163_openoctopus/stdout_b67aa0af83bd4d649e2de243f923b0a2.
+2026-04-28T16:35:38.5011324Z Successfully created stdout named pipe at: /podr/container/pipe/e2436c7df163_openoctopus/stdout_b67aa0af83bd4d649e2de243f923b0a2.
+2026-04-28T16:35:38.5285025Z Opening named pipe /podr/container/pipe/e2436c7df163_openoctopus/stdout_b67aa0af83bd4d649e2de243f923b0a2 for reading in non-blocking mode.
+2026-04-28T16:35:38.5290332Z Successfully opened named pipe: /podr/container/pipe/e2436c7df163_openoctopus/stdout_b67aa0af83bd4d649e2de243f923b0a2.
+2026-04-28T16:35:38.5291749Z Successfully removed non-blocking flag from /podr/container/pipe/e2436c7df163_openoctopus/stdout_b67aa0af83bd4d649e2de243f923b0a2.
+2026-04-28T16:35:38.5307436Z Creating stderr named pipe at /podr/container/pipe/e2436c7df163_openoctopus/stderr_8db192b1f5494980994321dd7de37afb.
+2026-04-28T16:35:38.5309283Z Successfully created stderr named pipe at: /podr/container/pipe/e2436c7df163_openoctopus/stderr_8db192b1f5494980994321dd7de37afb.
+2026-04-28T16:35:38.5310299Z Opening named pipe /podr/container/pipe/e2436c7df163_openoctopus/stderr_8db192b1f5494980994321dd7de37afb for reading in non-blocking mode.
+2026-04-28T16:35:38.5500762Z Successfully opened named pipe: /podr/container/pipe/e2436c7df163_openoctopus/stderr_8db192b1f5494980994321dd7de37afb.
+2026-04-28T16:35:38.5504135Z Successfully removed non-blocking flag from /podr/container/pipe/e2436c7df163_openoctopus/stderr_8db192b1f5494980994321dd7de37afb.
+2026-04-28T16:35:38.5511070Z Creating container with image: appsvc/python:3.11_20260203.2.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/python:3.11_20260203.2.tuxprod
+2026-04-28T16:35:39.0486717Z Starting container: e2436c7df163_openoctopus.
+2026-04-28T16:35:39.1245305Z Starting watchers and probes.
+2026-04-28T16:35:39.1338562Z Starting metrics collection.
+2026-04-28T16:35:39.1351515Z Container is running.
+2026-04-28T16:35:39.1356306Z State: Starting, Action: CreatingContainer, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:35:39.1964282Z Container start method finished after 1427 ms.
+2026-04-28T16:35:39.1966704Z State: Starting, Action: InitiatingSiteWarmUpProbe, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Container openoctopus successfully created and is running., DetailsLevel: INFO
+2026-04-28T16:35:39.1967184Z State: Starting, Action: WaitingForSiteWarmUpProbeSuccess, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Pinging warmup path to ensure container is ready to receive requests., DetailsLevel: INFO
+2026-04-28T16:36:07.9366113Z Container has finished running with exit code: 3.
+2026-04-28T16:36:07.9369760Z Container is terminating. Grace period: 5 seconds.
+2026-04-28T16:36:07.9446947Z Stop and delete container. Retry count = 0
+2026-04-28T16:36:07.9461409Z Stopping container: e2436c7df163_openoctopus.
+2026-04-28T16:36:08.0059086Z Deleting container: e2436c7df163_openoctopus. Retry count = 0
+2026-04-28T16:36:08.1784558Z Container spec TerminationMessagePolicy  path 
+2026-04-28T16:36:08.1785849Z Container is terminated. Total time elapsed: 241 ms.
+2026-04-28T16:36:08.2061446Z Site container: openoctopus terminated during site startup.
+2026-04-28T16:36:08.2064471Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:33:49, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:36:08.2083918Z Site startup probe failed after 29.0106639 seconds.
+2026-04-28T16:36:08.4565885Z State: Stopping, Action: CancellingStartup, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:36:08, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:36:08.4578406Z Failed to start site. Revert by stopping site.
+2026-04-28T16:36:08.4585552Z State: Stopping, Action: StoppingSite, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:36:08, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:36:08.4589225Z State: Stopping, Action: StoppingSiteContainers, LastError: ContainerTimeout, LastErrorTimestamp: 04/28/2026 16:36:08, LastErrorDetails: Container did not start within expected time limit of 230s. Please inspect your container logs for more details., Details: Site container: openoctopus terminated during site startup. Cancelling site startup., DetailsLevel: ERR
+2026-04-28T16:36:08.4589377Z Site: openoctopus stopped.
