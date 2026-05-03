@@ -578,6 +578,11 @@
     if (num >= 1e6) return (num / 1e6).toFixed(2) + '百萬';
     return Math.round(num).toString();
   }
+
+  // Auto-load default stock on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+  });
 </script>
 </body>
 </html>
