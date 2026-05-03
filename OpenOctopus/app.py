@@ -38,6 +38,7 @@ from services.portfolio.overview import build_portfolio_overview
 from services.tw.dashboard.summary import build_dashboard_summary as tw_build_dashboard_summary
 from services.tw.dashboard.summary import build_market_overview as tw_build_market_overview
 from services.tw.documents.recent_announcements import build_recent_announcements
+from services.tw.documents.financial_statements import build_financial_statements, build_annual_report_summary
 from services.tw.market.overview import build_market_overview as tw_build_market_index
 
 app = Flask(__name__, static_folder="UI", static_url_path="/static")
@@ -333,6 +334,30 @@ def tw_recent_announcements() -> Response:
         return jsonify({"error": "ticker is required"}), 400
 
     result = build_recent_announcements(ticker, limit=limit)
+    status_code = 200 if "error" not in result else 502
+    return jsonify(result), status_code
+
+
+@app.route("/api/tw/documents/financial-statements")
+def tw_financial_statements() -> Response:
+    """Taiwan stock financial statements (年報/季報)."""
+    ticker = (request.args.get("ticker") or "").strip()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    result = build_financial_statements(ticker)
+    status_code = 200 if "error" not in result else 502
+    return jsonify(result), status_code
+
+
+@app.route("/api/tw/documents/annual-report")
+def tw_annual_report() -> Response:
+    """Taiwan stock annual report summary (年報摘要)."""
+    ticker = (request.args.get("ticker") or "").strip()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    result = build_annual_report_summary(ticker)
     status_code = 200 if "error" not in result else 502
     return jsonify(result), status_code
 
