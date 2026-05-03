@@ -107,7 +107,7 @@
   <div class="p-6 flex gap-6 min-h-0">
     <div class="flex-1 space-y-6 min-w-0">
 
-      <!-- Trinity Hero Section -->
+      <!-- Trinity Hero Section - TOP THREE GAUGES -->
       <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
         <div class="flex justify-between items-start mb-8">
           <div>
@@ -126,64 +126,171 @@
           </div>
         </div>
 
-        <!-- Three Gauges -->
+        <!-- Three Top Gauges -->
         <div class="grid grid-cols-3 gap-8">
-          <!-- Gauge 1: Guidance Accuracy -->
+          <!-- Gauge 1: Realized Performance -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle id="gauge1-circle" cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
+                <circle cx="64" cy="64" r="56" fill="none" stroke="#000f27" stroke-width="7"
                   stroke-dasharray="351.86"
-                  stroke-dashoffset="88"
+                  stroke-dashoffset="200"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span id="gauge1-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
+              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">等待中</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">目標達成度</p>
-            <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge1-note">—</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">Realized Performance</p>
+            <p class="text-[9px] text-on-surface-variant mt-0.5">價格變動: —</p>
           </div>
 
-          <!-- Gauge 2: Strategy Execution -->
+          <!-- Gauge 2: Guidance vs. Actuals -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle id="gauge2-circle" cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
+                <circle cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
                   stroke-dasharray="351.86"
-                  stroke-dashoffset="112.6"
+                  stroke-dashoffset="200"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span id="gauge2-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
+              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">等待中</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">策略執行力</p>
-            <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge2-note">—</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">Guidance vs. Actuals</p>
+            <p class="text-[9px] text-on-surface-variant mt-0.5">指引精度: —</p>
           </div>
 
-          <!-- Gauge 3: Management Transparency -->
+          <!-- Gauge 3: Analyst Consensus -->
           <div class="flex flex-col items-center">
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
                 <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                <circle id="gauge3-circle" cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
+                <circle cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
                   stroke-dasharray="351.86"
-                  stroke-dashoffset="28.15"
+                  stroke-dashoffset="200"
                   stroke-linecap="round"
                   class="gauge-circle"/>
               </svg>
-              <span id="gauge3-score" class="absolute font-headline font-bold text-base tabular-nums text-primary">—</span>
+              <span class="absolute font-headline font-bold text-base tabular-nums text-primary">等待中</span>
             </div>
-            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">管理透明度</p>
-            <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge3-note">—</p>
+            <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center">Analyst Consensus</p>
+            <p class="text-[9px] text-on-surface-variant mt-0.5">分析師看法: —</p>
           </div>
         </div>
 
-        <!-- Sparkline -->
+        <!-- Forward Guidance & Sentiment Panel -->
         <div class="mt-8 pt-5" style="border-top:1px solid rgba(196,198,207,0.15);">
-          <div class="construction">
-            ⚙️ <strong>即將推出:</strong> 30天走勢圖表與技術指標分析
+          <div class="flex justify-between items-center mb-3">
+            <span class="font-label text-[9px] uppercase tracking-widest font-semibold text-on-surface-variant">Forward Guidance & Commitment Sentiment</span>
+            <span class="font-label text-[9px] tabular-nums text-on-surface-variant">準備中...</span>
+          </div>
+          <div class="bg-surface-container-low rounded-lg p-4 text-center text-[9px] text-on-surface-variant">
+            ⏳ 數據處理中，敬請稍候...
+          </div>
+        </div>
+      </section>
+
+      <!-- Management Credibility Center - BOTTOM THREE INDICATORS -->
+      <section class="bg-surface-container-lowest rounded-lg grid grid-cols-3 overflow-visible ambient-shadow">
+        <!-- Column A: Guidance Accuracy -->
+        <div class="p-6" style="border-right:1px solid rgba(196,198,207,0.15);">
+          <div class="mb-6">
+            <div class="relative inline-flex items-center gap-1 group mb-3">
+              <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase">目標達成度</h4>
+              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+              <div class="absolute left-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow">
+                Guidance Accuracy - 基於盈利一致性評估
+              </div>
+            </div>
+
+            <!-- Grade badge + label -->
+            <div class="flex items-center gap-3 mb-3">
+              <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
+                <span class="font-headline text-xl font-extrabold" id="mgmt-guidance-score" style="color:#10AC84;">—</span>
+              </div>
+              <div class="min-w-0">
+                <p class="text-[11px] font-bold text-on-surface leading-tight" id="mgmt-guidance-label">—</p>
+                <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-guidance-detail">等待中...</p>
+              </div>
+            </div>
+
+            <!-- Progress bars -->
+            <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5">
+              <div class="flex-1 rounded-sm bg-primary/30" style="height:45%;"></div>
+              <div class="flex-1 rounded-sm bg-primary/40" style="height:55%;"></div>
+              <div class="flex-1 rounded-sm bg-primary/30" style="height:40%;"></div>
+              <div class="flex-1 rounded-sm bg-primary/50" style="height:65%;"></div>
+            </div>
+            <p class="text-[8px] text-on-surface-variant text-center mt-1">近期表現</p>
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t mb-6" style="border-color:rgba(196,198,207,0.15);"></div>
+
+          <!-- Management Transparency -->
+          <div>
+            <div class="relative inline-flex items-center gap-1 mb-4 group">
+              <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase">管理透明度</h4>
+              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+              <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow">
+                Management Transparency - 資訊披露完整度
+              </div>
+            </div>
+            <div class="h-20 w-full rounded-lg relative overflow-hidden" style="background:linear-gradient(to right,#EE5253,#FF9F43,#10AC84);">
+              <div class="absolute inset-0 flex items-center px-4 justify-between">
+                <span class="text-[9px] text-white font-bold uppercase tracking-wider">隱蔽</span>
+                <div class="absolute w-0.5 bg-white/90 top-2 bottom-2 rounded-full z-10 shadow-lg" style="left:50%;" id="mgmt-transparency-indicator"></div>
+                <span class="text-[9px] text-white font-bold uppercase tracking-wider">透明</span>
+              </div>
+            </div>
+            <div class="mt-3 flex justify-between items-center">
+              <span class="text-xs font-bold text-performance-green" id="mgmt-transparency-score">— / 100</span>
+              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:15px;">info</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column B+C: Strategy Execution -->
+        <div class="col-span-2 p-6" style="border-left:1px solid rgba(196,198,207,0.15);">
+          <div class="relative inline-flex items-center gap-1 group mb-4">
+            <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase">策略執行力</h4>
+            <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+            <div class="absolute left-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow">
+              Strategy Execution - 基於營收成長與毛利率評估
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6 h-full">
+            <!-- Left: Score Indicator -->
+            <div class="flex items-center justify-center">
+              <div class="flex flex-col items-center">
+                <div class="flex items-center justify-center rounded-xl" style="width:80px;height:80px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
+                  <span class="font-headline text-4xl font-extrabold" id="mgmt-strategy-score" style="color:#10AC84;">—</span>
+                </div>
+                <p class="text-[10px] font-bold text-on-surface mt-3" id="mgmt-strategy-label">—</p>
+                <p class="text-[9px] text-on-surface-variant mt-1 text-center" id="mgmt-strategy-detail">等待中...</p>
+              </div>
+            </div>
+
+            <!-- Right: Details -->
+            <div class="space-y-4">
+              <div>
+                <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-2">營收成長</p>
+                <p class="text-[13px] font-bold text-primary" id="strategy-revenue">—</p>
+              </div>
+              <div>
+                <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-2">毛利率趨勢</p>
+                <p class="text-[13px] font-bold text-primary" id="strategy-margin">—</p>
+              </div>
+              <div>
+                <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-2">總體評估</p>
+                <div class="h-2 w-full bg-surface-container-low rounded-full overflow-hidden">
+                  <div class="h-full rounded-full" style="background:#10AC84; width:50%;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -532,42 +639,31 @@
 
     const cards = data.cards || [];
 
-    // Map cards to gauges
-    const metricsMap = {
-      '目標達成度': 1,
-      '策略執行力': 2,
-      '管理透明度': 3
-    };
-
+    // Map cards to management credibility center sections
     cards.forEach(card => {
-      const gaugeNum = metricsMap[card.type];
-      if (!gaugeNum) return;
-
       const score = card.score || 0;
       const label = card.label || '—';
       const detail = card.detail || '';
+      const type = card.type || '';
 
-      // Calculate stroke offset (351.86 is the circumference, offset from 0 to 351.86)
-      const offset = 351.86 * (1 - score / 100);
-      const color = getGaugeColor(score);
-
-      // Update gauge circle
-      const circle = document.getElementById(`gauge${gaugeNum}-circle`);
-      if (circle) {
-        circle.setAttribute('stroke-dashoffset', offset.toFixed(2));
-        circle.setAttribute('stroke', color);
-      }
-
-      // Update gauge score
-      const scoreEl = document.getElementById(`gauge${gaugeNum}-score`);
-      if (scoreEl) {
-        scoreEl.textContent = `${Math.round(score)}`;
-      }
-
-      // Update gauge note
-      const noteEl = document.getElementById(`gauge${gaugeNum}-note`);
-      if (noteEl) {
-        noteEl.textContent = label;
+      if (type.includes('目標達成度')) {
+        // Guidance Accuracy - Left column, top
+        document.getElementById('mgmt-guidance-score').textContent = `${Math.round(score)}`;
+        document.getElementById('mgmt-guidance-label').textContent = label;
+        document.getElementById('mgmt-guidance-detail').textContent = detail;
+      } else if (type.includes('管理透明度')) {
+        // Management Transparency - Left column, bottom
+        const percent = Math.round(score);
+        document.getElementById('mgmt-transparency-score').textContent = `${percent} / 100`;
+        const indicator = document.getElementById('mgmt-transparency-indicator');
+        if (indicator) {
+          indicator.style.left = `${percent}%`;
+        }
+      } else if (type.includes('策略執行力')) {
+        // Strategy Execution - Right column
+        document.getElementById('mgmt-strategy-score').textContent = `${Math.round(score)}`;
+        document.getElementById('mgmt-strategy-label').textContent = label;
+        document.getElementById('mgmt-strategy-detail').textContent = detail;
       }
     });
   }
