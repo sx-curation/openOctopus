@@ -50,26 +50,30 @@ _policy_agent = PolicyMonitoringAgent()
 
 @app.route("/")
 def index() -> Response:
-    with open(UI_DIR / "index.html", "r", encoding="utf-8") as f:
+    html_path = str(UI_DIR / "index.html")
+    with open(html_path, "r", encoding="utf-8") as f:
         return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/dashboard/us")
 def dashboard_us() -> Response:
-    with open(UI_DIR / "index.html", "r", encoding="utf-8") as f:
+    html_path = str(UI_DIR / "index.html")
+    with open(html_path, "r", encoding="utf-8") as f:
         return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/dashboard/tw")
 def dashboard_tw() -> Response:
-    with open(UI_DIR / "dashboard-tw.html", "r", encoding="utf-8") as f:
+    html_path = str(UI_DIR / "dashboard-tw.html")
+    with open(html_path, "r", encoding="utf-8") as f:
         return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 @app.route("/test")
 def test_dashboard() -> Response:
     """Test dashboard with US/TW switcher"""
-    with open(UI_DIR / "test-dashboard.html", "r", encoding="utf-8") as f:
+    html_path = str(UI_DIR / "test-dashboard.html")
+    with open(html_path, "r", encoding="utf-8") as f:
         return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
