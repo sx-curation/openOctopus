@@ -1,0 +1,2111 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OpenOctopus | Institutional Investment Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="/static/i18n.js"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "outline-variant": "#c4c6cf",
+          "on-surface-variant": "#44474e",
+          "surface-container-lowest": "#ffffff",
+          "primary-fixed-dim": "#b1c7f3",
+          "surface-dim": "#dbd9dd",
+          "surface-bright": "#faf9fc",
+          "secondary": "#52606f",
+          "on-background": "#1b1b1e",
+          "primary-container": "#0b2447",
+          "primary-fixed": "#d6e3ff",
+          "inverse-primary": "#b1c7f3",
+          "inverse-on-surface": "#f2f0f4",
+          "error": "#ba1a1a",
+          "outline": "#74777f",
+          "on-secondary": "#ffffff",
+          "surface": "#faf9fc",
+          "surface-container-high": "#e9e7eb",
+          "surface-tint": "#4a5f85",
+          "on-tertiary-container": "#cd761b",
+          "on-primary": "#ffffff",
+          "on-primary-container": "#778cb5",
+          "surface-container-low": "#f5f3f6",
+          "background": "#faf9fc",
+          "inverse-surface": "#303033",
+          "surface-container": "#efedf1",
+          "on-surface": "#1b1b1e",
+          "surface-container-highest": "#e3e2e5",
+          "error-container": "#ffdad6",
+          "primary": "#000f27",
+          "performance-green": "#10AC84",
+          "performance-red": "#EE5253",
+          "policy-gold": "#FF9F43"
+        },
+        borderRadius: {
+          DEFAULT: "0.125rem",
+          lg: "0.25rem",
+          xl: "0.5rem",
+          full: "0.75rem"
+        },
+        fontFamily: {
+          headline: ["Manrope", "system-ui", "sans-serif"],
+          body: ["Inter", "system-ui", "sans-serif"],
+          label: ["Inter", "system-ui", "sans-serif"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+  }
+  .fill-icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+  }
+  /* Sidebar nav active indicator */
+  .nav-active {
+    background: #ffffff;
+    color: #000f27;
+    font-weight: 700;
+    border-radius: 0 0.5rem 0.5rem 0;
+    box-shadow: 0 1px 4px rgba(0,15,39,0.08);
+  }
+  /* Tooltip glassmorphism */
+  .tooltip-glass {
+    background: rgba(48, 48, 51, 0.92);
+    backdrop-filter: blur(20px);
+  }
+  /* Ambient shadow for floating elements */
+  .ambient-shadow { box-shadow: 0px 24px 48px rgba(11, 36, 71, 0.06); }
+  /* Smooth transitions */
+  * { transition-property: background-color, color, opacity, transform; transition-duration: 150ms; }
+  /* Gauge circle animation */
+  .gauge-circle { transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  /* Page section transitions */
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #f5f3f6; }
+  ::-webkit-scrollbar-thumb { background: #c4c6cf; border-radius: 2px; }
+  /* Sparkline area gradient */
+  #sparkline-area { transition: all 0.3s; }
+  /* Building SVG illustration */
+  .building-bg {
+    background: linear-gradient(135deg, #000f27 0%, #0b2447 40%, #1a3a6b 70%, #2a5298 100%);
+  }
+  /* Notification badge */
+  .notif-dot {
+    width: 6px; height: 6px;
+    background: #EE5253;
+    border-radius: 50%;
+    position: absolute;
+    top: 0; right: 0;
+  }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface flex min-h-screen">
+
+<!-- ───────────────────────── SIDEBAR ───────────────────────── -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full flex flex-col py-6 z-50 w-60" style="background:#f5f3f6;">
+
+  <!-- Logo -->
+  <div class="px-6 mb-10 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#000f27,#0b2447);">
+      <span class="material-symbols-outlined fill-icon text-white" style="font-size:18px;">account_balance</span>
+    </div>
+    <div>
+      <p class="font-headline font-bold text-primary leading-tight text-sm" data-i18n="brand.title">Advisor Terminal</p>
+      <p class="font-label text-[9px] uppercase tracking-widest text-slate-400" data-i18n="brand.subtitle">Institutional Grade</p>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 space-y-0.5 pr-4" id="main-nav">
+    <a class="nav-link nav-active flex items-center px-6 py-3 cursor-pointer" data-page="dashboard">
+      <span class="material-symbols-outlined mr-3 text-primary">dashboard</span>
+      <span class="font-label text-[11px] uppercase tracking-widest font-bold" data-i18n="nav.dashboard">Dashboard</span>
+    </a>
+    <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="portfolio">
+      <span class="material-symbols-outlined mr-3">account_balance_wallet</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.portfolio">Portfolio</span>
+    </a>
+    <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="analysis">
+      <span class="material-symbols-outlined mr-3">analytics</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.analysis">Analysis</span>
+    </a>
+    <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="market">
+      <span class="material-symbols-outlined mr-3">monitoring</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.market">Market Insights</span>
+    </a>
+    <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="documents">
+      <span class="material-symbols-outlined mr-3">description</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.documents">Documents</span>
+    </a>
+  </nav>
+
+  <!-- Bottom links -->
+  <div class="px-6 space-y-3">
+    <a class="flex items-center gap-2 text-slate-400 hover:text-primary cursor-pointer">
+      <span class="material-symbols-outlined" style="font-size:16px;">help_outline</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.support">Support</span>
+    </a>
+    <a class="flex items-center gap-2 text-slate-400 hover:text-primary cursor-pointer">
+      <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.signout">Sign Out</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ───────────────────────── MAIN CONTENT ───────────────────────── -->
+<main class="ml-60 flex-1 flex flex-col min-w-0">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center px-8 h-14 sticky top-0 z-40" style="background:#faf9fc; border-bottom:1px solid rgba(196,198,207,0.15);">
+    <h1 class="text-base font-headline font-bold tracking-[0.15em] text-primary uppercase">OpenOctopus</h1>
+    <div class="flex items-center gap-5">
+      <!-- Language Switcher (hidden – default EN) -->
+      <div class="flex items-center gap-0.5 mr-1 hidden" id="lang-switcher">
+        <button id="lang-btn-en" onclick="I18N.setLang('en'); if(window._ooRerenderAll) window._ooRerenderAll();"
+          class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
+          style="background:#000f27;color:#ffffff;">EN</button>
+        <button id="lang-btn-de" onclick="I18N.setLang('de'); if(window._ooRerenderAll) window._ooRerenderAll();"
+          class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
+          style="background:transparent;color:#8d9198;">DE</button>
+        <button id="lang-btn-zh" onclick="I18N.setLang('zh'); if(window._ooRerenderAll) window._ooRerenderAll();"
+          class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
+          style="background:transparent;color:#8d9198;">中文</button>
+      </div>
+      <!-- Search -->
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="font-size:15px;">search</span>
+        <input id="global-search" data-i18n-placeholder="search.placeholder" class="pl-9 pr-4 py-1.5 bg-surface-container-high rounded text-xs focus:ring-0 border-none w-56 placeholder:text-slate-400 focus:bg-white focus:outline-1 focus:outline-outline-variant/30" placeholder="Global Identifier Search..." type="text">
+      </div>
+      <!-- Icons -->
+      <div class="flex items-center gap-4">
+        <div class="relative cursor-pointer">
+          <span class="material-symbols-outlined text-slate-400 hover:text-primary">notifications</span>
+          <span class="notif-dot"></span>
+        </div>
+        <span class="material-symbols-outlined text-slate-400 hover:text-primary cursor-pointer">settings</span>
+        <!-- Avatar placeholder (SVG) -->
+        <div class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-outline-variant/20 flex items-center justify-center cursor-pointer"
+             style="background:linear-gradient(135deg,#0b2447,#4a5f85);">
+          <span class="material-symbols-outlined fill-icon text-white" style="font-size:18px;">person</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ DASHBOARD PAGE ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div id="page-dashboard" class="page-section active">
+    <div class="p-6 flex gap-6 min-h-0">
+
+      <!-- ─── CENTER CONTENT ─── -->
+      <div class="flex-[3] space-y-6 min-w-0">
+
+        <!-- Trinity Divergence Hero -->
+        <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+          <div class="flex justify-between items-start mb-8">
+            <div>
+              <div class="relative inline-flex items-center gap-1 group">
+                <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="section.pii.label">Performance Integrity Index</p>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="section.pii.tooltip">
+                  Combines EPS earnings, price trend and analyst consensus into a single integrity score.
+                </div>
+              </div>
+              <h2 class="font-headline text-2xl font-extrabold text-primary" id="dashboard-hero-title">—</h2>
+              <p class="text-[10px] text-on-surface-variant mt-2" id="dashboard-active-ticker"></p>
+              <div class="mt-2 text-[9px] text-on-surface-variant" id="dashboard-source-meta"></div>
+            </div>
+            <div class="text-right relative group">
+              <div class="inline-flex items-center justify-end gap-1">
+                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" id="dashboard-hero-metric-label">Selected Ticker</p>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;" id="dashboard-hero-metric-tooltip-icon">info</span>
+              </div>
+              <div class="flex items-center gap-1.5 justify-end">
+                <span class="text-2xl font-headline font-bold tabular-nums text-performance-green" id="dashboard-hero-metric-value">--</span>
+                <span class="material-symbols-outlined fill-icon text-performance-green" style="font-size:22px;" id="dashboard-hero-metric-icon">trending_up</span>
+              </div>
+              <p class="text-[9px] text-on-surface-variant mt-1" id="dashboard-hero-metric-note">Average analyst target versus current price.</p>
+              <div class="absolute right-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg leading-relaxed ambient-shadow opacity-0 group-hover:opacity-100 pointer-events-none z-50 hidden" id="dashboard-hero-metric-tooltip" data-i18n-html="hero.metric.tooltip">
+                Mean Target Upside = (Analyst mean target − current price) / current price × 100
+              </div>
+            </div>
+          </div>
+
+          <!-- Trinity tab buttons hidden — controlled by Data Mode (No-AI/AI) in right sidebar -->
+          <div class="hidden">
+            <button id="trinity-tab-ai">AI Overlay</button>
+            <button id="trinity-tab-raw">Raw Data</button>
+          </div>
+
+          <div id="trinity-ai-panel">
+          <!-- Three Gauges -->
+          <div class="grid grid-cols-3 gap-8">
+            <!-- Gauge 1 -->
+            <div class="flex flex-col items-center">
+              <div class="relative w-28 h-28 flex items-center justify-center">
+                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#000f27" stroke-width="7"
+                    stroke-dasharray="351.86"
+                    stroke-dashoffset="56.3"
+                    stroke-linecap="round"
+                    class="gauge-circle"/>
+                </svg>
+                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-realized-value">84%</span>
+              </div>
+              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.realized">Realized Performance</p>
+              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-realized-note">AUM Variance: -0.4%</p>
+            </div>
+            <!-- Gauge 2 -->
+            <div class="flex flex-col items-center">
+              <div class="relative w-28 h-28 flex items-center justify-center">
+                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
+                    stroke-dasharray="351.86"
+                    stroke-dashoffset="112.6"
+                    stroke-linecap="round"
+                    class="gauge-circle"/>
+                </svg>
+                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-guidance-value">68%</span>
+              </div>
+              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.guidance">Guidance vs. Actuals</p>
+              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-guidance-note">Conservative Bias</p>
+            </div>
+            <!-- Gauge 3 -->
+            <div class="flex flex-col items-center">
+              <div class="relative w-28 h-28 flex items-center justify-center">
+                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                  <circle cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
+                    stroke-dasharray="351.86"
+                    stroke-dashoffset="28.15"
+                    stroke-linecap="round"
+                    class="gauge-circle"/>
+                </svg>
+                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-consensus-value">92%</span>
+              </div>
+              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.consensus">Analyst Consensus</p>
+              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-consensus-note">Sell-Side Alignment</p>
+            </div>
+          </div>
+
+          <!-- Sparkline Trend -->
+            <div class="mt-8 pt-5" style="border-top:1px solid rgba(196,198,207,0.15);">
+              <div class="flex justify-between items-center mb-3">
+                <span class="font-label text-[9px] uppercase tracking-widest font-semibold text-on-surface-variant" id="alignment-panel-title">Alignment Trend (4Q Trailing)</span>
+                <span class="font-label text-[9px] tabular-nums text-on-surface-variant" id="alignment-panel-metric">Target Convergence: 100.0</span>
+              </div>
+              <div class="h-14 w-full relative overflow-hidden" id="alignment-sparkline-wrap">
+                <svg id="sparkline-svg" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 56">
+                <defs>
+                  <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#000f27;stop-opacity:0.12"/>
+                    <stop offset="100%" style="stop-color:#000f27;stop-opacity:0"/>
+                  </linearGradient>
+                </defs>
+                <path id="sparkline-area" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12 L800,56 L0,56 Z" fill="url(#sparkGrad)"/>
+                <path id="sparkline-line" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12" fill="none" stroke="#000f27" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="hidden" id="alignment-word-cloud">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <p class="text-[9px] uppercase tracking-widest text-performance-green mb-2 flex items-center gap-1">
+                      <span class="material-symbols-outlined" style="font-size:12px;">trending_up</span>
+                      <span data-i18n="alignment.positive">Alpha Signals</span>
+                    </p>
+                    <div class="space-y-2" id="alignment-alpha-signals"></div>
+                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-positive-cloud"></div>
+                  </div>
+                  <div>
+                    <p class="text-[9px] uppercase tracking-widest text-performance-red mb-2 flex items-center gap-1">
+                      <span class="material-symbols-outlined" style="font-size:12px;">warning</span>
+                      <span data-i18n="alignment.negative">Beta Risks</span>
+                    </p>
+                    <div class="space-y-2" id="alignment-beta-risks"></div>
+                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-negative-cloud"></div>
+                  </div>
+                </div>
+                <!-- Disguised Negatives -->
+                <div class="mt-3 hidden" id="alignment-disguised-negatives-wrap">
+                  <p class="text-[9px] uppercase tracking-widest mb-2 flex items-center gap-1" style="color:#FF9F43;">
+                    <span class="material-symbols-outlined" style="font-size:12px;">visibility_off</span>
+                    <span data-i18n="alignment.disguised">Disguised Negatives</span>
+                    <span class="relative group">
+                      <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:11px;">info</span>
+                      <span class="absolute left-0 top-full mt-1 w-48 p-2 tooltip-glass text-inverse-on-surface text-[8px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="alignment.disguised.tooltip">
+                        Negative signals concealed within positive language, identified via semantic analysis.
+                      </span>
+                    </span>
+                  </p>
+                  <div class="space-y-2" id="alignment-disguised-negatives"></div>
+                </div>
+              </div>
+              <p class="mt-2 text-[9px] text-on-surface-variant" id="alignment-trend-note">Loading analyst alignment trend...</p>
+            </div>
+          </div>
+
+          <div id="trinity-raw-panel" class="hidden">
+            <div class="grid grid-cols-3 gap-6">
+              <div class="bg-surface-container-low rounded-lg p-4">
+                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.earnings_power">Earnings Power</p>
+                <div class="space-y-3" id="raw-earnings-power"></div>
+              </div>
+              <div class="bg-surface-container-low rounded-lg p-4">
+                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.surprise_track">Surprise Track</p>
+                <div class="space-y-3" id="raw-surprise-track"></div>
+              </div>
+              <div class="bg-surface-container-low rounded-lg p-4">
+                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.market_lens">Market Lens</p>
+                <div class="space-y-3" id="raw-market-lens"></div>
+              </div>
+            </div>
+          </div>
+          </section>
+
+        <!-- Quarterly Earnings Reaction Cycle -->
+        <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+          <div class="flex items-start justify-between mb-4">
+            <div class="relative inline-flex items-center gap-1 group">
+              <h3 class="font-headline text-[11px] font-extrabold text-primary uppercase tracking-tight" data-i18n="section.earnings_cycle">Quarterly Earnings Reaction Cycle</h3>
+              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+              <div class="absolute left-0 top-full mt-2 w-60 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="earnings.tooltip">
+                对比财报日前后5日股价，观察 EPS beat/miss 与市场反应之间的规律。
+              </div>
+            </div>
+            <!-- Next earnings countdown -->
+            <div id="earnings-next-badge" class="hidden items-center gap-1.5 px-2 py-1 rounded-full" style="background:rgba(0,15,39,0.07);">
+              <span class="material-symbols-outlined text-primary" style="font-size:13px;">event</span>
+              <span class="font-label text-[9px] text-primary font-bold" id="earnings-next-text"></span>
+            </div>
+          </div>
+
+          <!-- Analyst target price banner -->
+          <div id="earnings-analyst-banner" class="hidden mb-4 px-3 py-2 rounded-lg flex items-center justify-between gap-3" style="background:rgba(0,15,39,0.05);border:1px solid rgba(0,15,39,0.08);">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">price_check</span>
+              <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.analyst_target.label">Analyst Mean Target</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-headline text-[13px] font-bold text-primary tabular-nums" id="earnings-analyst-mean">--</span>
+              <span class="font-label text-[9px] text-on-surface-variant" id="earnings-analyst-range"></span>
+              <span class="font-label text-[10px] font-bold tabular-nums" id="earnings-analyst-upside"></span>
+            </div>
+          </div>
+
+          <!-- Column headers -->
+          <div class="flex items-center gap-4 mb-2">
+            <div class="w-16"></div>
+            <div class="w-28 shrink-0"></div>
+            <div class="w-28 shrink-0 font-label text-[8px] uppercase tracking-widest text-on-surface-variant text-center" data-i18n="earnings.col.eps">EPS Est → Act</div>
+            <div class="flex-1 relative">
+              <div class="flex justify-between text-[8px] font-label uppercase tracking-widest text-on-surface-variant px-1">
+                <span>T-5</span>
+                <span>Day 0</span>
+                <span>T+5</span>
+              </div>
+            </div>
+            <div class="w-14 text-right font-label text-[8px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.col.return">5d Return</div>
+          </div>
+
+          <div class="space-y-4" id="earnings-cycle-list">
+            <!-- dynamic content -->
+          </div>
+
+          <!-- Pattern summary row -->
+          <div id="earnings-pattern-summary" class="hidden mt-4 pt-3 flex items-center gap-4 flex-wrap" style="border-top:1px solid rgba(196,198,207,0.15);">
+            <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.pattern.label">Pattern:</span>
+            <span class="font-label text-[9px] text-on-surface" id="earnings-beat-rate"></span>
+            <span class="font-label text-[9px] text-performance-green" id="earnings-avg-beat"></span>
+            <span class="font-label text-[9px] text-performance-red" id="earnings-avg-miss"></span>
+          </div>
+
+          <p class="mt-3 text-[9px] text-on-surface-variant text-center" id="earnings-cycle-status">Loading earnings window...</p>
+        </section>
+
+        <!-- Management Credibility Center -->
+        <section class="bg-surface-container-lowest rounded-lg grid grid-cols-3 overflow-visible ambient-shadow">
+          <!-- Column A: Reliability Index + Management Transparency (stacked) -->
+          <div class="p-6" style="border-right:1px solid rgba(196,198,207,0.15);">
+            <!-- Reliability Index -->
+            <div class="mb-6">
+              <div class="relative inline-flex items-center gap-1 group mb-3">
+                <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.reliability">Guidance Accuracy</h4>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                <div class="absolute left-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.reliability.tooltip">
+                  How reliably management's quarterly guidance translates into actual results. Graded A–D based on 8-quarter EPS beat/miss history.
+                </div>
+              </div>
+
+              <!-- Grade badge + label -->
+              <div class="flex items-center gap-3 mb-3">
+                <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
+                  <span class="font-headline text-xl font-extrabold" id="mgmt-reliability-grade" style="color:#10AC84;">—</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-bold text-on-surface leading-tight" id="mgmt-reliability-label">—</p>
+                  <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-reliability-value">—</p>
+                </div>
+              </div>
+
+              <!-- Beat/miss pattern bars -->
+              <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5" id="mgmt-reliability-bars">
+                <div class="flex-1 rounded-sm bg-primary/30" style="height:55%;"></div>
+                <div class="flex-1 rounded-sm bg-primary/40" style="height:75%;"></div>
+                <div class="flex-1 rounded-sm bg-primary/30" style="height:40%;"></div>
+                <div class="flex-1 rounded-sm bg-primary/50" style="height:88%;"></div>
+                <div class="flex-1 rounded-sm bg-primary/35" style="height:65%;"></div>
+                <div class="flex-1 rounded-sm bg-primary/55" style="height:80%;"></div>
+              </div>
+              <p class="text-[8px] text-on-surface-variant text-center mt-1" data-i18n="mgmt.8quarter_label">8-quarter beat pattern</p>
+
+              <!-- Forecast variance -->
+              <div class="mt-2 flex justify-between items-center">
+                <span class="text-[9px] text-on-surface-variant" data-i18n="mgmt.stddev">Forecast Variance</span>
+                <span class="text-[9px] font-bold tabular-nums" id="mgmt-stddev-value">—</span>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t mb-6" style="border-color:rgba(196,198,207,0.15);"></div>
+
+            <!-- Management Transparency -->
+            <div>
+              <div class="relative inline-flex items-center gap-1 mb-4 group">
+                <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.transparency">Management Transparency</h4>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.transparency.tooltip">
+                  Evaluates earnings call language clarity, direct analyst Q&A response rate, and hedging frequency.
+                </div>
+              </div>
+              <div class="h-20 w-full rounded-lg relative overflow-hidden" style="background:linear-gradient(to right,#EE5253,#FF9F43,#10AC84);">
+                <div class="absolute inset-0 flex items-center px-4 justify-between">
+                  <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.opacity">Opacity</span>
+                  <div class="absolute w-0.5 bg-white/90 top-2 bottom-2 rounded-full z-10 shadow-lg" style="left:74%;" id="mgmt-transparency-indicator"></div>
+                  <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.lucid">Lucid</span>
+                </div>
+              </div>
+              <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs font-bold text-performance-green" id="mgmt-transparency-score">7.4 / 10.0</span>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:15px;">info</span>
+              </div>
+              <div class="mt-3 text-[9px] text-on-surface-variant hidden" id="mgmt-methodology-note"></div>
+            </div>
+          </div>
+
+          <!-- Column B+C: Strategy Execution (spans 2 columns) -->
+          <div class="col-span-2 p-6">
+            <div class="relative inline-flex items-center gap-1 group mb-4">
+              <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.strategy">Strategy Execution</h4>
+              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+              <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.strategy.tooltip">
+                Compares prior-quarter management commitments against current-quarter actuals to assess execution quality.
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-surface-container-low rounded-lg p-3">
+                <div class="mb-2">
+                  <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.commitment">Last Quarter's Promises</p>
+                  <div class="flex justify-between items-center mt-0.5">
+                    <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.commitment.sub">Did management follow through?</p>
+                    <span class="text-[10px] font-bold" id="mgmt-commitment-value">—</span>
+                  </div>
+                </div>
+                <div class="space-y-2" id="mgmt-commitment-checklist"></div>
+              </div>
+              <div class="bg-surface-container-low rounded-lg p-3">
+                <div class="mb-2">
+                  <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.continuity">Narrative Consistency</p>
+                  <div class="flex justify-between items-center mt-0.5">
+                    <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.continuity.sub">Are key topics carried forward?</p>
+                    <span class="text-[10px] font-bold" id="mgmt-mention-value">—</span>
+                  </div>
+                </div>
+                <div class="space-y-2" id="mgmt-mention-topics"></div>
+              </div>
+            </div>
+            <p class="mt-3 text-[9px] text-on-surface-variant italic leading-relaxed" id="mgmt-narrative">High correlation between verbal guidance and subsequent CapEx deployment.</p>
+          </div>
+        </section>
+
+      </div><!-- end center -->
+
+      <!-- ─── RIGHT SIDEBAR ─── -->
+      <aside class="w-72 shrink-0 space-y-6">
+
+        <!-- AI Mode Toggle -->
+        <section class="bg-surface-container-low rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider" data-i18n="sidebar.data_mode">Data Mode</h3>
+            <span id="ai-mode-badge" class="text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-surface-container-high text-on-surface-variant" data-i18n="sidebar.no_ai">No-AI</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="mode-no-ai" class="mode-toggle px-2.5 py-1.5 bg-primary text-[8px] text-white rounded-sm font-bold uppercase" data-mode="off" data-i18n="sidebar.no_ai">No-AI</button>
+            <button id="mode-ai" class="mode-toggle px-2.5 py-1.5 bg-surface-container-high text-[8px] text-on-surface-variant rounded-sm font-bold uppercase" data-mode="on" data-i18n="sidebar.ai">AI</button>
+          </div>
+          <p id="ai-usage-text" class="mt-3 text-[9px] text-on-surface-variant leading-relaxed" data-i18n="sidebar.ai.note_off">Deterministic mode active. No model token usage.</p>
+        </section>
+
+        <!-- Policy Outlook -->
+        <section class="bg-surface-container-low rounded-lg p-5 ambient-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider" data-i18n="sidebar.policy">Policy Outlook</h3>
+            <span class="material-symbols-outlined fill-icon text-policy-gold" style="font-size:16px;">stars</span>
+          </div>
+          <!-- Stats: No-AI vs AI counts -->
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1 rounded-md p-2 text-center" style="background:rgba(196,198,207,0.15);">
+              <p class="text-[8px] uppercase tracking-widest text-on-surface-variant mb-0.5">No-AI</p>
+              <p class="font-headline text-base font-extrabold text-primary tabular-nums" id="policy-count-noai">—</p>
+              <p class="text-[8px] text-on-surface-variant">items</p>
+            </div>
+            <div class="flex items-center justify-center text-on-surface-variant" style="font-size:10px;">vs</div>
+            <div class="flex-1 rounded-md p-2 text-center" style="background:rgba(74,95,133,0.12);">
+              <p class="text-[8px] uppercase tracking-widest text-policy-gold mb-0.5">AI</p>
+              <p class="font-headline text-base font-extrabold text-policy-gold tabular-nums" id="policy-count-ai">—</p>
+              <p class="text-[8px] text-on-surface-variant">items</p>
+            </div>
+          </div>
+          <div class="space-y-4" id="policy-cards">
+            <div class="p-3.5 bg-surface-container-lowest rounded-lg text-[10px] text-on-surface-variant" data-i18n="loading.policy">Loading policy outlook...</div>
+          </div>
+        </section>
+
+        <!-- Sentiment Feed -->
+        <section class="bg-surface-container-lowest rounded-lg p-5 ambient-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-headline text-[10px] font-extrabold text-primary uppercase tracking-wider" data-i18n="sidebar.sentiment">Sentiment Feed</h3>
+            <div class="flex gap-1">
+              <button id="btn-all" class="sentiment-tab px-2.5 py-1 bg-primary text-[8px] text-white rounded-sm font-bold uppercase" data-filter="all" data-i18n="sentiment.all">All</button>
+              <button id="btn-tech" class="sentiment-tab px-2.5 py-1 bg-surface-container-high text-[8px] text-on-surface-variant rounded-sm font-bold uppercase" data-filter="tech" data-i18n="sentiment.tech">Tech Shifts</button>
+            </div>
+          </div>
+          <!-- Stats: No-AI vs AI counts -->
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1 rounded-md p-2 text-center" style="background:rgba(196,198,207,0.15);">
+              <p class="text-[8px] uppercase tracking-widest text-on-surface-variant mb-0.5">No-AI</p>
+              <p class="font-headline text-base font-extrabold text-primary tabular-nums" id="sentiment-count-noai">—</p>
+              <p class="text-[8px] text-on-surface-variant">signals</p>
+            </div>
+            <div class="flex items-center justify-center text-on-surface-variant" style="font-size:10px;">vs</div>
+            <div class="flex-1 rounded-md p-2 text-center" style="background:rgba(16,172,132,0.10);">
+              <p class="text-[8px] uppercase tracking-widest text-performance-green mb-0.5">AI</p>
+              <p class="font-headline text-base font-extrabold text-performance-green tabular-nums" id="sentiment-count-ai">—</p>
+              <p class="text-[8px] text-on-surface-variant">signals</p>
+            </div>
+          </div>
+
+          <div class="space-y-4" id="sentiment-list">
+            <div class="p-3.5 bg-surface-container-low rounded-lg text-[10px] text-on-surface-variant" data-i18n="loading.sentiment">Loading sentiment feed...</div>
+          </div>
+          <button class="w-full mt-5 py-2 text-[8px] font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-container-low rounded" style="border:1px solid rgba(196,198,207,0.2);" data-i18n="sentiment.archive">View Deep Intelligence Archive</button>
+        </section>
+
+        <!-- sentinel: static sentiment removed -->
+        <!-- static sentinel removed -->
+
+        <!-- Macro Context Card (CSS illustration replaces external image) -->
+        <div class="rounded-lg overflow-hidden h-36 relative ambient-shadow">
+          <!-- Building-inspired geometric SVG background -->
+          <div class="absolute inset-0 building-bg"></div>
+          <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 280 144" preserveAspectRatio="xMidYMid slice">
+            <!-- Geometric building lines -->
+            <rect x="40" y="20" width="50" height="124" fill="none" stroke="white" stroke-width="0.5"/>
+            <rect x="100" y="10" width="80" height="134" fill="none" stroke="white" stroke-width="0.5"/>
+            <rect x="190" y="30" width="60" height="114" fill="none" stroke="white" stroke-width="0.5"/>
+            <!-- Windows grid -->
+            <g fill="white" opacity="0.4">
+              <rect x="50" y="30" width="8" height="6"/><rect x="65" y="30" width="8" height="6"/><rect x="80" y="30" width="8" height="6"/>
+              <rect x="50" y="44" width="8" height="6"/><rect x="65" y="44" width="8" height="6"/><rect x="80" y="44" width="8" height="6"/>
+              <rect x="50" y="58" width="8" height="6"/><rect x="65" y="58" width="8" height="6"/>
+              <rect x="110" y="22" width="12" height="8"/><rect x="130" y="22" width="12" height="8"/><rect x="150" y="22" width="12" height="8"/>
+              <rect x="110" y="38" width="12" height="8"/><rect x="130" y="38" width="12" height="8"/><rect x="150" y="38" width="12" height="8"/>
+              <rect x="110" y="54" width="12" height="8"/><rect x="130" y="54" width="12" height="8"/><rect x="150" y="54" width="12" height="8"/>
+            </g>
+            <!-- Reflection lines -->
+            <line x1="0" y1="0" x2="280" y2="144" stroke="white" stroke-width="0.3" opacity="0.3"/>
+            <line x1="280" y1="0" x2="0" y2="144" stroke="white" stroke-width="0.3" opacity="0.3"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col justify-end p-4" style="background:linear-gradient(to top,rgba(0,15,39,0.85) 0%,rgba(0,15,39,0.2) 100%);">
+            <p class="text-[8px] font-bold uppercase tracking-wider mb-1" style="color:rgba(255,255,255,0.6);" id="macro-theme-label">Asset Class: Commercial Real Estate</p>
+            <h4 class="text-white font-headline font-bold text-sm leading-tight" id="macro-theme-title">Metropolitan Legacy Yield Analysis</h4>
+          </div>
+        </div>
+
+      </aside><!-- end right sidebar -->
+    </div>
+  </div><!-- end dashboard page -->
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ PORTFOLIO PAGE ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div id="page-portfolio" class="page-section">
+    <div class="p-8 max-w-3xl">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="page.portfolio.label">Portfolio Overview</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-8" data-i18n="page.portfolio.title">Holdings & Allocation</h2>
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-surface-container-lowest rounded-lg p-5 ambient-shadow">
+          <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="portfolio.aum">Total AUM</p>
+          <p class="font-headline text-2xl font-bold text-primary tabular-nums" id="portfolio-aum-value">$4.82B</p>
+          <p class="text-[9px] text-performance-green mt-1" id="portfolio-aum-note">↑ +2.3% MTD</p>
+        </div>
+        <div class="bg-surface-container-lowest rounded-lg p-5 ambient-shadow">
+          <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="portfolio.positions">Active Positions</p>
+          <p class="font-headline text-2xl font-bold text-primary tabular-nums" id="portfolio-positions-value">147</p>
+          <p class="text-[9px] text-on-surface-variant mt-1" id="portfolio-positions-note">Across 12 sectors</p>
+        </div>
+        <div class="bg-surface-container-lowest rounded-lg p-5 ambient-shadow">
+          <p class="text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="portfolio.ytd">YTD Return</p>
+          <p class="font-headline text-2xl font-bold text-performance-green tabular-nums" id="portfolio-ytd-value">+18.4%</p>
+          <p class="text-[9px] text-on-surface-variant mt-1" id="portfolio-ytd-note">vs benchmark +12.1%</p>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+        <h3 class="font-headline text-[11px] font-extrabold text-primary uppercase mb-4" data-i18n="portfolio.holdings">Top Holdings</h3>
+        <p class="text-[9px] text-on-surface-variant mb-4" id="portfolio-status-note" data-i18n="loading.portfolio">Loading portfolio inputs...</p>
+        <table class="w-full">
+          <thead>
+            <tr class="text-[9px] uppercase tracking-widest text-on-surface-variant border-b" style="border-color:rgba(196,198,207,0.2);">
+              <th class="text-left pb-3 font-semibold" data-i18n="portfolio.col.ticker">Ticker</th>
+              <th class="text-right pb-3 font-semibold" data-i18n="portfolio.col.weight">Weight</th>
+              <th class="text-right pb-3 font-semibold" data-i18n="portfolio.col.pl">P/L</th>
+              <th class="text-right pb-3 font-semibold" data-i18n="portfolio.col.signal">Signal</th>
+            </tr>
+          </thead>
+          <tbody class="text-[11px] divide-y" style="divide-color:rgba(196,198,207,0.1);" id="portfolio-holdings-body">
+            <tr><td class="py-3 font-bold">AAPL</td><td class="text-right tabular-nums">8.4%</td><td class="text-right tabular-nums text-performance-green">+22.1%</td><td class="text-right"><span class="text-[8px] bg-performance-green/10 text-performance-green px-2 py-0.5 rounded-sm font-bold">BUY</span></td></tr>
+            <tr><td class="py-3 font-bold">NVDA</td><td class="text-right tabular-nums">7.2%</td><td class="text-right tabular-nums text-performance-green">+68.3%</td><td class="text-right"><span class="text-[8px] bg-performance-green/10 text-performance-green px-2 py-0.5 rounded-sm font-bold">BUY</span></td></tr>
+            <tr><td class="py-3 font-bold">MSFT</td><td class="text-right tabular-nums">6.8%</td><td class="text-right tabular-nums text-performance-green">+15.7%</td><td class="text-right"><span class="text-[8px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-sm font-bold">HOLD</span></td></tr>
+            <tr><td class="py-3 font-bold">TSLA</td><td class="text-right tabular-nums">3.1%</td><td class="text-right tabular-nums text-performance-red">-8.4%</td><td class="text-right"><span class="text-[8px] bg-performance-red/10 text-performance-red px-2 py-0.5 rounded-sm font-bold">SELL</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ ANALYSIS PAGE ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div id="page-analysis" class="page-section">
+    <div class="p-8 max-w-2xl">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="page.analysis.label">OpenOctopus Agent</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6" data-i18n="page.analysis.title">Investment Analysis</h2>
+      <div class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+        <p class="text-[10px] text-on-surface-variant mb-4" data-i18n="analysis.description">Enter a ticker or natural-language query to run the OpenOctopus analysis agent.</p>
+        <div class="flex gap-3">
+          <input id="analysis-input" class="flex-1 px-4 py-2.5 bg-surface-container-high rounded text-sm border-none focus:outline-1 focus:outline-outline-variant/50 focus:bg-white" placeholder="e.g. AAPL, NVDA, or 'analyze AI semiconductor exposure'" data-i18n-placeholder="analysis.placeholder">
+          <button id="analysis-btn" class="px-5 py-2.5 bg-primary text-on-primary text-xs font-bold uppercase tracking-wider rounded hover:opacity-90" data-i18n="analysis.button">
+            Analyze
+          </button>
+        </div>
+        <div id="analysis-output" class="mt-5 hidden">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-1.5 h-1.5 rounded-full bg-performance-green animate-pulse"></div>
+            <span class="text-[10px] text-on-surface-variant uppercase tracking-widest" data-i18n="analysis.output.label">Agent Output</span>
+          </div>
+          <div class="bg-surface-container-low rounded p-4 text-[11px] leading-relaxed text-on-surface font-mono" id="analysis-text" data-i18n="analysis.running">
+            Running analysis...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ MARKET INSIGHTS PAGE ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div id="page-market" class="page-section">
+    <div class="p-8">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="page.market.label">Market Intelligence</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6" data-i18n="page.market.title">Market Insights</h2>
+
+      <!-- ── 3 × 2 unified grid ─────────────────────────────────────────────── -->
+      <div class="grid grid-cols-3 gap-4">
+
+        <!-- Row 1: VIX -------------------------------------------------------- -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">VIX</p>
+            <span class="text-[8px] text-on-surface-variant font-label">Fear Index</span>
+          </div>
+          <p class="font-headline text-xl font-bold tabular-nums" id="market-vix-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-vix-change">—</p>
+          <div class="mt-2" id="market-vix-sparkline"></div>
+        </div>
+
+        <!-- Row 1: Brent Crude ------------------------------------------------ -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest" data-i18n="market.brent">Brent Crude</p>
+            <span class="text-[8px] text-on-surface-variant font-label">USD/bbl</span>
+          </div>
+          <p class="font-headline text-xl font-bold tabular-nums" id="market-brent-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-brent-change">—</p>
+          <div class="mt-2" id="market-brent-sparkline"></div>
+        </div>
+
+        <!-- Row 1: Gold ------------------------------------------------------- -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest" data-i18n="market.gold">Gold</p>
+            <span class="text-[8px] text-on-surface-variant font-label">USD/oz</span>
+          </div>
+          <p class="font-headline text-xl font-bold tabular-nums" id="market-gold-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-gold-change">—</p>
+          <div class="mt-2" id="market-gold-sparkline"></div>
+        </div>
+
+        <!-- Row 2: S&P 500 ---------------------------------------------------- -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">S&amp;P 500</p>
+            <span class="text-[8px] text-on-surface-variant font-label">USD</span>
+          </div>
+          <p class="font-headline text-xl font-bold tabular-nums" id="market-sp500-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-sp500-change">—</p>
+          <div class="mt-2" id="market-sp500-sparkline"></div>
+        </div>
+
+        <!-- Row 2: NASDAQ ----------------------------------------------------- -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">NASDAQ</p>
+            <span class="text-[8px] text-on-surface-variant font-label">USD</span>
+          </div>
+          <p class="font-headline text-xl font-bold tabular-nums" id="market-nasdaq-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-nasdaq-change">—</p>
+          <div class="mt-2" id="market-nasdaq-sparkline"></div>
+        </div>
+
+        <!-- Row 2: Market Sentiment summary ----------------------------------- -->
+        <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-widest" data-i18n="market.sentiment">Market Sentiment</p>
+              <span class="text-[8px] text-on-surface-variant font-label">0–100</span>
+            </div>
+            <p class="font-headline text-xl font-bold tabular-nums" id="sentiment-score">—</p>
+            <p class="text-[10px] font-bold mt-0.5 uppercase tracking-widest" id="sentiment-label">—</p>
+          </div>
+          <div class="mt-3 space-y-1.5">
+            <div class="flex justify-between text-[9px]">
+              <span class="text-on-surface-variant" data-i18n="sentiment.vix_signal">VIX</span>
+              <span class="font-bold" id="sentiment-vix-display">—</span>
+            </div>
+            <div class="flex justify-between text-[9px]">
+              <span class="text-on-surface-variant" data-i18n="sentiment.vix_ts">VIX Term Struct.</span>
+              <span class="font-bold" id="sentiment-ts-display">—</span>
+            </div>
+            <div class="flex justify-between text-[9px]">
+              <span class="text-on-surface-variant" data-i18n="sentiment.gold_signal">Gold</span>
+              <span class="font-bold" id="sentiment-gold-display">—</span>
+            </div>
+            <div class="h-2 rounded-full bg-surface-container-high overflow-hidden mt-2">
+              <div class="h-full rounded-full transition-all duration-500" id="sentiment-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+
+      <p class="text-[10px] text-on-surface-variant mt-3" id="market-status-note" data-i18n="loading.market">Loading market data...</p>
+      <p class="text-[10px] text-on-surface-variant mt-1" id="market-commodities-note"></p>
+      <p class="text-[10px] text-on-surface-variant mt-1" id="market-sentiment-note"></p>
+    </div>
+  </div>
+
+  <!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ DOCUMENTS PAGE ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+  <div id="page-documents" class="page-section">
+    <div class="p-8 max-w-2xl">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="page.documents.label">Filing Library</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-8" data-i18n="page.documents.title">SEC Filings & Reports</h2>
+      <p class="text-[10px] text-on-surface-variant mb-4" id="documents-status-note" data-i18n="loading.filings">Loading filings...</p>
+      <div class="space-y-3" id="documents-list">
+        <div class="bg-surface-container-lowest rounded-lg p-4 flex items-center justify-between ambient-shadow hover:bg-surface-container-low cursor-pointer">
+          <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-on-primary-container">description</span>
+            <div>
+              <p class="text-[11px] font-bold">AAPL 10-K Annual Report</p>
+              <p class="text-[9px] text-on-surface-variant">FY2024 · Filed 2024-11-01</p>
+            </div>
+          </div>
+          <span class="text-[9px] bg-surface-container-high px-2 py-1 rounded font-bold text-on-surface-variant">10-K</span>
+        </div>
+        <div class="bg-surface-container-lowest rounded-lg p-4 flex items-center justify-between ambient-shadow hover:bg-surface-container-low cursor-pointer">
+          <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-on-primary-container">description</span>
+            <div>
+              <p class="text-[11px] font-bold">NVDA 10-Q Quarterly Report</p>
+              <p class="text-[9px] text-on-surface-variant">Q3 FY2025 · Filed 2025-12-15</p>
+            </div>
+          </div>
+          <span class="text-[9px] bg-surface-container-high px-2 py-1 rounded font-bold text-on-surface-variant">10-Q</span>
+        </div>
+        <div class="bg-surface-container-lowest rounded-lg p-4 flex items-center justify-between ambient-shadow hover:bg-surface-container-low cursor-pointer">
+          <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-policy-gold">warning</span>
+            <div>
+              <p class="text-[11px] font-bold">MSFT 8-K Material Event</p>
+              <p class="text-[9px] text-on-surface-variant">Azure AI Division · Filed 2025-03-22</p>
+            </div>
+          </div>
+          <span class="text-[9px] bg-policy-gold/10 px-2 py-1 rounded font-bold text-policy-gold">8-K</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main><!-- end main -->
+
+<!-- ───────────────────────── JAVASCRIPT ───────────────────────── -->
+<script>
+  // ── Global data cache for re-rendering on language switch ──
+  window._ooCache = {};
+  window._ooMgmtCache = {}; // { 'en': data, 'de': data, 'zh': data }
+
+(function () {
+  // ── Navigation ──
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  // ── Sentiment Feed Tabs ──
+  const sentimentTabs = document.querySelectorAll('.sentiment-tab');
+  const sentimentItems = document.querySelectorAll('.sentiment-item');
+  sentimentTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const filter = tab.dataset.filter;
+      sentimentTabs.forEach(t => {
+        t.classList.remove('bg-primary', 'text-white');
+        t.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      });
+      tab.classList.add('bg-primary', 'text-white');
+      tab.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+      sentimentItems.forEach(item => {
+        item.style.display = (filter === 'all' || item.dataset.tag === filter) ? '' : 'none';
+      });
+    });
+  });
+
+  // ── Analysis Agent (mock) ──
+  const analysisBtn = document.getElementById('analysis-btn');
+  const analysisInput = document.getElementById('analysis-input');
+  const analysisOutput = document.getElementById('analysis-output');
+  const analysisText = document.getElementById('analysis-text');
+  const tickerUniverse = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'AVGO', 'JPM', 'XOM', 'TSLA'];
+  let currentTicker = 'AAPL';
+  let currentTrinityTab = 'ai';
+
+  function showPage(page) {
+    navLinks.forEach(l => {
+      l.classList.remove('nav-active', 'text-primary', 'font-bold');
+      l.classList.add('text-slate-500');
+      const icon = l.querySelector('.material-symbols-outlined');
+      if (icon) icon.classList.remove('text-primary');
+      if (l.dataset.page === page) {
+        l.classList.add('nav-active');
+        l.classList.remove('text-slate-500');
+      }
+    });
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + page);
+    if (target) target.classList.add('active');
+  }
+
+  async function fetchJson(url) {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Request failed');
+    }
+    return data;
+  }
+
+  function formatNumber(value, digits = 2) {
+    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+    return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  }
+
+  function formatSignedPct(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+    const sign = value > 0 ? '+' : '';
+    return `${sign}${Number(value).toFixed(2)}%`;
+  }
+
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function setHtml(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function setWidth(id, pct) {
+    const el = document.getElementById(id);
+    if (el) el.style.width = `${pct}%`;
+  }
+
+  function renderDashboardLoading(ticker) {
+    setText('dashboard-active-ticker', I18N ? I18N.t('loading.data') : 'loading live data...');
+    setHtml('dashboard-source-meta', `
+      <span class="inline-flex items-center gap-2 px-2 py-1 rounded bg-surface-container-low font-label uppercase tracking-widest">
+        Generated: loading...
+      </span>
+    `);
+    setText('gauge-realized-value', '...');
+    setText('gauge-realized-note', I18N ? I18N.t('loading.realized') : 'Loading realized performance proxy...');
+    setText('gauge-guidance-value', '...');
+    setText('gauge-guidance-note', I18N ? I18N.t('loading.guidance') : 'Loading guidance consistency...');
+    setText('gauge-consensus-value', '...');
+    setText('gauge-consensus-note', I18N ? I18N.t('loading.consensus') : 'Loading analyst consensus...');
+    setText('alignment-panel-title', I18N ? I18N.t('alignment.panel.title') : 'Forward Guidance & Commitment Sentiment');
+    setText('alignment-panel-metric', I18N ? I18N.t('loading.transcript') : 'Loading transcript signal...');
+    setHtml('alignment-positive-cloud', '<span class="px-2 py-1 rounded-full text-[11px] bg-surface-container-low">loading</span>');
+    setHtml('alignment-negative-cloud', '<span class="px-2 py-1 rounded-full text-[11px] bg-surface-container-low">loading</span>');
+    document.getElementById('alignment-sparkline-wrap')?.classList.add('hidden');
+    document.getElementById('alignment-word-cloud')?.classList.remove('hidden');
+    setText('alignment-trend-note', I18N ? I18N.t('loading.alignment_trend') : 'Loading guidance, commitment, and sentiment signals...');
+    const loadingBlock = '<div class="flex justify-between items-center text-[10px]"><span class="text-on-surface-variant">Loading</span><span class="font-bold">...</span></div>';
+    setHtml('raw-earnings-power', loadingBlock + loadingBlock);
+    setHtml('raw-surprise-track', loadingBlock + loadingBlock);
+    setHtml('raw-market-lens', loadingBlock + loadingBlock + loadingBlock);
+    activateTrinityTab(currentTrinityTab);
+    setHtml('earnings-cycle-list', `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('loading.earnings') : 'Loading earnings reaction windows...'}</div>`);
+    setText('earnings-cycle-status', I18N ? I18N.t('loading.earnings') : 'Loading earnings-cycle data...');
+    setText('mgmt-reliability-grade', '—');
+    setText('mgmt-reliability-label', I18N ? I18N.t('loading.data') : 'Loading...');
+    setText('mgmt-reliability-value', '—');
+    setText('mgmt-stddev-value', '—');
+    setText('mgmt-commitment-value', I18N ? I18N.t('status.loading') : 'Loading...');
+    setText('mgmt-mention-value', I18N ? I18N.t('status.loading') : 'Loading...');
+    setHtml('mgmt-commitment-checklist', `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('loading.checklist') : 'Loading checklist...'}</div>`);
+    setHtml('mgmt-mention-topics', `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('loading.topic_continuity') : 'Loading topic continuity...'}</div>`);
+    setText('mgmt-narrative', I18N ? I18N.t('mgmt.pending') : 'Loading management execution signals...');
+    setText('mgmt-transparency-score', I18N ? I18N.t('status.loading') : 'Loading...');
+    const indicator = document.getElementById('mgmt-transparency-indicator');
+    if (indicator) indicator.style.left = '12%';
+    setText('mgmt-methodology-note', I18N ? I18N.t('loading.methodology') : 'Loading methodology and transcript status...');
+  }
+
+  function renderUnavailableStatus(field) {
+    if (!field) return 'N/A';
+    if (field.status === 'no_available_data') return I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA';
+    if (field.status === 'interim_solution') return field.value ?? (I18N ? I18N.t('status.interim') : 'interim solution');
+    if (field.status === 'unavailable') return 'N/A';
+    if (field.status === 'planned') return I18N ? I18N.t('status.planned') : 'Planned';
+    return field.value ?? 'N/A';
+  }
+
+  function fieldNote(field, fallback) {
+    if (!field) return fallback || (I18N ? I18N.t('status.unavailable') : 'Unavailable');
+    const parts = [];
+    if (field.label) parts.push(field.label);
+    if (field.rationale) parts.push(field.rationale);
+    return parts.join(' · ') || fallback || (I18N ? I18N.t('status.unavailable') : 'Unavailable');
+  }
+
+  function formatScoreField(field, suffix = '%') {
+    if (!field) return 'N/A';
+    if (field.status === 'no_available_data') return I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA';
+    if (field.value === null || field.value === undefined || Number.isNaN(field.value)) {
+      return field.label || 'N/A';
+    }
+    return typeof field.value === 'number' ? `${Math.round(field.value)}${suffix}` : String(field.value);
+  }
+
+  function renderTickerSnapshot(summary) {
+    const snapshot = summary.ticker_snapshot || {};
+    const analyst = summary.analyst_snapshot || {};
+    const change = snapshot.change_pct;
+    const positive = change !== null && change !== undefined && change >= 0;
+    const sourceGeneratedAt = snapshot.fetched_at || summary.trinity_source_meta?.[0]?.source_generated_at || (I18N ? I18N.t('status.date_unavailable') : 'date unavailable');
+    const heroTitle = summary.company_name ? `${summary.company_name} (${summary.ticker})` : summary.ticker;
+    setText('dashboard-hero-title', heroTitle);
+    setText('dashboard-active-ticker', `${I18N ? I18N.t('status.source') : 'source'}: ${snapshot.source || 'n/a'} · ${I18N ? I18N.t('status.generated') : 'generated'}: ${sourceGeneratedAt}`);
+    if (analyst.target_upside_pct !== null && analyst.target_upside_pct !== undefined) {
+      setText('dashboard-hero-metric-label', I18N ? I18N.t('hero.metric.interim') : '· interim solution');
+      setText('dashboard-hero-metric-value', formatSignedPct(analyst.target_upside_pct));
+      setText('dashboard-hero-metric-note', I18N ? I18N.t('hero.metric.note') : 'Average analyst target versus current price.');
+    } else {
+      setText('dashboard-hero-metric-label', I18N ? I18N.t('hero.metric.label') : 'Selected Ticker');
+      setText('dashboard-hero-metric-value', `${summary.ticker} ${snapshot.price !== undefined ? formatNumber(snapshot.price, 2) : 'N/A'}`);
+      setText('dashboard-hero-metric-note', I18N ? I18N.t('hero.metric.note_fallback') : 'Current market price for selected ticker.');
+    }
+    const icon = document.getElementById('dashboard-hero-metric-icon');
+    const tooltip = document.getElementById('dashboard-hero-metric-tooltip');
+    const tooltipIcon = document.getElementById('dashboard-hero-metric-tooltip-icon');
+    if (icon) {
+      const heroPositive = analyst.target_upside_pct !== null && analyst.target_upside_pct !== undefined
+        ? analyst.target_upside_pct >= 0
+        : positive;
+      icon.textContent = heroPositive ? 'trending_up' : 'trending_down';
+      icon.classList.toggle('text-performance-green', heroPositive);
+      icon.classList.toggle('text-performance-red', !heroPositive);
+    }
+    if (tooltip && tooltipIcon) {
+      const showTooltip = analyst.target_upside_pct !== null && analyst.target_upside_pct !== undefined;
+      tooltip.classList.toggle('hidden', !showTooltip);
+      tooltipIcon.classList.toggle('hidden', !showTooltip);
+    }
+  }
+
+  function renderTrinitySourceMeta(summary) {
+    const container = document.getElementById('dashboard-source-meta');
+    if (!container) return;
+    const meta = summary.trinity_source_meta || [];
+    const generatedAt = meta
+      .map(item => item.source_generated_at)
+      .filter(Boolean)
+      .sort()
+      .slice(-1)[0] || (I18N ? I18N.t('status.date_unavailable') : 'date unavailable');
+    container.innerHTML = `
+      <details class="inline-block">
+        <summary class="list-none cursor-pointer select-none inline-flex items-center gap-2 px-2 py-1 rounded bg-surface-container-low font-label uppercase tracking-widest">
+          <span>${I18N ? I18N.t('status.generated') : 'Generated'}: ${generatedAt}</span>
+          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:12px;">expand_more</span>
+        </summary>
+        <div class="mt-2 flex flex-wrap gap-2">
+          ${meta.map(item => `
+            <span class="px-2 py-1 rounded bg-surface-container-low font-label uppercase tracking-widest">
+              ${item.label}: ${item.source || 'n/a'} · ${item.source_generated_at || (I18N ? I18N.t('status.date_unavailable') : 'date unavailable')}
+            </span>
+          `).join('')}
+        </div>
+      </details>
+    `;
+  }
+
+  function renderRawDataColumn(id, items, formatter = (value) => value === null || value === undefined ? 'N/A' : formatNumber(value, 2)) {
+    const normalizedItems = Array.isArray(items) ? items : [];
+    if (!normalizedItems.length) {
+      setHtml(id, `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'}</div>`);
+      return;
+    }
+    setHtml(id, normalizedItems.map(item => `
+      <div class="flex justify-between items-center text-[10px]">
+        <span class="text-on-surface-variant">${item.label}</span>
+        <span class="font-bold tabular-nums">${formatter(item.value)}</span>
+      </div>
+    `).join(''));
+  }
+
+  function buildFallbackRawData(summary) {
+    const guidanceDetail = summary.trinity?.guidance_vs_actuals_score?.detail || {};
+    return {
+      earnings_power: [
+        { label: 'TTM EPS', value: summary.key_financials?.eps_ttm ?? null },
+        { label: 'Forward EPS', value: summary.key_financials?.eps_forward ?? null }
+      ],
+      surprise_track: [
+        { label: 'Trailing EPS Surprise', value: guidanceDetail.avg_abs_eps_surprise_pct ?? null },
+        { label: 'Trailing Revenue Surprise', value: guidanceDetail.avg_abs_revenue_surprise_pct ?? null }
+      ],
+      market_lens: [
+        { label: 'Current Price', value: summary.ticker_snapshot?.price ?? null },
+        { label: 'Analyst Estimate', value: summary.analyst_snapshot?.price_targets?.mean ?? null },
+        { label: 'Next EPS Estimate', value: summary.analyst_snapshot?.earnings_estimate?.avg ?? null }
+      ]
+    };
+  }
+
+  function outcomeBadge(outcome) {
+    const map = {
+      met: 'bg-performance-green/15 text-performance-green',
+      missed: 'bg-performance-red/15 text-performance-red',
+      mixed: 'bg-policy-gold/20 text-policy-gold',
+      unverifiable: 'bg-surface-container-high text-on-surface-variant',
+      aligned: 'bg-performance-green/15 text-performance-green',
+      diverged: 'bg-performance-red/15 text-performance-red',
+      continued: 'bg-performance-green/15 text-performance-green',
+      updated: 'bg-policy-gold/20 text-policy-gold',
+      dropped: 'bg-performance-red/15 text-performance-red',
+      positive: 'bg-performance-green/15 text-performance-green',
+      neutral: 'bg-surface-container-high text-on-surface-variant',
+      negative: 'bg-performance-red/15 text-performance-red'
+    };
+    const label = outcome ? outcome.replace(/_/g, ' ') : 'n/a';
+    return `<span class="px-2 py-1 rounded-full text-[9px] font-semibold ${map[outcome] || 'bg-surface-container-high text-on-surface-variant'}">${label}</span>`;
+  }
+
+  function summarizeCommitmentChecklist(field) {
+    const detail = field?.detail || {};
+    const items = [...(detail.items || []), ...(detail.hard_commitments || []), ...(detail.forward_guidance || [])];
+    if (field?.status !== 'interim_solution') return I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA';
+    if (!items.length) return detail.rationale ? (I18N ? I18N.t('mgmt.no_commitments') : 'LLM: No verifiable commitments found') : (I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA');
+    const counts = items.reduce((acc, item) => {
+      const key = item.outcome || 'unverifiable';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const outcomeLabel = k => I18N ? I18N.t(`outcome.${k}`) : k;
+    return ['met', 'mixed', 'missed', 'unverifiable']
+      .filter(key => counts[key])
+      .map(key => `${counts[key]} ${outcomeLabel(key)}`)
+      .join(' · ');
+  }
+
+  function summarizeTopicContinuity(field) {
+    const matches = field?.detail?.matches || [];
+    if (field?.status !== 'interim_solution') return I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA';
+    if (!matches.length) return field?.detail?.rationale ? (I18N ? I18N.t('mgmt.no_continuity') : 'LLM: No topic continuity detected') : (I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA');
+    const aligned = matches.filter(item => item.direction_consistency === 'aligned').length;
+    const diverged = matches.filter(item => item.direction_consistency === 'diverged').length;
+    const dropped = matches.filter(item => item.topic_continuity === 'dropped').length;
+    if (aligned && !diverged && !dropped) return I18N ? I18N.t('outcome.aligned') : 'Direction aligned';
+    if (diverged) return `${diverged} ${I18N ? I18N.t('outcome.diverged') : 'topic diverged'}`;
+    if (dropped) return `${dropped} ${I18N ? I18N.t('outcome.dropped') : 'topic dropped'}`;
+    return I18N ? I18N.t('outcome.mixed_cont') : 'Mixed continuity';
+  }
+
+  function renderManagementChecklist(field) {
+    const detail = field?.detail || {};
+    const items = [...(detail.items || []), ...(detail.hard_commitments || []), ...(detail.forward_guidance || [])];
+    if (field?.status !== 'interim_solution') {
+      return `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'}</div>`;
+    }
+    if (!items.length) {
+      const rationale = detail.rationale || 'No verifiable commitments found in transcript.';
+      const evidence = (detail.evidence || []).slice(0, 2);
+      return `
+        <div class="rounded-lg bg-surface-container-high p-2.5">
+          <p class="text-[10px] font-semibold leading-relaxed text-on-surface-variant">${I18N ? I18N.t('mgmt.llm_result') : 'LLM Analysis Result'}</p>
+          <p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed">${rationale}</p>
+          ${evidence.map(e => `<p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed italic">"${e}"</p>`).join('')}
+        </div>`;
+    }
+    return items.slice(0, 4).map(item => `
+      <div class="rounded-lg bg-surface-container-high p-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-semibold leading-relaxed">${item.topic || item.statement || 'Commitment'}</p>
+            <p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed">${item.actual_reference || item.comparison_basis || item.statement || ''}</p>
+          </div>
+          ${outcomeBadge(item.outcome)}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderMentionTopics(field) {
+    const matches = field?.detail?.matches || [];
+    if (field?.status !== 'interim_solution') {
+      return `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'}</div>`;
+    }
+    if (!matches.length) {
+      const detail = field?.detail || {};
+      const rationale = detail.rationale || 'No topic continuity detected between quarters.';
+      const evidence = (detail.evidence || []).slice(0, 2);
+      return `
+        <div class="rounded-lg bg-surface-container-high p-2.5">
+          <p class="text-[10px] font-semibold leading-relaxed text-on-surface-variant">${I18N ? I18N.t('mgmt.llm_result') : 'LLM Analysis Result'}</p>
+          <p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed">${rationale}</p>
+          ${evidence.map(e => `<p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed italic">"${e}"</p>`).join('')}
+        </div>`;
+    }
+    return matches.slice(0, 4).map(item => `
+      <div class="rounded-lg bg-surface-container-high p-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-semibold leading-relaxed">${item.topic || item.previous_statement || 'Topic continuity'}</p>
+            <p class="text-[9px] text-on-surface-variant mt-1 leading-relaxed">${item.current_reference || item.deviation_note || 'No current-quarter reference.'}</p>
+          </div>
+          <div class="flex flex-col items-end gap-1">
+            ${outcomeBadge(item.direction_consistency)}
+            ${outcomeBadge(item.sentiment)}
+          </div>
+        </div>
+        <div class="mt-2">${outcomeBadge(item.topic_continuity)}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderWordCloudItems(items, sentiment) {
+    return (items || []).map(item => {
+      const size = Math.max(11, Math.min(18, 10 + (item.count || 1) * 2));
+      const bg = sentiment === 'positive' ? 'rgba(16,172,132,0.10)' : 'rgba(238,82,83,0.10)';
+      const color = sentiment === 'positive' ? '#10AC84' : '#EE5253';
+      return `<span class="px-2 py-1 rounded-full font-semibold" style="font-size:${size}px;background:${bg};color:${color};">${item.term}</span>`;
+    }).join('');
+  }
+
+  function i18nDesc(val) {
+    if (typeof val === 'string') return val;
+    if (val && typeof val === 'object') {
+      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+      return val[lang] || val['en'] || Object.values(val)[0] || '';
+    }
+    return '';
+  }
+
+  function renderSignalThemeCard(signal, type) {
+    const isAlpha = type === 'alpha';
+    const borderColor = isAlpha ? 'rgba(16,172,132,0.3)' : 'rgba(238,82,83,0.3)';
+    const bgColor = isAlpha ? 'rgba(16,172,132,0.05)' : 'rgba(238,82,83,0.05)';
+    const accentColor = isAlpha ? '#10AC84' : '#EE5253';
+    const icon = isAlpha ? 'rocket_launch' : 'shield';
+    const terms = (signal.top_terms || []).map(t =>
+      `<span class="px-1.5 py-0.5 rounded-full" style="font-size:9px;background:${bgColor};color:${accentColor};border:1px solid ${borderColor};">${t.term} ×${t.count}</span>`
+    ).join('');
+    return `
+      <div class="rounded-lg p-2" style="background:${bgColor};border:1px solid ${borderColor};">
+        <div class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined" style="font-size:12px;color:${accentColor};">${icon}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-[10px] font-bold" style="color:${accentColor};">${signal.label_key && I18N ? I18N.t(signal.label_key) : signal.label}</p>
+            <p class="text-[8px] text-on-surface-variant mt-0.5 leading-relaxed">${i18nDesc(signal.desc)}</p>
+            <div class="flex flex-wrap gap-1 mt-1.5">${terms}</div>
+          </div>
+          <span class="text-[10px] font-bold tabular-nums" style="color:${accentColor};">${signal.total_hits}</span>
+        </div>
+      </div>`;
+  }
+
+  function renderDisguisedNegativeCard(signal) {
+    const borderColor = 'rgba(255,159,67,0.3)';
+    const bgColor = 'rgba(255,159,67,0.05)';
+    const accentColor = '#FF9F43';
+    const examples = (signal.examples || []).map(ex =>
+      `<p class="text-[8px] text-on-surface-variant italic mt-1 leading-relaxed" style="border-left:2px solid ${borderColor};padding-left:6px;">"${ex.length > 100 ? ex.slice(0,100) + '…' : ex}"</p>`
+    ).join('');
+    return `
+      <div class="rounded-lg p-2" style="background:${bgColor};border:1px solid ${borderColor};">
+        <div class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined" style="font-size:12px;color:${accentColor};">visibility_off</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-[10px] font-bold" style="color:${accentColor};">${signal.label_key && I18N ? I18N.t(signal.label_key) : signal.label}</p>
+            <p class="text-[8px] mt-0.5 leading-relaxed" style="color:${accentColor};">${i18nDesc(signal.desc)}</p>
+            <p class="text-[8px] text-on-surface-variant mt-1 leading-relaxed">🔍 ${i18nDesc(signal.translation)}</p>
+            ${examples}
+          </div>
+          <span class="text-[10px] font-bold tabular-nums" style="color:${accentColor};">×${signal.hit_count}</span>
+        </div>
+      </div>`;
+  }
+
+  function renderAlignmentTrend(field) {
+    const sparkWrap = document.getElementById('alignment-sparkline-wrap');
+    const wordCloud = document.getElementById('alignment-word-cloud');
+    const positiveCloud = document.getElementById('alignment-positive-cloud');
+    const negativeCloud = document.getElementById('alignment-negative-cloud');
+    const alphaSignals = document.getElementById('alignment-alpha-signals');
+    const betaRisks = document.getElementById('alignment-beta-risks');
+    const disguisedWrap = document.getElementById('alignment-disguised-negatives-wrap');
+    const disguisedContainer = document.getElementById('alignment-disguised-negatives');
+    const title = document.getElementById('alignment-panel-title');
+    const metric = document.getElementById('alignment-panel-metric');
+    if (sparkWrap) sparkWrap.classList.add('hidden');
+    if (wordCloud) wordCloud.classList.remove('hidden');
+    if (title) title.textContent = I18N ? I18N.t('alignment.panel.title') : 'Forward Guidance & Commitment Sentiment';
+    if (metric) metric.textContent = field?.detail?.source_generated_at
+      ? `${I18N ? I18N.t('transcript.date') : 'Transcript Date'}: ${field.detail.source_generated_at}`
+      : (I18N ? I18N.t('alignment.transcript.unavailable') : 'Transcript sentiment unavailable');
+
+    const mode = field?.value?.mode;
+    if (!field || field.status !== 'interim_solution' || !mode) {
+      if (alphaSignals) alphaSignals.innerHTML = '';
+      if (betaRisks) betaRisks.innerHTML = '';
+      if (positiveCloud) positiveCloud.innerHTML = '';
+      if (negativeCloud) negativeCloud.innerHTML = '';
+      if (disguisedWrap) disguisedWrap.classList.add('hidden');
+      setText('alignment-trend-note', fieldNote(field, I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'));
+      return;
+    }
+
+    // Render Alpha/Beta themed signal cards
+    const alphaData = field.value.alpha_signals || [];
+    const betaData = field.value.beta_risks || [];
+    if (alphaSignals) alphaSignals.innerHTML = alphaData.length
+      ? alphaData.map(s => renderSignalThemeCard(s, 'alpha')).join('')
+      : `<p class="text-[9px] text-on-surface-variant italic">${I18N ? I18N.t('alignment.no_alpha') : 'No alpha signals detected'}</p>`;
+    if (betaRisks) betaRisks.innerHTML = betaData.length
+      ? betaData.map(s => renderSignalThemeCard(s, 'beta')).join('')
+      : `<p class="text-[9px] text-on-surface-variant italic">${I18N ? I18N.t('alignment.no_beta') : 'No beta risks detected'}</p>`;
+
+    // Render Disguised Negatives
+    const disguisedData = field.value.disguised_negatives || [];
+    if (disguisedWrap && disguisedContainer) {
+      if (disguisedData.length > 0) {
+        disguisedWrap.classList.remove('hidden');
+        disguisedContainer.innerHTML = disguisedData.map(s => renderDisguisedNegativeCard(s)).join('');
+      } else {
+        disguisedWrap.classList.add('hidden');
+      }
+    }
+
+    // Render keyword pills below each column
+    if (positiveCloud) positiveCloud.innerHTML = renderWordCloudItems(field.value.positive_keywords, 'positive');
+    if (negativeCloud) negativeCloud.innerHTML = renderWordCloudItems(field.value.negative_keywords, 'negative');
+    setText('alignment-trend-note', fieldNote(field, I18N ? I18N.t('status.interim') : 'interim solution'));
+  }
+
+  function renderDashboardSummary(summary) {
+    const rawData = summary.raw_data || buildFallbackRawData(summary);
+    renderTickerSnapshot(summary);
+    renderTrinitySourceMeta(summary);
+    setText('gauge-realized-value', formatScoreField(summary.trinity?.realized_performance_score));
+    setText('gauge-realized-note', fieldNote(summary.trinity?.realized_performance_score, I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'));
+    setText('gauge-guidance-value', formatScoreField(summary.trinity?.guidance_vs_actuals_score));
+    setText('gauge-guidance-note', fieldNote(summary.trinity?.guidance_vs_actuals_score, I18N ? I18N.t('status.interim') : 'interim solution'));
+    setText('gauge-consensus-value', formatScoreField(summary.trinity?.analyst_consensus_score));
+    setText('gauge-consensus-note', fieldNote(summary.trinity?.analyst_consensus_score, I18N ? I18N.t('status.interim') : 'interim solution'));
+    setText('macro-theme-label', summary.macro_context?.numeric_macro_claims?.status === 'no_available_data'
+      ? (I18N ? I18N.t('macro.theme_no_data') : 'Theme Card · NO AVAILABLE DATA')
+      : (I18N ? I18N.t('macro.asset_theme') : 'Asset Class: Theme View'));
+    setText('macro-theme-title', summary.macro_context?.theme_title?.value || (I18N ? I18N.t('macro.theme_default') : 'Theme'));
+    renderAlignmentTrend(summary.trinity?.alignment_trend_series);
+    renderRawDataColumn('raw-earnings-power', rawData.earnings_power);
+    renderRawDataColumn('raw-surprise-track', rawData.surprise_track, (value) => value === null || value === undefined ? 'N/A' : formatSignedPct(value));
+    renderRawDataColumn('raw-market-lens', rawData.market_lens);
+  }
+
+  function activateTrinityTab(tab) {
+    currentTrinityTab = tab === 'raw' ? 'raw' : 'ai';
+    const aiPanel = document.getElementById('trinity-ai-panel');
+    const rawPanel = document.getElementById('trinity-raw-panel');
+    const aiBtn = document.getElementById('trinity-tab-ai');
+    const rawBtn = document.getElementById('trinity-tab-raw');
+    const showAI = currentTrinityTab === 'ai';
+    aiPanel?.classList.toggle('hidden', !showAI);
+    rawPanel?.classList.toggle('hidden', showAI);
+    aiBtn?.classList.toggle('bg-primary', showAI);
+    aiBtn?.classList.toggle('text-white', showAI);
+    aiBtn?.classList.toggle('bg-surface-container-low', !showAI);
+    aiBtn?.classList.toggle('text-on-surface-variant', !showAI);
+    rawBtn?.classList.toggle('bg-primary', !showAI);
+    rawBtn?.classList.toggle('text-white', !showAI);
+    rawBtn?.classList.toggle('bg-surface-container-low', showAI);
+    rawBtn?.classList.toggle('text-on-surface-variant', showAI);
+  }
+
+  function barColor(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) return '#8d9198';
+    return value >= 0 ? '#5ae4a8' : '#ff7f7f';
+  }
+
+  function barHeight(value, isDay0 = false) {
+    if (value === null || value === undefined || Number.isNaN(value)) return isDay0 ? 20 : 12;
+    const base = Math.min(44, Math.max(10, Math.round(Math.abs(value) * 6 + 10)));
+    return isDay0 ? Math.min(48, base + 4) : base;
+  }
+
+  function renderReturnBar(point, isDay0 = false) {
+    const width = isDay0 ? '14px' : '8px';
+    const shadow = isDay0 ? `box-shadow:0 0 0 1px ${(point.daily_return_pct || 0) >= 0 ? 'rgba(90,228,168,0.28)' : 'rgba(255,127,127,0.28)'};` : '';
+    const tooltip = point.date
+      ? `title="${point.date}  ${point.close != null ? '$' + point.close.toFixed(2) : ''}  ${point.daily_return_pct != null ? (point.daily_return_pct >= 0 ? '+' : '') + point.daily_return_pct.toFixed(2) + '%' : ''}"`
+      : '';
+    return `<div class="rounded-sm cursor-default" ${tooltip} style="width:${width};height:${barHeight(point.daily_return_pct, isDay0)}px;background:${barColor(point.daily_return_pct)};${shadow}"></div>`;
+  }
+
+  function beatMissStyle(colorKey) {
+    const map = {
+      big_beat: { bg: 'rgba(90,228,168,0.18)', text: '#1a9968', border: 'rgba(90,228,168,0.4)' },
+      beat:     { bg: 'rgba(90,228,168,0.1)',  text: '#2ab87c', border: 'rgba(90,228,168,0.25)' },
+      inline:   { bg: 'rgba(141,145,152,0.12)', text: '#6b7280', border: 'rgba(141,145,152,0.3)' },
+      miss:     { bg: 'rgba(255,127,127,0.1)',  text: '#e05252', border: 'rgba(255,127,127,0.25)' },
+      big_miss: { bg: 'rgba(255,127,127,0.18)', text: '#c23b3b', border: 'rgba(255,127,127,0.4)' },
+      neutral:  { bg: 'rgba(141,145,152,0.1)',  text: '#9ca3af', border: 'rgba(141,145,152,0.2)' },
+    };
+    return map[colorKey] || map.neutral;
+  }
+
+  function formatEps(est, act) {
+    if (est == null && act == null) return '<span class="text-on-surface-variant">N/A</span>';
+    const estStr = est != null ? `$${est.toFixed(2)}e` : '?e';
+    const actStr = act != null ? `$${act.toFixed(2)}a` : '?a';
+    const actColor = (est != null && act != null)
+      ? (act >= est ? 'color:#2ab87c' : 'color:#e05252')
+      : '';
+    return `<span class="text-on-surface-variant">${estStr}</span><span class="mx-0.5 text-on-surface-variant">→</span><span style="${actColor};font-weight:600">${actStr}</span>`;
+  }
+
+  function renderEarningsCycle(data) {
+    const list = document.getElementById('earnings-cycle-list');
+    if (!list) return;
+    const quarters = data.quarters || [];
+    if (!quarters.length) {
+      list.innerHTML = `<div class="text-[10px] text-on-surface-variant">${I18N ? I18N.tf('earnings.no_cycle', {ticker: data.ticker}) : `No earnings cycle data available for ${data.ticker}.`}</div>`;
+      setText('earnings-cycle-status', I18N ? I18N.t('earnings.no_history') : 'No historical earnings data available.');
+      return;
+    }
+
+    // Next earnings badge
+    if (data.next_earnings_date) {
+      const badge = document.getElementById('earnings-next-badge');
+      const nextText = document.getElementById('earnings-next-text');
+      const daysUntil = Math.ceil((new Date(data.next_earnings_date) - new Date()) / 86400000);
+      if (badge && nextText && daysUntil > 0 && daysUntil <= 90) {
+        nextText.textContent = `${I18N ? I18N.t('earnings.next.label') : 'Next earnings:'} ${daysUntil}d (${data.next_earnings_date})`;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      }
+    }
+
+    // Analyst target banner
+    const at = data.analyst_target;
+    if (at && at.mean) {
+      const banner = document.getElementById('earnings-analyst-banner');
+      const meanEl = document.getElementById('earnings-analyst-mean');
+      const rangeEl = document.getElementById('earnings-analyst-range');
+      const upsideEl = document.getElementById('earnings-analyst-upside');
+      if (banner && meanEl) {
+        meanEl.textContent = `$${at.mean.toFixed(2)}`;
+        if (rangeEl && at.low && at.high) {
+          rangeEl.textContent = `Range $${at.low.toFixed(0)} – $${at.high.toFixed(0)}`;
+        }
+        if (upsideEl && at.upside_pct != null) {
+          const up = at.upside_pct;
+          upsideEl.textContent = `${up >= 0 ? '+' : ''}${up.toFixed(1)}% ${I18N ? I18N.t('earnings.analyst_upside') : 'upside'}`;
+          upsideEl.className = `font-label text-[10px] font-bold tabular-nums ${up >= 0 ? 'text-performance-green' : 'text-performance-red'}`;
+        }
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      }
+    }
+
+    list.innerHTML = quarters.map(q => {
+      const colorKey = q.beat_miss_color || 'neutral';
+      const style = beatMissStyle(colorKey);
+      const badgeLabel = q.beat_miss_label || 'N/A';
+      const epsHtml = formatEps(q.eps_estimate, q.eps_actual);
+
+      if (q.status !== 'ok') {
+        return `
+          <div class="flex items-center gap-4">
+            <div class="w-16 font-label text-[9px] font-bold text-on-surface-variant uppercase shrink-0">${q.quarter_label}</div>
+            <div class="w-28 shrink-0">
+              <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:${style.bg};color:${style.text};border:1px solid ${style.border};">${badgeLabel}</span>
+            </div>
+            <div class="w-28 shrink-0 font-label text-[9px] tabular-nums text-center">${epsHtml}</div>
+            <div class="flex-1 text-[10px] text-on-surface-variant">${I18N ? I18N.t('earnings.unavailable_row') : 'Unavailable'} · ${q.history_error || (I18N ? I18N.t('earnings.missing_window') : 'Missing price window')}</div>
+            <div class="w-14"></div>
+          </div>
+        `;
+      }
+
+      const preBars = q.pre_days.map(point => renderReturnBar(point)).join('');
+      const postBars = q.post_days.map(point => renderReturnBar(point)).join('');
+      const day0Bar = renderReturnBar(q.day0, true);
+      const windowClass = (q.window_return_pct || 0) >= 0 ? 'text-performance-green' : 'text-performance-red';
+      return `
+        <div class="flex items-center gap-4">
+          <div class="w-16 font-label text-[9px] font-bold text-on-surface-variant uppercase shrink-0">${q.quarter_label}</div>
+          <div class="w-28 shrink-0">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold leading-snug" style="background:${style.bg};color:${style.text};border:1px solid ${style.border};">${badgeLabel}</span>
+          </div>
+          <div class="w-28 shrink-0 font-label text-[9px] tabular-nums text-center">${epsHtml}</div>
+          <div class="flex-1 h-12 flex items-center relative">
+            <div class="absolute inset-0 flex items-center"><div class="w-full h-px" style="background:rgba(196,198,207,0.15);"></div></div>
+            <div class="absolute left-1/2 top-0 bottom-0 w-px" style="background:rgba(0,15,39,0.15);"></div>
+            <div class="absolute left-0 right-1/2 flex justify-end items-center gap-1 pr-3 opacity-55">${preBars}</div>
+            <div class="absolute left-1/2 -translate-x-1/2">${day0Bar}</div>
+            <div class="absolute left-1/2 right-0 flex justify-start items-center gap-1 pl-3">${postBars}</div>
+          </div>
+          <div class="w-14 text-right font-label text-[10px] font-bold ${windowClass} tabular-nums shrink-0">${formatSignedPct(q.window_return_pct)}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Pattern summary
+    const s = data.summary;
+    if (s && s.quarters_with_eps_data > 0) {
+      const summaryEl = document.getElementById('earnings-pattern-summary');
+      const beatRateEl = document.getElementById('earnings-beat-rate');
+      const avgBeatEl = document.getElementById('earnings-avg-beat');
+      const avgMissEl = document.getElementById('earnings-avg-miss');
+      if (summaryEl && beatRateEl) {
+        beatRateEl.textContent = `${I18N ? I18N.t('earnings.beat.label') : 'Beat'} ${s.beat_count}/${s.quarters_with_eps_data} qtrs`;
+        if (avgBeatEl && s.avg_beat_post5d_pct != null) {
+          avgBeatEl.textContent = `${I18N ? I18N.t('earnings.beat_avg') : 'Beat avg 5d'}: +${s.avg_beat_post5d_pct.toFixed(1)}%`;
+        }
+        if (avgMissEl && s.avg_miss_post5d_pct != null) {
+          avgMissEl.textContent = `${I18N ? I18N.t('earnings.miss_avg') : 'Miss avg 5d'}: ${s.avg_miss_post5d_pct.toFixed(1)}%`;
+        } else if (avgMissEl) {
+          avgMissEl.textContent = '';
+        }
+        summaryEl.classList.remove('hidden');
+        summaryEl.classList.add('flex');
+      }
+    }
+
+    const unavailableCount = quarters.filter(q => q.status !== 'ok').length;
+    const t = I18N ? I18N.t.bind(I18N) : k => k;
+    setText('earnings-cycle-status', unavailableCount
+      ? t('earnings.loaded_partial').replace('{ok}', quarters.length - unavailableCount).replace('{total}', quarters.length).replace('{ticker}', data.ticker)
+      : t('earnings.loaded').replace('{n}', quarters.length).replace('{ticker}', data.ticker));
+  }
+
+  function reliabilityGrade(v) {
+    if (v === null || v === undefined) return { grade: '—', label: 'No Data', color: '#888', bg: 'rgba(128,128,128,0.10)', border: 'rgba(128,128,128,0.25)' };
+    if (v >= 88) return { grade: 'S',  label: I18N ? I18N.t('reliability.exceptional') : 'Exceptional',    color: '#10AC84', bg: 'rgba(16,172,132,0.10)',  border: 'rgba(16,172,132,0.30)' };
+    if (v >= 75) return { grade: 'A',  label: I18N ? I18N.t('reliability.reliable')    : 'Highly Reliable', color: '#10AC84', bg: 'rgba(16,172,132,0.08)',  border: 'rgba(16,172,132,0.22)' };
+    if (v >= 60) return { grade: 'B',  label: I18N ? I18N.t('reliability.moderate')    : 'Moderate',        color: '#FF9F43', bg: 'rgba(255,159,67,0.10)',  border: 'rgba(255,159,67,0.28)' };
+    if (v >= 45) return { grade: 'C',  label: I18N ? I18N.t('reliability.inconsistent'): 'Inconsistent',    color: '#FF9F43', bg: 'rgba(255,159,67,0.08)',  border: 'rgba(255,159,67,0.22)' };
+    return              { grade: 'D',  label: I18N ? I18N.t('reliability.poor')          : 'Poor Accuracy',   color: '#EE5253', bg: 'rgba(238,82,83,0.10)',   border: 'rgba(238,82,83,0.28)' };
+  }
+
+  function stddevLabel(v) {
+    if (v === null || v === undefined) return '—';
+    if (v <= 5)  return `±${v} · ${I18N ? I18N.t('reliability.var_low')  : 'Low Variance'}`;
+    if (v <= 20) return `±${v} · ${I18N ? I18N.t('reliability.var_mid')  : 'Moderate Variance'}`;
+    return            `±${v} · ${I18N ? I18N.t('reliability.var_high') : 'High Variance'}`;
+  }
+
+  function renderManagement(data) {
+    const heuristics = data.heuristics || {};
+    const reliability = heuristics.reliability_index || {};
+    const stddev = heuristics.std_dev_miss_beat || {};
+    const commitment = heuristics.t_minus_1_commitment_score || {};
+    const mention = heuristics.t_zero_mention_rate || {};
+    const transparency = heuristics.transparency_score || {};
+    const transcriptDate = data.cached_transcript?.date || data.fallback_transcript?.transcript_date || null;
+
+    // Reliability grade badge
+    const rv = reliability.status === 'interim_solution' ? reliability.value : null;
+    const rg = reliabilityGrade(rv);
+    const gradeEl = document.getElementById('mgmt-reliability-grade');
+    const gradeBadge = gradeEl?.parentElement;
+    if (gradeEl) { gradeEl.textContent = rg.grade; gradeEl.style.color = rg.color; }
+    if (gradeBadge) { gradeBadge.style.background = rg.bg; gradeBadge.style.borderColor = rg.border; }
+    setText('mgmt-reliability-label', rg.label);
+    setText('mgmt-reliability-value', rv !== null ? `${rv} · 8-qtr index` : '—');
+    setText('mgmt-stddev-value', stddev.status === 'interim_solution' ? stddevLabel(stddev.value) : '—');
+
+    const base = rv !== null ? rv : 12;
+    const beatHistory = data.heuristics?.beat_miss_history || [];
+    setHtml('mgmt-reliability-bars', Array.from({ length: 8 }).map((_, i) => {
+      const entry = beatHistory[i];
+      const surprise = entry?.eps_surprise_pct;
+      let barColor, barOpacity;
+      if (surprise !== null && surprise !== undefined) {
+        if (surprise >= 10)       { barColor = '#10AC84'; barOpacity = 0.90; }
+        else if (surprise >= 5)   { barColor = '#10AC84'; barOpacity = 0.65; }
+        else if (surprise >= 1)   { barColor = '#10AC84'; barOpacity = 0.40; }
+        else if (surprise > -1)   { barColor = '#888';    barOpacity = 0.30; }
+        else if (surprise > -5)   { barColor = '#EE5253'; barOpacity = 0.40; }
+        else if (surprise > -10)  { barColor = '#EE5253'; barOpacity = 0.65; }
+        else                      { barColor = '#EE5253'; barOpacity = 0.90; }
+      } else {
+        barColor = rg.color;
+        barOpacity = Math.min(0.7, 0.25 + (rv !== null ? rv / 100 * 0.5 : 0) + i * 0.035);
+      }
+      const h = Math.max(14, Math.min(92, base * (0.45 + i * 0.07)));
+      return `<div class="flex-1 rounded-sm" style="height:${h}%;background:${barColor};opacity:${barOpacity.toFixed(2)};"></div>`;
+    }).join(''));
+    setText('mgmt-commitment-value', summarizeCommitmentChecklist(commitment));
+    setText('mgmt-mention-value', summarizeTopicContinuity(mention));
+    setHtml('mgmt-commitment-checklist', renderManagementChecklist(commitment));
+    setHtml('mgmt-mention-topics', renderMentionTopics(mention));
+    setText(
+      'mgmt-narrative',
+      `${transcriptDate ? `${I18N ? I18N.t('transcript.date') : 'Transcript Date'}: ${transcriptDate} · ` : ''}${data.methodology?.note || (I18N ? I18N.t('loading.mgmt_scoring') : 'Management scoring methodology pending.')}`
+    );
+    setText('mgmt-transparency-score', transparency.status === 'interim_solution' ? `${transparency.value} / 10.0` : (I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'));
+    const indicator = document.getElementById('mgmt-transparency-indicator');
+    if (indicator) {
+      indicator.style.left = transparency.status === 'interim_solution'
+        ? `${Math.max(8, Math.min(92, transparency.value * 10))}%`
+        : '12%';
+    }
+    setText('mgmt-methodology-note', `${data.methodology?.note || (I18N ? I18N.t('transcript.retrieval_only') : 'Transcript retrieval only.')} ${I18N ? I18N.tf('transcript.current_src', {src: data.raw_source_available ? 'available' : 'missing'}) : `Current source: ${data.raw_source_available ? 'available' : 'missing'}.`}`);
+  }
+
+  function renderPortfolio(data) {
+    setText('portfolio-aum-value', data.summary_cards?.total_aum?.status === 'unavailable' ? (I18N ? I18N.t('status.input_required') : 'Input required') : 'N/A');
+    setText('portfolio-aum-note', data.summary_cards?.total_aum?.rationale || (I18N ? I18N.t('status.unavailable') : 'Unavailable'));
+    setText('portfolio-positions-value', data.summary_cards?.active_positions?.status === 'unavailable' ? (I18N ? I18N.t('status.input_required') : 'Input required') : 'N/A');
+    setText('portfolio-positions-note', data.summary_cards?.active_positions?.rationale || (I18N ? I18N.t('status.unavailable') : 'Unavailable'));
+    setText('portfolio-ytd-value', data.summary_cards?.ytd_return?.status === 'unavailable' ? (I18N ? I18N.t('status.input_required') : 'Input required') : 'N/A');
+    setText('portfolio-ytd-note', data.summary_cards?.ytd_return?.rationale || (I18N ? I18N.t('status.unavailable') : 'Unavailable'));
+    const inputs = (data.required_inputs || []).join(', ');
+    setText('portfolio-status-note', I18N ? I18N.tf('portfolio.api_status', {status: data.status, inputs}) : `Portfolio API status: ${data.status}. Required inputs: ${inputs}`);
+    setHtml('portfolio-holdings-body', `<tr><td colspan="4" class="py-4 text-center text-on-surface-variant">${I18N ? I18N.tf('portfolio.no_holdings', {inputs}) : `No holdings loaded. Provide ${inputs}.`}</td></tr>`);
+  }
+
+  function renderMarketOverview(data) {
+    const statusParts = [];
+    (data.cards || []).forEach(card => {
+      const quote = card.quote || {};
+      const id = card.id;
+      setText(`market-${id}-value`, quote.price != null ? formatNumber(quote.price, 2) : 'N/A');
+      const changeEl = document.getElementById(`market-${id}-change`);
+      const changePct = quote.change_pct;
+      if (changeEl) {
+        changeEl.textContent = changePct != null ? formatSignedPct(changePct) : (quote.source ? `src: ${quote.source}` : '—');
+        changeEl.classList.remove('text-performance-green', 'text-performance-red', 'text-on-surface-variant');
+        changeEl.classList.add(changePct == null ? 'text-on-surface-variant' : changePct >= 0 ? 'text-performance-green' : 'text-performance-red');
+      }
+      const sparkEl = document.getElementById(`market-${id}-sparkline`);
+      if (sparkEl) sparkEl.innerHTML = buildSparklineSVG(card.sparkline_30d);
+      statusParts.push(`${card.label}: ${card.status}`);
+    });
+    setText('market-status-note', statusParts.join(' · '));
+  }
+
+  // ── Sparkline SVG helper (30-day with date axis) ─────────────────────────
+  function buildSparklineSVG(bars) {
+    if (!bars || bars.length < 2) return `<span class="text-[9px] text-on-surface-variant">${I18N ? I18N.t('status.no_data_sparkline') : 'No data'}</span>`;
+    const closes = bars.map(b => b.close).filter(v => v != null);
+    const dates  = bars.map(b => b.date  || '').filter(Boolean);
+    if (closes.length < 2) return '';
+    const min = Math.min(...closes), max = Math.max(...closes), range = max - min || 1;
+    const W = 220, H = 52, axisH = 13, padX = 2, padY = 3;
+    const chartH = H - axisH;
+    const pts = closes.map((v, i) => {
+      const x = padX + (i / (closes.length - 1)) * (W - padX * 2);
+      const y = padY + (1 - (v - min) / range) * (chartH - padY * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    const trend = closes[closes.length - 1] >= closes[0];
+    const color = trend ? '#22c55e' : '#ef4444';
+    const fmtD = d => d ? d.slice(5).replace('-', '/') : '';  // MM/DD
+    const d0 = fmtD(dates[0]);
+    const dM = fmtD(dates[Math.floor(dates.length / 2)]);
+    const dN = fmtD(dates[dates.length - 1]);
+    const axisY = H - 1;
+    return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:52px" preserveAspectRatio="none">
+      <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="${padX}" y1="${chartH}" x2="${W-padX}" y2="${chartH}" stroke="rgba(150,160,180,0.15)" stroke-width="0.5"/>
+      <text x="${padX}" y="${axisY}" fill="rgba(150,160,180,0.6)" font-size="7.5" font-family="monospace">${d0}</text>
+      <text x="${W/2}" y="${axisY}" fill="rgba(150,160,180,0.6)" font-size="7.5" font-family="monospace" text-anchor="middle">${dM}</text>
+      <text x="${W-padX}" y="${axisY}" fill="rgba(150,160,180,0.6)" font-size="7.5" font-family="monospace" text-anchor="end">${dN}</text>
+    </svg>`;
+  }
+
+  function renderMarketCommodities(data) {
+    (data.cards || []).forEach(card => {
+      const quote = card.quote || {};
+      const id = card.id;
+      setText(`market-${id}-value`, quote.price != null ? formatNumber(quote.price, 2) : 'N/A');
+      const changeEl = document.getElementById(`market-${id}-change`);
+      const changePct = quote.change_pct;
+      if (changeEl) {
+        changeEl.textContent = changePct != null ? formatSignedPct(changePct) : '—';
+        changeEl.classList.remove('text-performance-green', 'text-performance-red', 'text-on-surface-variant');
+        changeEl.classList.add(changePct == null ? 'text-on-surface-variant' : changePct >= 0 ? 'text-performance-green' : 'text-performance-red');
+      }
+      const sparkEl = document.getElementById(`market-${id}-sparkline`);
+      if (sparkEl) sparkEl.innerHTML = buildSparklineSVG(card.sparkline_30d);
+    });
+    const note = (data.cards || []).map(c => `${c.label}: ${c.status}`).join(' · ');
+    setText('market-commodities-note', note || '');
+  }
+
+  function renderMarketSentiment(data) {
+    const score = data.composite_score;
+    const label = data.composite_label || 'unavailable';
+    const t = key => (typeof I18N !== 'undefined' ? I18N.t(key) : key);
+
+    // Color classes by zone
+    const colorClass = score == null ? 'text-on-surface-variant'
+      : score <= 33 ? 'text-performance-green'
+      : score <= 67 ? 'text-policy-gold'
+      : 'text-performance-red';
+    const barColor = score == null ? 'bg-surface-container-high'
+      : score <= 33 ? 'bg-performance-green'
+      : score <= 67 ? 'bg-policy-gold'
+      : 'bg-performance-red';
+
+    const scoreEl = document.getElementById('sentiment-score');
+    if (scoreEl) {
+      scoreEl.textContent = score != null ? score : '—';
+      scoreEl.className = `font-headline text-4xl font-extrabold tabular-nums ${colorClass}`;
+    }
+    const labelEl = document.getElementById('sentiment-label');
+    const labelKey = label === 'extreme_greed' ? 'sentiment.extreme_greed'
+      : label === 'extreme_fear' ? 'sentiment.extreme_fear'
+      : `sentiment.${label}`;
+    if (labelEl) {
+      labelEl.textContent = t(labelKey);
+      labelEl.className = `text-[11px] font-bold mt-1 uppercase tracking-widest ${colorClass}`;
+    }
+    const barEl = document.getElementById('sentiment-bar');
+    if (barEl) {
+      barEl.className = `h-full rounded-full transition-all duration-500 ${barColor}`;
+      barEl.style.width = score != null ? `${score}%` : '0%';
+    }
+
+    // Individual signals
+    const sig = data.signals || {};
+    const vixSig = sig.vix || {};
+    const pcSig = sig.put_call_ratio || {};
+    const goldSig = sig.gold || {};
+
+    const fmtSignal = (sigObj, valueStr) => {
+      const lbl = sigObj.label || 'unavailable';
+      const labelText = t(`sentiment.${lbl === 'extreme_greed' || lbl === 'extreme_fear' ? lbl : lbl}`);
+      return `${valueStr} · <span class="text-on-surface-variant">${labelText}</span>`;
+    };
+
+    const vixDisplay = document.getElementById('sentiment-vix-display');
+    if (vixDisplay) vixDisplay.innerHTML = fmtSignal(vixSig, vixSig.value != null ? `${vixSig.value}` : '—');
+    const tsSig = sig.vix_term_structure || {};
+    const tsDisplay = document.getElementById('sentiment-ts-display');
+    if (tsDisplay) {
+      const tsValue = tsSig.ratio != null ? `${tsSig.ratio} (VIX9D/VIX)` : '—';
+      tsDisplay.innerHTML = fmtSignal(tsSig, tsValue);
+    }
+    const goldDisplay = document.getElementById('sentiment-gold-display');
+    if (goldDisplay) goldDisplay.innerHTML = fmtSignal(goldSig, goldSig.change_pct_1m != null ? formatSignedPct(goldSig.change_pct_1m) : '—');
+
+    setText('market-sentiment-note', `Updated: ${data.fetched_at || '—'}`);
+  }
+
+  function renderDocuments(data) {
+    setText('documents-status-note', `${data.ticker} filings · ${data.status}`);
+    setHtml('documents-list', (data.cards || []).map(card => `
+      <div class="bg-surface-container-lowest rounded-lg p-4 ambient-shadow">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <span class="material-symbols-outlined ${card.form_type === '8-K' ? 'text-policy-gold' : 'text-on-primary-container'}">${card.form_type === '8-K' ? 'warning' : 'description'}</span>
+            <div>
+              <p class="text-[11px] font-bold">${card.title}</p>
+              <p class="text-[9px] text-on-surface-variant mt-1">${card.subtitle}</p>
+              <p class="text-[10px] text-on-surface-variant mt-2 leading-relaxed">${card.excerpt || (I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA')}</p>
+            </div>
+          </div>
+          <span class="text-[9px] bg-surface-container-high px-2 py-1 rounded font-bold text-on-surface-variant shrink-0">${card.form_type}</span>
+        </div>
+      </div>
+    `).join(''));
+  }
+
+  // ── Language switch re-render (defined here to access all render functions) ──
+  window._ooRerenderAll = function() {
+    if (typeof I18N !== 'undefined') I18N.applyToDOM();
+    const c = window._ooCache;
+    if (!c || !c.summary) return;
+    renderDashboardSummary(c.summary);
+    renderEarningsCycle(c.earnings);
+    // Use language-specific management data if cached; otherwise re-fetch asynchronously
+    const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+    const mgmtData = window._ooMgmtCache[lang] || c.management;
+    renderManagement(mgmtData);
+    if (!window._ooMgmtCache[lang] && currentTicker) {
+      fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`)
+        .then(data => {
+          window._ooMgmtCache[lang] = data;
+          window._ooCache.management = data;
+          renderManagement(data);
+        }).catch(() => {});
+    }
+    renderPortfolio(c.portfolio);
+    renderMarketOverview(c.market);
+    if (c.commodities) renderMarketCommodities(c.commodities);
+    if (c.sentiment) renderMarketSentiment(c.sentiment);
+    renderDocuments(c.documents);
+  };
+
+  async function loadDashboardData(ticker) {
+    currentTicker = ticker.toUpperCase();
+    renderDashboardLoading(currentTicker);
+    try {
+      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+      const [summary, earnings, management, portfolio, market, documents] = await Promise.all([
+        fetchJson(`/api/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
+        fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
+        fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`),
+        fetchJson('/api/portfolio/overview'),
+        fetchJson('/api/market/overview'),
+        fetchJson(`/api/documents/recent-filings?ticker=${encodeURIComponent(currentTicker)}`),
+      ]);
+      window._ooMgmtCache = {};  // clear cache when ticker changes
+      window._ooMgmtCache[lang] = management;
+      window._ooCache = { summary, earnings, management, portfolio, market, documents };
+      renderDashboardSummary(summary);
+      renderEarningsCycle(earnings);
+      renderManagement(management);
+      renderPortfolio(portfolio);
+      renderMarketOverview(market);
+      renderDocuments(documents);
+      if (analysisInput) analysisInput.value = currentTicker;
+      if (globalSearch) globalSearch.value = currentTicker;
+      // Load commodities and sentiment asynchronously (slower endpoints)
+      fetchJson('/api/market/commodities')
+        .then(data => { window._ooCache.commodities = data; renderMarketCommodities(data); })
+        .catch(err => setText('market-commodities-note', I18N ? I18N.tf('error.commodities', {msg: err.message}) : `Commodities unavailable: ${err.message}`));
+      fetchJson('/api/market/sentiment')
+        .then(data => { window._ooCache.sentiment = data; renderMarketSentiment(data); })
+        .catch(err => setText('market-sentiment-note', I18N ? I18N.tf('error.sentiment_load', {msg: err.message}) : `Sentiment unavailable: ${err.message}`));
+    } catch (err) {
+      setText('dashboard-active-ticker', I18N ? I18N.tf('error.loading_ticker', {ticker: currentTicker}) : `error loading ${currentTicker}`);
+      setText('earnings-cycle-status', I18N ? I18N.tf('error.dashboard_load', {msg: err.message}) : `Dashboard load failed: ${err.message}`);
+      setText('market-status-note', I18N ? I18N.tf('error.market_overview', {msg: err.message}) : `Market overview failed: ${err.message}`);
+    }
+  }
+
+  // ── Real API call to Flask backend ──
+  async function runAnalysis(query) {
+    analysisOutput.classList.remove('hidden');
+    analysisText.textContent = I18N ? I18N.t('analysis.connecting') : 'Connecting to Azure model… this may take 15–30 seconds.';
+    analysisBtn.disabled = true;
+    analysisBtn.textContent = '…';
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        analysisText.textContent = (I18N ? I18N.t('analysis.error_prefix') : '⚠ Error: ') + data.error;
+      } else {
+        analysisText.textContent = data.result;
+      }
+    } catch (err) {
+      analysisText.textContent = (I18N ? I18N.t('analysis.network_error') : '⚠ Network error: ') + err.message +
+        '\n\n' + (I18N ? I18N.t('analysis.flask_hint') : 'Make sure the Flask server (app.py) is running on port 5000.');
+    } finally {
+      analysisBtn.disabled = false;
+      analysisBtn.textContent = I18N ? I18N.t('analysis.button') : 'Analyze';
+    }
+  }
+
+  document.getElementById('trinity-tab-ai')?.addEventListener('click', () => activateTrinityTab('ai'));
+  document.getElementById('trinity-tab-raw')?.addEventListener('click', () => activateTrinityTab('raw'));
+
+  if (analysisBtn) {
+    analysisBtn.addEventListener('click', () => {
+      const q = (analysisInput.value || 'AAPL').trim();
+      // If input looks like a ticker symbol (1-5 uppercase letters), reload dashboard
+      if (/^[A-Za-z]{1,5}$/.test(q)) {
+        showPage('dashboard');
+        loadDashboardData(q.toUpperCase());
+        return;
+      }
+      runAnalysis(q);
+    });
+    analysisInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') analysisBtn.click();
+    });
+  }
+
+  // ── Health check badge ──
+  fetch('/api/health')
+    .then(r => r.json())
+    .then(d => {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:16px;right:16px;font-size:9px;font-family:Inter,sans-serif;background:#000f27;color:#fff;padding:6px 10px;border-radius:4px;opacity:0.7;z-index:9999;';
+      badge.textContent = `🐙 ${d.backend} · ${d.model}`;
+      document.body.appendChild(badge);
+    })
+    .catch(() => {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:16px;right:16px;font-size:9px;font-family:Inter,sans-serif;background:#EE5253;color:#fff;padding:6px 10px;border-radius:4px;opacity:0.7;z-index:9999;';
+      badge.textContent = I18N ? I18N.t('health.offline') : '🐙 server offline — run app.py';
+      document.body.appendChild(badge);
+    });
+
+  // ── Global Search ──
+  const globalSearch = document.getElementById('global-search');
+  if (globalSearch) {
+    globalSearch.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        const ticker = e.target.value.trim().toUpperCase();
+        showPage('dashboard');
+        loadDashboardData(ticker);
+      }
+    });
+  }
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => showPage(link.dataset.page));
+  });
+
+  // ── Gauge entrance animation ──
+  // Set initial dashoffset to full circle, then animate to target
+  const gauges = [
+    { el: document.querySelectorAll('.gauge-circle')[0], target: 56.3  },
+    { el: document.querySelectorAll('.gauge-circle')[1], target: 112.6 },
+    { el: document.querySelectorAll('.gauge-circle')[2], target: 28.15 },
+  ];
+  gauges.forEach(g => {
+    if (g.el) {
+      g.el.style.strokeDashoffset = '351.86';
+      setTimeout(() => { g.el.style.strokeDashoffset = g.target; }, 300);
+    }
+  });
+
+  // ── i18n init ──
+  if (typeof I18N !== 'undefined') I18N.init();
+
+  loadDashboardData(currentTicker);
+
+  // ── AI / No-AI Policy & Sentiment feeds ──
+  (function () {
+    let aiMode = 'off';
+    let activeSentimentFilter = 'all';
+    let sentimentFeed = [];
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+
+    const localDataProvider = {
+      async getPolicyOutlook() {
+        return { items: [
+          { title: 'Trade Tariff Exemption 4-A', windowPct: 75, expires: '2026-Q4', severity: 'medium' },
+          { title: 'Semiconductor Subsidy Phase 2', windowPct: 32, expires: '2025-Q4', severity: 'medium' },
+          { title: 'EU AI Act Compliance Window', windowPct: 18, expires: '2025-Q2', severity: 'high' },
+        ], ai: { mode: 'fallback', ai_used: false } };
+      },
+      async getSentimentFeed() {
+        return { items: [
+          { label: 'Positive', tone: 'positive', time: '08:14 ET', tag: 'tech', headline: 'NVIDIA Gen-AI integration reports 40% efficiency gain in model serving.' },
+          { label: 'Negative', tone: 'negative', time: '06:45 ET', tag: 'policy', headline: 'New EU data mandate raises compliance burden for ad-targeting models.' },
+          { label: 'Positive', tone: 'positive', time: 'Yesterday', tag: 'macro', headline: 'Regional manufacturing partnership lowers projected supply-chain risk by 15%.' },
+          { label: 'Alert', tone: 'alert', time: 'Yesterday', tag: 'tech', headline: 'Rate-path uncertainty may reprice long-duration AI growth multiples in Q3.' },
+        ], ai: { mode: 'fallback', ai_used: false } };
+      },
+    };
+
+    const apiDataProvider = {
+      async getPolicyOutlook() {
+        const res = await fetch(`/api/policy-outlook?keyword=ai%20regulation&days=180&limit=20&ai=${aiMode}`);
+        if (!res.ok) throw new Error(`policy-outlook http ${res.status}`);
+        return await res.json();
+      },
+      async getSentimentFeed() {
+        const res = await fetch(`/api/sentiment-feed?keyword=ai%20regulation&days=180&limit=20&ai=${aiMode}`);
+        if (!res.ok) throw new Error(`sentiment-feed http ${res.status}`);
+        return await res.json();
+      },
+    };
+
+    async function safeFetch(apiFn, localFn) {
+      try { return await apiFn(); }
+      catch (e) { console.warn('API unavailable, using local fallback.', e); return await localFn(); }
+    }
+
+    function renderAiStatus(meta) {
+      const badge = document.getElementById('ai-mode-badge');
+      const usageText = document.getElementById('ai-usage-text');
+      if (!badge || !usageText) return;
+      if (meta && meta.ai_used) {
+        badge.textContent = I18N ? I18N.t('ai.status.on') : 'AI ON';
+        badge.className = 'text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-policy-gold text-white';
+        const p = meta.prompt_tokens ?? 0, c = meta.completion_tokens ?? 0, t = meta.total_tokens ?? (p + c);
+        usageText.textContent = I18N ? I18N.tf('ai.usage.active', {p, c, t}) : `AI active — tokens: prompt ${p}, completion ${c}, total ${t}.`;
+      } else {
+        badge.textContent = aiMode === 'on' ? (I18N ? I18N.t('ai.status.offline') : 'AI OFFLINE') : (I18N ? I18N.t('sidebar.no_ai') : 'No-AI');
+        badge.className = 'text-[8px] px-2 py-0.5 rounded-sm font-bold uppercase bg-surface-container-high text-on-surface-variant';
+        usageText.textContent = (meta && meta.mode === 'fallback')
+          ? (I18N ? I18N.t('ai.usage.fallback') : 'API unavailable. Local deterministic fallback active.')
+          : (aiMode === 'on' ? (I18N ? I18N.t('ai.usage.no_usage') : 'AI mode requested, but no model usage recorded.') : (I18N ? I18N.t('sidebar.ai.note_off') : 'Deterministic mode active. No model token usage.'));
+      }
+    }
+
+    function renderPolicyOutlook(items) {
+      const container = document.getElementById('policy-cards');
+      if (!container) return;
+      if (!items || !items.length) { container.innerHTML = `<div class="p-3.5 bg-surface-container-lowest rounded-lg text-[10px] text-on-surface-variant">${I18N ? I18N.t('policy.no_events') : 'No policy events found.'}</div>`; return; }
+      container.innerHTML = items.map(item => {
+        const pct = Math.max(0, Math.min(100, Number(item.windowPct) || 0));
+        const barCls = (item.severity === 'high' || pct <= 25) ? 'bg-performance-red' : 'bg-policy-gold';
+        const txtCls = (item.severity === 'high' || pct <= 25) ? 'text-performance-red' : 'text-policy-gold';
+        return `<div class="p-3.5 bg-surface-container-lowest rounded-lg"><p class="text-[10px] font-bold text-primary mb-2">${escHtml(item.title)}</p><div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden mb-2"><div class="h-full rounded-full ${barCls}" style="width:${pct}%;"></div></div><div class="flex justify-between items-center"><span class="text-[9px] text-on-surface-variant uppercase tracking-tight">${I18N ? I18N.t('policy.valid_until') : 'Valid until'} ${escHtml(item.expires)}</span><span class="text-[9px] font-bold ${txtCls} uppercase">${pct}% ${I18N ? I18N.t('policy.window') : 'Window'}</span></div></div>`;
+      }).join('');
+    }
+
+    function sentimentToneClass(tone) {
+      if (tone === 'positive') return { border: 'border-performance-green', text: 'text-performance-green' };
+      if (tone === 'negative') return { border: 'border-performance-red', text: 'text-performance-red' };
+      return { border: 'border-policy-gold', text: 'text-policy-gold' };
+    }
+
+    function renderSentimentFeed() {
+      const container = document.getElementById('sentiment-list');
+      if (!container) return;
+      const filtered = sentimentFeed.filter(item => activeSentimentFilter === 'all' || item.tag === activeSentimentFilter);
+      if (!filtered.length) { container.innerHTML = `<div class="p-3.5 bg-surface-container-low rounded-lg text-[10px] text-on-surface-variant">${I18N ? I18N.t('sentiment.no_items') : 'No sentiment items for this filter.'}</div>`; return; }
+      container.innerHTML = filtered.map(item => {
+        const tone = sentimentToneClass(item.tone);
+        return `<div class="sentiment-item border-l-2 ${tone.border} pl-3 py-0.5" data-tag="${escHtml(item.tag)}"><div class="flex justify-between mb-0.5"><span class="text-[8px] font-bold uppercase ${tone.text}">${escHtml(item.label)}</span><span class="text-[8px] text-on-surface-variant tabular-nums">${escHtml(item.time)}</span></div><p class="text-[10px] leading-snug font-medium text-primary">${escHtml(item.headline)}</p></div>`;
+      }).join('');
+    }
+
+    function updateCounterStats(policyNoAi, policyAi, sentNoAi, sentAi) {
+      const el = id => document.getElementById(id);
+      if (el('policy-count-noai')) el('policy-count-noai').textContent = policyNoAi;
+      if (el('policy-count-ai'))   el('policy-count-ai').textContent   = policyAi;
+      if (el('sentiment-count-noai')) el('sentiment-count-noai').textContent = sentNoAi;
+      if (el('sentiment-count-ai'))   el('sentiment-count-ai').textContent   = sentAi;
+    }
+
+    async function loadDashboardFeeds() {
+      try {
+        // Always fetch both local (No-AI) and api (AI) for comparison counts
+        const [policyData, sentimentData, policyLocal, sentimentLocal] = await Promise.all([
+          safeFetch(() => apiDataProvider.getPolicyOutlook(), () => localDataProvider.getPolicyOutlook()),
+          safeFetch(() => apiDataProvider.getSentimentFeed(), () => localDataProvider.getSentimentFeed()),
+          localDataProvider.getPolicyOutlook().catch(() => ({ items: [] })),
+          localDataProvider.getSentimentFeed().catch(() => ({ items: [] })),
+        ]);
+        // Update counter stats: No-AI = local counts, AI = api counts
+        const policyApiCount = (policyData.items || []).length;
+        const sentApiCount   = (sentimentData.items || []).length;
+        const policyLocalCount = (policyLocal.items || []).length;
+        const sentLocalCount   = (sentimentLocal.items || []).length;
+        updateCounterStats(policyLocalCount, policyApiCount, sentLocalCount, sentApiCount);
+        renderPolicyOutlook(policyData.items || []);
+        sentimentFeed = sentimentData.items || [];
+        renderSentimentFeed();
+        // Prefer meta with ai_used=true; fall back to any meta
+        const bestMeta = [sentimentData.ai, policyData.ai].find(m => m && m.ai_used) ||
+                         sentimentData.ai || policyData.ai || null;
+        renderAiStatus(bestMeta);
+      } catch (err) {
+        console.error('Dashboard feed load failed:', err);
+        renderAiStatus({ mode: 'fallback', ai_used: false });
+      }
+    }
+
+    // Mode toggle buttons — also control AI Overlay vs Raw Data tab
+    document.querySelectorAll('.mode-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        aiMode = btn.dataset.mode === 'on' ? 'on' : 'off';
+        document.querySelectorAll('.mode-toggle').forEach(b => {
+          b.classList.remove('bg-primary','text-white');
+          b.classList.add('bg-surface-container-high','text-on-surface-variant');
+        });
+        btn.classList.add('bg-primary','text-white');
+        btn.classList.remove('bg-surface-container-high','text-on-surface-variant');
+        // No-AI → Raw Data panel; AI → AI Overlay panel
+        activateTrinityTab(aiMode === 'on' ? 'ai' : 'raw');
+        loadDashboardFeeds();
+      });
+    });
+
+    // Sentiment tab filter
+    document.querySelectorAll('.sentiment-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        activeSentimentFilter = tab.dataset.filter;
+        document.querySelectorAll('.sentiment-tab').forEach(t => {
+          t.classList.remove('bg-primary','text-white');
+          t.classList.add('bg-surface-container-high','text-on-surface-variant');
+        });
+        tab.classList.add('bg-primary','text-white');
+        tab.classList.remove('bg-surface-container-high','text-on-surface-variant');
+        renderSentimentFeed();
+      });
+    });
+
+    loadDashboardFeeds();
+  })();
+})();
+</script>
+</body>
+</html>

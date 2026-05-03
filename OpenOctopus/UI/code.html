@@ -1,0 +1,462 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OpenOctopus | Institutional Investment Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline-variant": "#c4c6cf",
+                      "tertiary-fixed": "#ffdcc2",
+                      "on-surface-variant": "#44474e",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed-dim": "#b1c7f3",
+                      "surface-variant": "#e3e2e5",
+                      "on-tertiary-fixed": "#2e1500",
+                      "surface-dim": "#dbd9dd",
+                      "surface-bright": "#faf9fc",
+                      "secondary": "#52606f",
+                      "on-tertiary-fixed-variant": "#6d3a00",
+                      "on-error-container": "#93000a",
+                      "on-background": "#1b1b1e",
+                      "primary-container": "#0b2447",
+                      "primary-fixed": "#d6e3ff",
+                      "inverse-primary": "#b1c7f3",
+                      "inverse-on-surface": "#f2f0f4",
+                      "error": "#ba1a1a",
+                      "outline": "#74777f",
+                      "on-secondary": "#ffffff",
+                      "surface": "#faf9fc",
+                      "on-secondary-fixed-variant": "#3a4856",
+                      "tertiary-fixed-dim": "#ffb77a",
+                      "surface-container-high": "#e9e7eb",
+                      "surface-tint": "#4a5f85",
+                      "on-tertiary-container": "#cd761b",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed-dim": "#b9c8d9",
+                      "on-primary-container": "#778cb5",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#3b1d00",
+                      "surface-container-low": "#f5f3f6",
+                      "background": "#faf9fc",
+                      "inverse-surface": "#303033",
+                      "surface-container": "#efedf1",
+                      "on-surface": "#1b1b1e",
+                      "secondary-fixed": "#d5e4f6",
+                      "on-secondary-fixed": "#0f1d29",
+                      "tertiary": "#1d0b00",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#32476c",
+                      "on-secondary-container": "#586675",
+                      "on-primary-fixed": "#011b3e",
+                      "surface-container-highest": "#e3e2e5",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#d5e4f6",
+                      "primary": "#000f27",
+                      "performance-green": "#10AC84",
+                      "performance-red": "#EE5253",
+                      "policy-gold": "#FF9F43"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Manrope"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface flex min-h-screen">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-6 z-50 bg-[#f5f3f6] dark:bg-[#0b2447] w-64">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: &quot;FILL&quot; 1;">account_balance</span>
+</div>
+<div>
+<p class="font-headline font-bold text-primary dark:text-white leading-tight" style="">Advisor Terminal</p>
+<p class="font-['Inter'] text-[10px] uppercase tracking-widest text-slate-500" style="">Institutional Grade</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 bg-[#ffffff] dark:bg-[#faf9fc]/10 text-[#000f27] dark:text-white font-bold rounded-r-lg shadow-sm" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">dashboard</span>
+<span class="font-['Inter'] text-sm uppercase tracking-widest" style="">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-[#e9e7eb] dark:hover:bg-white/5 transition-all duration-200" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">account_balance_wallet</span>
+<span class="font-['Inter'] text-sm uppercase tracking-widest" style="">Portfolio</span>
+</a>
+<a class="flex items-center px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-[#e9e7eb] dark:hover:bg-white/5 transition-all duration-200" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">analytics</span>
+<span class="font-['Inter'] text-sm uppercase tracking-widest" style="">Analysis</span>
+</a>
+<a class="flex items-center px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-[#e9e7eb] dark:hover:bg-white/5 transition-all duration-200" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">monitoring</span>
+<span class="font-['Inter'] text-sm uppercase tracking-widest" style="">Market Insights</span>
+</a>
+<a class="flex items-center px-6 py-3 text-slate-600 dark:text-slate-400 hover:bg-[#e9e7eb] dark:hover:bg-white/5 transition-all duration-200" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">description</span>
+<span class="font-['Inter'] text-sm uppercase tracking-widest" style="">Documents</span>
+</a>
+</nav>
+<div class="mt-auto px-6 space-y-4">
+<a class="flex items-center text-slate-600 dark:text-slate-400 hover:text-primary" href="#" style="">
+<span class="material-symbols-outlined mr-2" style="">help_outline</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest" style="">Support</span>
+</a>
+<a class="flex items-center text-slate-600 dark:text-slate-400 hover:text-primary" href="#" style="">
+<span class="material-symbols-outlined mr-2" style="">logout</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest" style="">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 flex flex-col min-w-0">
+<!-- Header -->
+<header class="flex justify-between items-center px-8 w-full z-40 bg-[#faf9fc] dark:bg-[#000f27] h-16">
+<h1 class="text-xl font-headline font-bold tracking-tighter text-[#000f27] dark:text-white uppercase" style="">OpenOctopus</h1>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" style="">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-high rounded text-xs focus:ring-0 border-none w-64" placeholder="Global Identifier Search..." type="text">
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" style="">notifications</span>
+<span class="material-symbols-outlined text-slate-500 cursor-pointer hover:text-primary transition-colors" style="">settings</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a wealth advisor in a dark suit with a clean office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeV_DejSUV2KWUQFn-INfKEyg-XX32-z6-oeZyoHc6I6Y2DVRel1ZG2MBfJUrPxDp4B6wQm_rtaJVmhMNo5vMhJ5NA13krVV5DSReoScpcSvDeV8fR9x_HiEoM9vCsDLxb9x8ANY2eq8hozra4GfbqbuR1-2cq48kXH9GXEEfkqVJJpoYQrK8dA6OynZmXZzsfMww3X3Pj3KVZmiWD4vPMmbwPDGyXJCDJw-4piCedFnwMzFoZDh6zdMzD-TCKTTuGBM6cAZFzC98" style="">
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 flex gap-8">
+<!-- Center Content Area -->
+<div class="flex-[3] space-y-8 min-w-0">
+<!-- Trinity Divergence Hero -->
+<section class="bg-surface-container-lowest rounded-lg p-6">
+<div class="flex justify-between items-end mb-8">
+<div>
+<p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-1" style="">Performance Integrity Index</p>
+<h2 class="font-headline text-2xl font-extrabold text-primary" style="">Trinity Divergence Hero</h2>
+</div>
+<div class="text-right">
+<p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant" style="">Divergence Score</p>
+<div class="flex items-center gap-2">
+<span class="text-3xl font-headline font-bold tabular-nums text-performance-green" style="">+14.2%</span>
+<span class="material-symbols-outlined text-performance-green" style="">trending_up</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-12 relative">
+<!-- Gauge 1: Realized Performance -->
+<div class="flex flex-col items-center">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="60" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline font-bold text-lg tabular-nums text-primary" style="">84%</span>
+</div>
+<p class="mt-4 font-label text-[11px] uppercase tracking-widest font-bold" style="">Realized Performance</p>
+<p class="text-[10px] text-on-surface-variant" style="">AUM Variance: -0.4%</p>
+</div>
+<!-- Gauge 2: Management Guidance -->
+<div class="flex flex-col items-center">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-on-primary-container" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="120" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline font-bold text-lg tabular-nums text-primary" style="">68%</span>
+</div>
+<p class="mt-4 font-label text-[11px] uppercase tracking-widest font-bold text-center" style="">Guidance vs. Actuals</p>
+<p class="text-[10px] text-on-surface-variant" style="">Conservative Bias</p>
+</div>
+<!-- Gauge 3: Analyst Consensus -->
+<div class="flex flex-col items-center">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-performance-green" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="30" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline font-bold text-lg tabular-nums text-primary" style="">92%</span>
+</div>
+<p class="mt-4 font-label text-[11px] uppercase tracking-widest font-bold text-center" style="">Analyst Consensus</p>
+<p class="text-[10px] text-on-surface-variant" style="">Sell-Side Alignment</p>
+</div>
+</div>
+<!-- Sparkline Delta -->
+<div class="mt-10 pt-6 border-t border-outline-variant/10">
+<div class="flex justify-between items-center mb-4">
+<span class="font-label text-[10px] uppercase tracking-widest font-semibold" style="">trinity Alignment Trend (4Q Trailing)</span>
+<span class="font-label text-[10px] tabular-nums text-on-surface-variant" style="">Target Convergence: 100.0</span>
+</div>
+<div class="h-12 w-full relative">
+<svg class="w-full h-full overflow-visible">
+<path d="M0 40 Q 50 10 100 35 T 200 15 T 300 45 T 400 20 T 500 40 T 600 5 T 700 25 T 800 10" fill="none" stroke="#000f27" stroke-width="2"></path>
+<path d="M0 40 Q 50 10 100 35 T 200 15 T 300 45 T 400 20 T 500 40 T 600 5 T 700 25 T 800 10 L 800 48 L 0 48 Z" fill="url(#grad1)" opacity="0.1"></path>
+<defs>
+<linearGradient id="grad1" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#000f27;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#000f27;stop-opacity:0"></stop>
+</linearGradient>
+</defs>
+</svg>
+</div>
+</div>
+</section>
+<!-- Market Reaction History (Candlestick Pattern) -->
+<section class="bg-surface-container-lowest rounded-lg p-6">
+<h3 class="font-headline text-sm font-extrabold text-primary uppercase tracking-tight mb-8" style="">Quarterly Earnings Reaction Cycle</h3>
+<div class="space-y-6">
+<!-- Quarter Row -->
+<div class="flex items-center gap-4">
+<div class="w-20 font-label text-[10px] font-bold text-on-surface-variant uppercase" style="">2024-Q2</div>
+<div class="flex-1 h-12 flex items-center relative gap-0.5">
+<div class="absolute left-0 right-0 h-px bg-outline-variant/10"></div>
+<div class="absolute left-1/2 -top-2 bottom-0 w-px bg-primary opacity-20"></div>
+<!-- Day -5 to -1 -->
+<div class="flex-1 flex justify-center gap-1 opacity-40">
+<div class="w-2 h-6 bg-performance-red"></div>
+<div class="w-2 h-8 bg-performance-red"></div>
+<div class="w-2 h-4 bg-performance-green"></div>
+</div>
+<!-- Day 0 -->
+<div class="w-4 h-10 bg-performance-green shadow-sm ring-1 ring-performance-green/20"></div>
+<!-- Day +1 to +5 -->
+<div class="flex-1 flex justify-center gap-1">
+<div class="w-2 h-6 bg-performance-green"></div>
+<div class="w-2 h-8 bg-performance-green"></div>
+<div class="w-2 h-10 bg-performance-green"></div>
+<div class="w-2 h-7 bg-performance-red"></div>
+</div>
+</div>
+<div class="w-12 text-right font-label text-[10px] font-bold text-performance-green tabular-nums" style="">+4.2%</div>
+</div>
+<!-- Quarter Row -->
+<div class="flex items-center gap-4">
+<div class="w-20 font-label text-[10px] font-bold text-on-surface-variant uppercase" style="">2024-Q1</div>
+<div class="flex-1 h-12 flex items-center relative gap-0.5">
+<div class="absolute left-0 right-0 h-px bg-outline-variant/10"></div>
+<div class="absolute left-1/2 -top-2 bottom-0 w-px bg-primary opacity-20"></div>
+<div class="flex-1 flex justify-center gap-1 opacity-40">
+<div class="w-2 h-4 bg-performance-green"></div>
+<div class="w-2 h-6 bg-performance-green"></div>
+<div class="w-2 h-5 bg-performance-red"></div>
+</div>
+<div class="w-4 h-12 bg-performance-red shadow-sm ring-1 ring-performance-red/20"></div>
+<div class="flex-1 flex justify-center gap-1">
+<div class="w-2 h-8 bg-performance-red"></div>
+<div class="w-2 h-5 bg-performance-red"></div>
+<div class="w-2 h-3 bg-performance-green"></div>
+</div>
+</div>
+<div class="w-12 text-right font-label text-[10px] font-bold text-performance-red tabular-nums" style="">-2.8%</div>
+</div>
+<!-- Quarter Row -->
+<div class="flex items-center gap-4">
+<div class="w-20 font-label text-[10px] font-bold text-on-surface-variant uppercase" style="">2023-Q4</div>
+<div class="flex-1 h-12 flex items-center relative gap-0.5">
+<div class="absolute left-0 right-0 h-px bg-outline-variant/10"></div>
+<div class="absolute left-1/2 -top-2 bottom-0 w-px bg-primary opacity-20"></div>
+<div class="flex-1 flex justify-center gap-1 opacity-40">
+<div class="w-2 h-3 bg-performance-red"></div>
+<div class="w-2 h-4 bg-performance-green"></div>
+<div class="w-2 h-7 bg-performance-green"></div>
+</div>
+<div class="w-4 h-8 bg-performance-green shadow-sm ring-1 ring-performance-green/20"></div>
+<div class="flex-1 flex justify-center gap-1">
+<div class="w-2 h-5 bg-performance-green"></div>
+<div class="w-2 h-6 bg-performance-green"></div>
+<div class="w-2 h-4 bg-performance-green"></div>
+</div>
+</div>
+<div class="w-12 text-right font-label text-[10px] font-bold text-performance-green tabular-nums" style="">+1.5%</div>
+</div>
+</div>
+<div class="mt-6 flex justify-center gap-12 border-t border-outline-variant/10 pt-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" style="">Days -5 to -1</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-primary/20 ring-1 ring-primary/40 rounded-sm"></span>
+<span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" style="">Day 0 (Call)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" style="">Days +1 to +5</span>
+</div>
+</div>
+</section>
+<!-- Management Credibility Center -->
+<section class="bg-surface-container-lowest rounded-lg p-0 grid grid-cols-3 overflow-hidden">
+<!-- Column A: Reliability Index -->
+<div class="p-6 border-r border-outline-variant/10">
+<h4 class="font-headline text-[11px] font-extrabold text-primary uppercase mb-4" style="">Reliability Index</h4>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-on-surface-variant" style="">8-Quarter Index</span>
+<span class="text-xs font-bold tabular-nums" style="">0.94 <span class="text-[10px] font-normal text-performance-green" style="">▲</span></span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-on-surface-variant" style="">Std Dev Miss/Beat</span>
+<span class="text-xs font-bold tabular-nums" style="">±0.12</span>
+</div>
+<div class="h-16 w-full bg-surface-container-low rounded-sm p-2 flex items-end gap-1">
+<div class="flex-1 bg-primary/40 h-[60%]"></div>
+<div class="flex-1 bg-primary/40 h-[80%]"></div>
+<div class="flex-1 bg-primary/40 h-[45%]"></div>
+<div class="flex-1 bg-primary/40 h-[90%]"></div>
+<div class="flex-1 bg-primary/40 h-[70%]"></div>
+<div class="flex-1 bg-primary/40 h-[85%]"></div>
+</div>
+</div>
+</div>
+<!-- Column B: Strategy Execution -->
+<div class="p-6 border-r border-outline-variant/10">
+<h4 class="font-headline text-[11px] font-extrabold text-primary uppercase mb-4" style="">Strategy Execution</h4>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[10px] mb-1">
+<span class="text-on-surface-variant" style="">T-1 Commitment</span>
+<span class="font-bold tabular-nums" style="">82%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-on-primary-container w-[82%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[10px] mb-1">
+<span class="text-on-surface-variant" style="">T-0 Mention Rate</span>
+<span class="font-bold tabular-nums" style="">14.2% Growth</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[94%]"></div>
+</div>
+</div>
+<p class="text-[9px] text-on-surface-variant italic leading-tight" style="">High correlation between verbal guidance and subsequent CapEx deployment.</p>
+</div>
+</div>
+<!-- Column C: Q&A Transparency -->
+<div class="p-6 relative group">
+<h4 class="font-headline text-[11px] font-extrabold text-primary uppercase mb-4" style="">Management Transparency</h4>
+<div class="h-24 w-full rounded-lg flex items-center justify-center relative overflow-hidden" style="background: linear-gradient(to right, #EE5253, #FF9F43, #10AC84)">
+<div class="absolute inset-0 flex items-center px-4 justify-between">
+<span class="text-[10px] text-white font-bold" style="">OPACITY</span>
+<div class="w-1 h-full bg-white shadow-lg ring-2 ring-primary/20 z-10"></div>
+<span class="text-[10px] text-white font-bold" style="">LUCID</span>
+</div>
+</div>
+<div class="mt-4 flex justify-between items-center">
+<span class="text-xs font-bold text-performance-green" style="">7.4 / 10.0</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant cursor-help" style="">info</span>
+</div>
+<!-- Tooltip Hidden by Default -->
+<div class="absolute inset-x-4 bottom-full mb-2 p-3 bg-inverse-surface text-inverse-on-surface text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl" style="">
+                            Low score indicates vector similarity weakness or high deflection rates during unscripted Q&amp;A sessions.
+                        </div>
+</div>
+</section>
+</div>
+<!-- Right Sidebar Intelligence Panels -->
+<aside class="flex-1 space-y-8 max-w-xs">
+<!-- Active Policy Outlook -->
+<section class="bg-surface-container-low rounded-lg p-5">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-[11px] font-extrabold text-primary uppercase tracking-wider" style="">Policy Outlook</h3>
+<span class="material-symbols-outlined text-sm text-policy-gold" style="font-variation-settings: &quot;FILL&quot; 1;">stars</span>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-surface-container-lowest rounded-lg">
+<p class="text-[10px] font-bold text-primary mb-2" style="">Trade Tariff Exemption 4-A</p>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden mb-2">
+<div class="h-full bg-policy-gold w-3/4"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[9px] text-on-surface-variant uppercase tracking-tighter" style="">Valid until 2026-Q4</span>
+<span class="text-[9px] font-bold text-policy-gold uppercase" style="">75% Window</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-lowest rounded-lg">
+<p class="text-[10px] font-bold text-primary mb-2" style="">Semiconductor Subsidy Phase 2</p>
+<div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden mb-2">
+<div class="h-full bg-policy-gold w-1/3"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[9px] text-on-surface-variant uppercase tracking-tighter" style="">Valid until 2025-Q1</span>
+<span class="text-[9px] font-bold text-policy-gold uppercase" style="">32% Window</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sentiment Feed -->
+<section class="bg-surface-container-lowest rounded-lg p-5">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-[11px] font-extrabold text-primary uppercase tracking-wider" style="">Sentiment Feed</h3>
+<div class="flex gap-1">
+<button class="px-2 py-1 bg-primary text-[9px] text-white rounded-sm font-bold uppercase" style="">All</button>
+<button class="px-2 py-1 bg-surface-container-high text-[9px] text-on-surface-variant rounded-sm font-bold uppercase" style="">Tech Shifts</button>
+</div>
+</div>
+<div class="space-y-4">
+<div class="border-l-2 border-performance-green pl-3 py-1">
+<div class="flex justify-between mb-1">
+<span class="text-[9px] font-bold uppercase text-performance-green" style="">Positive</span>
+<span class="text-[9px] text-on-surface-variant tabular-nums" style="">08:14 ET</span>
+</div>
+<p class="text-[11px] leading-snug font-medium text-primary" style="">NVIDIA Gen-AI Integration reported 40% efficiency gains in Sector Alpha.</p>
+</div>
+<div class="border-l-2 border-performance-red pl-3 py-1">
+<div class="flex justify-between mb-1">
+<span class="text-[9px] font-bold uppercase text-performance-red" style="">Negative</span>
+<span class="text-[9px] text-on-surface-variant tabular-nums" style="">06:45 ET</span>
+</div>
+<p class="text-[11px] leading-snug font-medium text-primary" style="">New EU Data Privacy mandate threatens high-growth advertising modeling.</p>
+</div>
+<div class="border-l-2 border-performance-green pl-3 py-1">
+<div class="flex justify-between mb-1">
+<span class="text-[9px] font-bold uppercase text-performance-green" style="">Positive</span>
+<span class="text-[9px] text-on-surface-variant tabular-nums" style="">Yesterday</span>
+</div>
+<p class="text-[11px] leading-snug font-medium text-primary" style="">Strategic partnership with Asian manufacturing hub reduces supply risk by 15%.</p>
+</div>
+</div>
+<button class="w-full mt-6 py-2 border border-outline-variant/10 text-[9px] font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-container-low transition-colors" style="">View Deep Intelligence Archive</button>
+</section>
+<!-- Macro Context Card -->
+<div class="rounded-lg overflow-hidden h-40 relative">
+<img class="w-full h-full object-cover" data-alt="architectural abstraction of a modern glass skyscraper reflecting a clear blue sky with sharp geometric lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARCz7KSrRNjcykyPm-paeE_OqGDpEL3IgejP0WbazyCjDSvINM057WENQb6zcUyYwSnQEiph6o6ruFcCQ_REw8cmaf8f8Ab5oKywJ_JwNYfKIQg7B1_m6ITrB3p5OuUDizqJovGmstu6oa0nE2lGFsR6TmmunTtiBDt-9n8kL-YMotzBbDdARDZlBvUGct3W6fl6GQabPnJ1SVwCUF_tq0V2tzWFIsO8dRmmpOFL7I8fGorWW-fwMhRN_dRR_js-h3kQFTO8GY2kc" style="">
+<div class="absolute inset-0 bg-primary/60 backdrop-blur-sm flex flex-col justify-end p-4">
+<p class="text-[9px] font-bold text-white/60 uppercase mb-1" style="">Asset Class: Commercial Real Estate</p>
+<h4 class="text-white font-headline font-bold text-sm" style="">Metropolitan Legacy Yield Analysis</h4>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

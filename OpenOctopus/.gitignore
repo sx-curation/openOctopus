@@ -1,0 +1,53 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Caches
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local dev server logs
+flask_*.txt
+flask_*.log
+
+# Azure deployment packages
+deploy*.zip
+current*.zip
+app_logs*/
+app_logs*.zip
+app_logs2*/
+app_logs2*.zip
+fresh_logs*/
+latest_logs*/
+now_logs*/
+current_logs*/
+startup*.log
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
