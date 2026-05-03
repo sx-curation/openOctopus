@@ -207,23 +207,28 @@
 
             <!-- Grade badge + label -->
             <div class="flex items-center gap-3 mb-3">
-              <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
-                <span class="font-headline text-xl font-extrabold" id="mgmt-guidance-score" style="color:#10AC84;">—</span>
+              <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;" id="mgmt-guidance-badge">
+                <span class="font-headline text-xl font-extrabold" id="mgmt-guidance-grade" style="color:#10AC84;">—</span>
               </div>
               <div class="min-w-0">
                 <p class="text-[11px] font-bold text-on-surface leading-tight" id="mgmt-guidance-label">—</p>
-                <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-guidance-detail">等待中...</p>
+                <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-guidance-value">—</p>
               </div>
             </div>
 
-            <!-- Progress bars -->
-            <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5">
-              <div class="flex-1 rounded-sm bg-primary/30" style="height:45%;"></div>
-              <div class="flex-1 rounded-sm bg-primary/40" style="height:55%;"></div>
-              <div class="flex-1 rounded-sm bg-primary/30" style="height:40%;"></div>
-              <div class="flex-1 rounded-sm bg-primary/50" style="height:65%;"></div>
+            <!-- 8-Quarter bar chart -->
+            <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5" id="mgmt-guidance-bars">
             </div>
-            <p class="text-[8px] text-on-surface-variant text-center mt-1">近期表現</p>
+            <p class="text-[8px] text-on-surface-variant text-center mt-1">8 季度表現</p>
+
+            <!-- Variance & Beat/Miss Stats -->
+            <div class="mt-2 flex justify-between items-center mb-2">
+              <span class="text-[9px] text-on-surface-variant">波動性</span>
+              <span class="text-[9px] font-bold" id="mgmt-guidance-variance">—</span>
+            </div>
+            <div class="mt-2 text-[9px] text-on-surface-variant">
+              <span id="mgmt-guidance-beat-miss">Beat: — | Miss: —</span>
+            </div>
           </div>
 
           <!-- Divider -->
@@ -635,11 +640,100 @@
   }
 
   function renderManagementMetrics(data) {
-    if (data.error || !data.cards) return;
+    if (data.error) return;
 
-    const cards = data.cards || [];
+    // Render enhanced guidance accuracy if heuristics available
+    if (data.heuristics && data.heuristics.guidance_accuracy) {
+      renderGuidanceAccuracyEnhanced(data.heuristics.guidance_accuracy);
+    } else if (data.cards) {
+      // Fallback to legacy cards format
+      renderManagementMetricsLegacy(data.cards);
+    }
 
-    // Map cards to management credibility center sections
+    // Render other metrics
+    if (data.heuristics) {
+      if (data.heuristics.management_transparency) {
+        renderTransparency(data.heuristics.management_transparency);
+      }
+      if (data.heuristics.strategy_execution) {
+        renderStrategyExecution(data.heuristics.strategy_execution);
+      }
+    } else if (data.cards) {
+      renderManagementMetricsLegacy(data.cards);
+    }
+  }
+
+  function renderGuidanceAccuracyEnhanced(ga) {
+    if (!ga) return;
+
+    const grade = ga.grade || '—';
+    const score = ga.score || 0;
+    const beatCount = ga.beat_count || 0;
+    const missCount = ga.miss_count || 0;
+    const history = ga.history || [];
+    const varianceLabel = ga.variance_label || '—';
+
+    // 1. Grade badge styling by grade
+    const gradeColors = {
+      'S': { color: '#10AC84', bg: 'rgba(16,172,132,0.10)', border: 'rgba(16,172,132,0.25)' },
+      'A': { color: '#10AC84', bg: 'rgba(16,172,132,0.08)', border: 'rgba(16,172,132,0.22)' },
+      'B': { color: '#FF9F43', bg: 'rgba(255,159,67,0.10)', border: 'rgba(255,159,67,0.28)' },
+      'C': { color: '#FF9F43', bg: 'rgba(255,159,67,0.08)', border: 'rgba(255,159,67,0.22)' },
+      'D': { color: '#EE5253', bg: 'rgba(238,82,83,0.10)', border: 'rgba(238,82,83,0.28)' },
+    };
+
+    const colors = gradeColors[grade] || gradeColors['D'];
+
+    // Update grade badge
+    const gradeEl = document.getElementById('mgmt-guidance-grade');
+    const badge = document.getElementById('mgmt-guidance-badge');
+    if (gradeEl) {
+      gradeEl.textContent = grade;
+      gradeEl.style.color = colors.color;
+    }
+    if (badge) {
+      badge.style.background = colors.bg;
+      badge.style.border = `2px solid ${colors.border}`;
+    }
+
+    // Update label and value
+    document.getElementById('mgmt-guidance-label').textContent = ga.label || '—';
+    document.getElementById('mgmt-guidance-value').textContent = `${score} · 8季度指數`;
+    document.getElementById('mgmt-guidance-variance').textContent = varianceLabel;
+    document.getElementById('mgmt-guidance-beat-miss').textContent =
+      `Beat: ${beatCount} | Miss: ${missCount}`;
+
+    // 2. Generate 8-quarter bar chart
+    const bars = document.getElementById('mgmt-guidance-bars');
+    if (bars && history.length > 0) {
+      bars.innerHTML = history.map((h, i) => {
+        const surprise = h.surprise_pct || 0;
+        let barColor, barOpacity;
+
+        // Color intensity based on surprise magnitude
+        if (surprise >= 10) { barColor = '#10AC84'; barOpacity = 0.90; }
+        else if (surprise >= 5) { barColor = '#10AC84'; barOpacity = 0.65; }
+        else if (surprise >= 1) { barColor = '#10AC84'; barOpacity = 0.40; }
+        else if (surprise > -1) { barColor = '#888'; barOpacity = 0.30; }
+        else if (surprise > -5) { barColor = '#EE5253'; barOpacity = 0.40; }
+        else if (surprise > -10) { barColor = '#EE5253'; barOpacity = 0.65; }
+        else { barColor = '#EE5253'; barOpacity = 0.90; }
+
+        // Height mapped to surprise percentage
+        const h_pct = Math.max(20, Math.min(85, 50 + surprise * 2));
+
+        return `<div class="flex-1 rounded-sm"
+                     style="height:${h_pct}%;background:${barColor};opacity:${barOpacity};"
+                     title="${h.quarter}: ${surprise.toFixed(2)}%">
+                </div>`;
+      }).join('');
+    } else if (bars) {
+      bars.innerHTML = '<p class="text-[9px] text-on-surface-variant">資料不足</p>';
+    }
+  }
+
+  function renderManagementMetricsLegacy(cards) {
+    // Legacy rendering for backward compatibility
     cards.forEach(card => {
       const score = card.score || 0;
       const label = card.label || '—';
@@ -647,12 +741,10 @@
       const type = card.type || '';
 
       if (type.includes('目標達成度')) {
-        // Guidance Accuracy - Left column, top
-        document.getElementById('mgmt-guidance-score').textContent = `${Math.round(score)}`;
+        document.getElementById('mgmt-guidance-grade').textContent = `${Math.round(score)}`;
         document.getElementById('mgmt-guidance-label').textContent = label;
-        document.getElementById('mgmt-guidance-detail').textContent = detail;
+        document.getElementById('mgmt-guidance-value').textContent = detail;
       } else if (type.includes('管理透明度')) {
-        // Management Transparency - Left column, bottom
         const percent = Math.round(score);
         document.getElementById('mgmt-transparency-score').textContent = `${percent} / 100`;
         const indicator = document.getElementById('mgmt-transparency-indicator');
@@ -660,12 +752,28 @@
           indicator.style.left = `${percent}%`;
         }
       } else if (type.includes('策略執行力')) {
-        // Strategy Execution - Right column
         document.getElementById('mgmt-strategy-score').textContent = `${Math.round(score)}`;
         document.getElementById('mgmt-strategy-label').textContent = label;
         document.getElementById('mgmt-strategy-detail').textContent = detail;
       }
     });
+  }
+
+  function renderTransparency(mgmt) {
+    if (!mgmt) return;
+    const percent = Math.round(mgmt.score || 0);
+    document.getElementById('mgmt-transparency-score').textContent = `${percent} / 100`;
+    const indicator = document.getElementById('mgmt-transparency-indicator');
+    if (indicator) {
+      indicator.style.left = `${percent}%`;
+    }
+  }
+
+  function renderStrategyExecution(strategy) {
+    if (!strategy) return;
+    document.getElementById('mgmt-strategy-score').textContent = `${Math.round(strategy.score || 0)}`;
+    document.getElementById('mgmt-strategy-label').textContent = strategy.label || '—';
+    document.getElementById('mgmt-strategy-detail').textContent = strategy.detail || strategy.label || '—';
   }
 
   function formatNumber(num) {

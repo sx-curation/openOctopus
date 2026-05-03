@@ -1,7 +1,187 @@
 """Taiwan stock management metrics analysis."""
 import yfinance as yf
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
+import numpy as np
+
+
+def _get_quarterly_history(ticker: str, quarters: int = 8) -> List[Dict[str, Any]]:
+    """Extract 8 quarters of EPS beat/miss history from yfinance.
+
+    Args:
+        ticker: Taiwan stock code (e.g., '2330')
+        quarters: Number of quarters to retrieve (default 8)
+
+    Returns:
+        List of quarterly data with beat/miss information
+    """
+    try:
+        ticker_clean = ticker.replace('.TW', '') if '.TW' in ticker else ticker
+        ticker_full = f'{ticker_clean}.TW'
+        stock = yf.Ticker(ticker_full)
+
+        # Get quarterly financial data
+        quarterly = stock.quarterly_financials if hasattr(stock, 'quarterly_financials') else None
+        if quarterly is None or quarterly.empty:
+            return []
+
+        history = []
+        columns = quarterly.columns[:quarters]
+
+        for i, col in enumerate(columns):
+            try:
+                net_income = quarterly.loc['Net Income', col] if 'Net Income' in quarterly.index else None
+                if net_income is None or np.isnan(net_income):
+                    continue
+
+                # For Taiwan market: simplified beat/miss based on actual vs historical average
+                # We use sequential comparison as true estimates are unavailable
+                prev_income = quarterly.loc['Net Income', columns[i+1]] if i+1 < len(columns) else None
+
+                if prev_income is not None and not np.isnan(prev_income) and prev_income != 0:
+                    # Calculate surprise percentage relative to previous quarter
+                    surprise_pct = ((net_income - prev_income) / abs(prev_income)) * 100
+                else:
+                    surprise_pct = 0
+
+                # Classify as beat/miss
+                if surprise_pct > 1:
+                    status = 'beat'
+                elif surprise_pct < -1:
+                    status = 'miss'
+                else:
+                    status = 'in-line'
+
+                if hasattr(col, 'strftime'):
+                    year = col.year
+                    month = col.month
+                    quarter = (month - 1) // 3 + 1
+                    quarter_date = f'{year}-Q{quarter}'
+                else:
+                    quarter_date = str(col)[:7]
+
+                history.append({
+                    'quarter': quarter_date,
+                    'actual': float(net_income),
+                    'estimate': float(prev_income) if prev_income and not np.isnan(prev_income) else None,
+                    'surprise_pct': round(surprise_pct, 2),
+                    'status': status
+                })
+            except:
+                continue
+
+        return history[:quarters]
+    except Exception as e:
+        return []
+
+
+def _score_to_grade(score: float) -> str:
+    """Convert score to grade letter.
+
+    Args:
+        score: Score from 0-100
+
+    Returns:
+        Grade letter: S, A, B, C, or D
+    """
+    if score >= 88:
+        return 'S'  # Exceptional
+    elif score >= 75:
+        return 'A'  # Highly Reliable
+    elif score >= 60:
+        return 'B'  # Moderate
+    elif score >= 45:
+        return 'C'  # Inconsistent
+    else:
+        return 'D'  # Poor Accuracy
+
+
+def _grade_label(grade: str) -> str:
+    """Get Chinese label for grade."""
+    labels = {
+        'S': '非凡準確',
+        'A': '高度可靠',
+        'B': '中等水平',
+        'C': '不夠一致',
+        'D': '準確度差',
+    }
+    return labels.get(grade, '—')
+
+
+def _variance_label(variance: float) -> str:
+    """Get variance label based on standard deviation."""
+    if variance <= 5:
+        return f'±{variance:.1f}% · 波動性低'
+    elif variance <= 20:
+        return f'±{variance:.1f}% · 波動性中等'
+    else:
+        return f'±{variance:.1f}% · 波動性高'
+
+
+def _calculate_guidance_accuracy_enhanced(ticker: str) -> Dict[str, Any]:
+    """Calculate enhanced guidance accuracy with beat/miss history.
+
+    Args:
+        ticker: Taiwan stock code
+
+    Returns:
+        Enhanced guidance accuracy metrics with grade and history
+    """
+    try:
+        # Get quarterly history
+        history = _get_quarterly_history(ticker, quarters=8)
+
+        if not history:
+            return {
+                'score': 0,
+                'grade': '—',
+                'label': '資料不足',
+                'beat_count': 0,
+                'miss_count': 0,
+                'avg_surprise': 0,
+                'variance_label': '—',
+                'history': []
+            }
+
+        # Calculate statistics
+        beat_count = sum(1 for h in history if h['surprise_pct'] > 1)
+        miss_count = sum(1 for h in history if h['surprise_pct'] < -1)
+        surprises = [h['surprise_pct'] for h in history]
+        avg_surprise = sum(surprises) / len(surprises) if surprises else 0
+        variance = float(np.std(surprises)) if len(surprises) > 1 else 0
+
+        # Calculate score: beat ratio + consistency bonus
+        beat_ratio = (beat_count / len(history)) * 100 if history else 0
+        consistency_bonus = max(0, 20 - variance)  # Less variance = higher bonus
+        score = beat_ratio * 0.7 + consistency_bonus * 0.3
+        score = max(0, min(100, score))
+
+        # Get grade and labels
+        grade = _score_to_grade(score)
+        label = _grade_label(grade)
+        variance_label = _variance_label(variance)
+
+        return {
+            'score': int(score),
+            'grade': grade,
+            'label': label,
+            'beat_count': beat_count,
+            'miss_count': miss_count,
+            'avg_surprise': round(avg_surprise, 2),
+            'variance_label': variance_label,
+            'history': history,
+        }
+    except Exception as e:
+        return {
+            'score': 0,
+            'grade': '—',
+            'label': '無法計算',
+            'beat_count': 0,
+            'miss_count': 0,
+            'avg_surprise': 0,
+            'variance_label': '—',
+            'history': []
+        }
 
 
 def build_management_metrics(ticker: str) -> Dict[str, Any]:
@@ -32,7 +212,7 @@ def build_management_metrics(ticker: str) -> Dict[str, Any]:
 
         # Calculate metrics
         metrics = {
-            'guidance_accuracy': _calculate_guidance_accuracy(financials, quarterly),
+            'guidance_accuracy': _calculate_guidance_accuracy_enhanced(ticker),
             'strategy_execution': _calculate_strategy_execution(financials, hist),
             'management_transparency': _calculate_transparency(stock),
         }
@@ -187,7 +367,7 @@ def _calculate_transparency(stock) -> Dict[str, Any]:
 
 
 def build_management_snapshot(ticker: str) -> Dict[str, Any]:
-    """Build Taiwan management snapshot dashboard data."""
+    """Build Taiwan management snapshot dashboard data with full heuristics."""
     result = build_management_metrics(ticker)
 
     if 'error' in result:
@@ -196,16 +376,23 @@ def build_management_snapshot(ticker: str) -> Dict[str, Any]:
     # Format for dashboard display
     metrics = result.get('metrics', {})
 
+    # Return enhanced response with full heuristics structure
     return {
         'ticker': result['ticker'],
         'status': 'ok',
+        'heuristics': {
+            'guidance_accuracy': metrics.get('guidance_accuracy', {}),
+            'strategy_execution': metrics.get('strategy_execution', {}),
+            'management_transparency': metrics.get('management_transparency', {}),
+        },
+        # Keep old 'cards' format for backward compatibility
         'cards': [
             {
                 'type': '目標達成度',
                 'title': 'Guidance Accuracy',
                 'score': metrics.get('guidance_accuracy', {}).get('score', 0),
                 'label': metrics.get('guidance_accuracy', {}).get('label', '無數據'),
-                'detail': metrics.get('guidance_accuracy', {}).get('detail', ''),
+                'detail': metrics.get('guidance_accuracy', {}).get('variance_label', ''),
             },
             {
                 'type': '策略執行力',
