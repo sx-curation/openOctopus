@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <script src="/static/i18n.js"></script>
+<script src="/static/market-switcher.js"></script>
 <script id="tailwind-config">
   tailwind.config = {
     darkMode: "class",
@@ -131,6 +132,16 @@
       <p class="font-headline font-bold text-primary leading-tight text-sm" data-i18n="brand.title">Advisor Terminal</p>
       <p class="font-label text-[9px] uppercase tracking-widest text-slate-400" data-i18n="brand.subtitle">Institutional Grade</p>
     </div>
+  </div>
+
+  <!-- Market Switcher -->
+  <div class="px-6 mb-6 flex gap-2">
+    <button id="market-btn-us" class="flex-1 py-2 px-3 text-xs font-bold uppercase rounded transition-colors"
+            onclick="switchMarket('us')"
+            style="background:#000f27;color:#ffffff;">US Stocks</button>
+    <button id="market-btn-tw" class="flex-1 py-2 px-3 text-xs font-bold uppercase rounded transition-colors"
+            onclick="switchMarket('tw')"
+            style="background:#e9e7eb;color:#1b1b1e;">Taiwan</button>
   </div>
 
   <!-- Navigation -->
@@ -904,6 +915,7 @@
   const analysisText = document.getElementById('analysis-text');
   const tickerUniverse = ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'AVGO', 'JPM', 'XOM', 'TSLA'];
   let currentTicker = 'AAPL';
+  let currentMarket = localStorage.getItem('currentMarket') || 'us';
   let currentTrinityTab = 'ai';
 
   function showPage(page) {
@@ -920,6 +932,30 @@
     document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
+  }
+
+  function switchMarket(market) {
+    currentMarket = market;
+    localStorage.setItem('currentMarket', market);
+
+    // Update button states
+    const usBtn = document.getElementById('market-btn-us');
+    const twBtn = document.getElementById('market-btn-tw');
+
+    if (market === 'us') {
+      usBtn.style.background = '#000f27';
+      usBtn.style.color = '#ffffff';
+      twBtn.style.background = '#e9e7eb';
+      twBtn.style.color = '#1b1b1e';
+    } else {
+      usBtn.style.background = '#e9e7eb';
+      usBtn.style.color = '#1b1b1e';
+      twBtn.style.background = '#0b6b3d';
+      twBtn.style.color = '#ffffff';
+    }
+
+    // Reload dashboard with current ticker
+    loadDashboardData(currentTicker);
   }
 
   async function fetchJson(url) {
@@ -1813,14 +1849,32 @@
     renderDashboardLoading(currentTicker);
     try {
       const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
-      const [summary, earnings, management, portfolio, market, documents] = await Promise.all([
-        fetchJson(`/api/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
-        fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
-        fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`),
+      const isTW = currentMarket === 'tw';
+      const apiPrefix = isTW ? '/api/tw' : '/api';
+
+      const requests = [
+        fetchJson(`${apiPrefix}/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
         fetchJson('/api/portfolio/overview'),
-        fetchJson('/api/market/overview'),
-        fetchJson(`/api/documents/recent-filings?ticker=${encodeURIComponent(currentTicker)}`),
-      ]);
+        fetchJson(isTW ? '/api/tw/market/overview' : '/api/market/overview'),
+      ];
+
+      // Only fetch US-specific endpoints for US market
+      if (!isTW) {
+        requests.push(
+          fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
+          fetchJson(`/api/dashboard/management?ticker=${encodeURIComponent(currentTicker)}&lang=${encodeURIComponent(lang)}`),
+          fetchJson(`/api/documents/recent-filings?ticker=${encodeURIComponent(currentTicker)}`)
+        );
+      } else {
+        requests.push(
+          Promise.resolve({ error: 'Not available for Taiwan market' }),
+          Promise.resolve({ error: 'Not available for Taiwan market' }),
+          fetchJson(`/api/tw/documents/recent-announcements?ticker=${encodeURIComponent(currentTicker)}`)
+        );
+      }
+
+      const [summary, portfolio, market, earnings, management, documents] = await Promise.all(requests);
+
       window._ooMgmtCache = {};  // clear cache when ticker changes
       window._ooMgmtCache[lang] = management;
       window._ooCache = { summary, earnings, management, portfolio, market, documents };
@@ -1941,6 +1995,17 @@
 
   // ── i18n init ──
   if (typeof I18N !== 'undefined') I18N.init();
+
+  // Initialize market button states
+  const usBtn = document.getElementById('market-btn-us');
+  const twBtn = document.getElementById('market-btn-tw');
+  if (currentMarket === 'us') {
+    if (usBtn) { usBtn.style.background = '#000f27'; usBtn.style.color = '#ffffff'; }
+    if (twBtn) { twBtn.style.background = '#e9e7eb'; twBtn.style.color = '#1b1b1e'; }
+  } else {
+    if (usBtn) { usBtn.style.background = '#e9e7eb'; usBtn.style.color = '#1b1b1e'; }
+    if (twBtn) { twBtn.style.background = '#0b6b3d'; twBtn.style.color = '#ffffff'; }
+  }
 
   loadDashboardData(currentTicker);
 
