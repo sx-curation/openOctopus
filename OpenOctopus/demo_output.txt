@@ -1,8 +1,0 @@
-Taiwan Dashboard Preview
-==================================================
-Price Data: NT$2135.0, P/E: 28.984522
-Management Metrics: 3 cards loaded
-  1. Score: 50/100
-  2. Score: 50/100
-  3. Score: 100/100
-Financial Statements: 3 types
