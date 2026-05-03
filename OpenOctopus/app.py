@@ -53,6 +53,12 @@ def index() -> Response:
     return send_file(UI_DIR / "index.html")
 
 
+@app.route("/test")
+def test_dashboard() -> Response:
+    """Test dashboard with US/TW switcher"""
+    return send_file(UI_DIR / "test-dashboard.html")
+
+
 # ── Health ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/health")
