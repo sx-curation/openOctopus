@@ -18,7 +18,7 @@ _app_root = Path(__file__).parent
 if str(_app_root) not in sys.path:
     sys.path.insert(0, str(_app_root))
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask.wrappers import Response
 
 from agent import investment_run_analysis
@@ -50,9 +50,7 @@ _policy_agent = PolicyMonitoringAgent()
 
 @app.route("/")
 def index() -> Response:
-    html_path = str(UI_DIR / "market-selector.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
+    return send_from_directory(str(UI_DIR), "market-selector.html")
 
 
 @app.route("/dashboard/us")
