@@ -1,11 +1,15 @@
 """Taiwan stock dashboard summary service.
 
-Simplified version using Taiwan data sources (yfinance + TWSE).
+Integrates database layer (tw_stock.db) with yfinance and TWSE API.
 """
+import os
+from pathlib import Path
 from tools.tw_price_data import get_stock_price
 from tools.tw_financials import get_key_financials
 from tools.tw_moving_averages import get_moving_average_signals
 from tools.tw_news import get_stock_news
+from data_sources.tw.collector import collect_and_store_tw_stock_data, get_tw_stock_summary
+from data_sources.tw.db import TaiwanStockDB
 
 
 def build_dashboard_summary(ticker: str) -> dict:
@@ -25,17 +29,32 @@ def build_dashboard_summary(ticker: str) -> dict:
         ticker_clean = ticker[:-3]
         ticker_full = ticker
 
-    # Fetch all data sources in parallel conceptually
+    # Determine database path
+    app_root = Path(__file__).parent.parent.parent.parent
+    db_path = app_root / 'tw_stock.db'
+
+    # Try to collect/update data (this also stores in DB)
+    collection_result = collect_and_store_tw_stock_data(ticker_clean, str(db_path), period='1y')
+
+    # Fetch all data sources
     price_data = get_stock_price(ticker_clean)
     financials = get_key_financials(ticker_clean)
     technicals = get_moving_average_signals(ticker_clean)
     news = get_stock_news(ticker_clean, limit=5)
 
+    # Get summary from database (includes 52-week stats)
+    db_summary = get_tw_stock_summary(ticker_clean, str(db_path))
+
     # Build consolidated response
     return {
         "ticker": ticker_full,
         "summary": {
-            "price_data": price_data,
+            "company_name": financials.get('company_name', ticker_clean),
+            "price_data": {
+                **price_data,
+                "week_52_high": db_summary.get('week_52_high'),
+                "week_52_low": db_summary.get('week_52_low'),
+            },
             "financials": financials,
             "technicals": technicals,
             "recent_news": news.get("news", []) if "news" in news else [],
@@ -44,8 +63,11 @@ def build_dashboard_summary(ticker: str) -> dict:
             "price_error": "error" in price_data,
             "financials_error": "error" in financials,
             "technicals_error": "error" in technicals,
+            "db_available": not ("error" in db_summary),
+            "data_points_stored": db_summary.get('price_data_points', 0),
         },
-        "note": "Taiwan data from yfinance + TWSE API. Analyst coverage is limited."
+        "note": "Taiwan data from yfinance + TWSE API + SQLite database. Analyst coverage is limited.",
+        "_collection_status": collection_result.get('status', 'unknown')
     }
 
 
