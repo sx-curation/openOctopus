@@ -1877,7 +1877,27 @@
         );
       }
 
-      const [summary, portfolio, market, earnings, management, documents] = await Promise.all(requests);
+      let [summary, portfolio, market, earnings, management, documents] = await Promise.all(requests);
+
+      // Normalize Taiwan data structure to match US structure for render functions
+      if (isTW && summary.summary) {
+        const tw_summary = summary;
+        summary = {
+          ...tw_summary,
+          ticker_snapshot: {
+            price: tw_summary.summary.price_data?.price,
+            change_pct: tw_summary.summary.price_data?.change_pct,
+            ticker: currentTicker,
+          },
+          key_financials: tw_summary.summary.financials || {},
+          raw_data: {
+            technicals: tw_summary.summary.technicals,
+            recent_news: tw_summary.summary.recent_news,
+          },
+          trinity: { value: 'N/A', status: 'taiwan_limited' },
+          trinity_source_meta: { note: tw_summary.note }
+        };
+      }
 
       window._ooMgmtCache = {};  // clear cache when ticker changes
       window._ooMgmtCache[lang] = management;
