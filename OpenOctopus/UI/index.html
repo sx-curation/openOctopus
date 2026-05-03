@@ -947,14 +947,18 @@
       usBtn.style.color = '#ffffff';
       twBtn.style.background = '#e9e7eb';
       twBtn.style.color = '#1b1b1e';
+      // Reset to US default ticker
+      currentTicker = 'AAPL';
     } else {
       usBtn.style.background = '#e9e7eb';
       usBtn.style.color = '#1b1b1e';
       twBtn.style.background = '#0b6b3d';
       twBtn.style.color = '#ffffff';
+      // Reset to TW default ticker
+      currentTicker = '2330';
     }
 
-    // Reload dashboard with current ticker
+    // Reload dashboard with market-appropriate ticker
     loadDashboardData(currentTicker);
   }
 
