@@ -1,5 +1,6 @@
 /**
  * Market Switcher - Toggle between US and Taiwan stocks
+ * (Button creation is handled in index.html)
  */
 
 // Initialize market state
@@ -112,7 +113,9 @@ function renderDashboard(data, isUS) {
 
 /**
  * Initialize market switcher UI
+ * (Buttons are now created in index.html - this function is kept for reference)
  */
+/*
 function initMarketSwitcher() {
   const navContainer = document.getElementById('main-nav');
   if (!navContainer) return;
@@ -155,3 +158,4 @@ if (document.readyState === 'loading') {
 } else {
   initMarketSwitcher();
 }
+*/
