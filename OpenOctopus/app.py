@@ -34,6 +34,12 @@ from services.market.commodities import build_market_commodities
 from services.market.sentiment import build_market_sentiment
 from services.portfolio.overview import build_portfolio_overview
 
+# Taiwan services
+from services.tw.dashboard.summary import build_dashboard_summary as tw_build_dashboard_summary
+from services.tw.dashboard.summary import build_market_overview as tw_build_market_overview
+from services.tw.documents.recent_announcements import build_recent_announcements
+from services.tw.market.overview import build_market_overview as tw_build_market_index
+
 app = Flask(__name__, static_folder="UI", static_url_path="/static")
 
 UI_DIR = Path(__file__).parent / "UI"
@@ -269,6 +275,44 @@ def sentiment_feed() -> Response:
     payload = _build_sentiment_feed(events)
     payload["items"], payload["ai"] = _ai_rewrite_items("sentiment", payload["items"], ai_enabled)
     return jsonify(payload)
+
+
+
+
+# ── Taiwan Market Endpoints ──────────────────────────────────────────────────
+
+@app.route("/api/tw/dashboard/summary")
+def tw_dashboard_summary() -> Response:
+    """Taiwan stock dashboard summary."""
+    ticker = (request.args.get("ticker") or "").strip()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    result = tw_build_dashboard_summary(ticker)
+    status_code = 200 if "error" not in result.get("summary", {}) else 502
+    return jsonify(result), status_code
+
+
+@app.route("/api/tw/market/overview")
+def tw_market_overview() -> Response:
+    """Taiwan market overview (TAIEX, OTC)."""
+    result = tw_build_market_index()
+    status_code = 200 if "error" not in result else 502
+    return jsonify(result), status_code
+
+
+@app.route("/api/tw/documents/recent-announcements")
+def tw_recent_announcements() -> Response:
+    """Taiwan stock recent announcements/news."""
+    ticker = (request.args.get("ticker") or "").strip()
+    limit = int(request.args.get("limit", "10"))
+
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    result = build_recent_announcements(ticker, limit=limit)
+    status_code = 200 if "error" not in result else 502
+    return jsonify(result), status_code
 
 
 if __name__ == "__main__":
