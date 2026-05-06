@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from config import settings
+from data_sources.transcripts.hf_downloader import CACHE_DIR, ticker_jsonl_path
 
 
 # Lightweight index: (symbol, year, quarter) → {date, company_name, byte_offset}
@@ -12,6 +13,13 @@ _OFFSET_INDEX: dict[tuple[str, float], dict] = {}
 
 def get_cached_transcript(ticker: str, year: int | None = None, quarter: int | None = None) -> dict:
     ticker = ticker.upper()
+
+    # --- Try per-ticker JSONL first (written by hf_downloader) ---
+    per_ticker_path = ticker_jsonl_path(ticker)
+    if per_ticker_path.exists():
+        return _lookup_in_path(per_ticker_path, ticker, year, quarter)
+
+    # --- Fallback: legacy combined JSONL (settings.HF_TRANSCRIPTS_PATH) ---
     path = Path(settings.HF_TRANSCRIPTS_PATH)
     if not path.exists():
         return {
@@ -19,6 +27,11 @@ def get_cached_transcript(ticker: str, year: int | None = None, quarter: int | N
             "ticker": ticker,
             "path": str(path),
         }
+    return _lookup_in_path(path, ticker, year, quarter)
+
+
+def _lookup_in_path(path: Path, ticker: str, year: int | None, quarter: int | None) -> dict:
+    """Look up a transcript for *ticker* in a JSONL file at *path*."""
 
     index = _load_offset_index(path)
     if year is not None and quarter is not None:

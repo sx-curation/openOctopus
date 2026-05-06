@@ -1,18 +1,28 @@
 """
-Routes tool_name → handler function and returns a JSON-serialisable result dict.
-Results are cached in-memory with a TTL to avoid redundant API calls.
-"""
-from tools.price_data import get_stock_price
-from tools.moving_averages import get_moving_average_signals
-from tools.financials import get_key_financials
-from tools.analyst_estimates import get_analyst_estimates
-from tools.earnings_transcript import get_earnings_transcript
-from tools.sec_filings import get_sec_filing_summary
-from tools.sec_8k_events import get_recent_8k_events
-from utils import cache
-from config import settings
+Routes tool_name → BaseTool.execute() and caches results via CacheManager.
 
-# Policy Monitoring Agent - lazy import to avoid startup cost when not used
+Cache tiers:
+  L1 (TTL 300s) : get_stock_price, get_key_financials, get_analyst_estimates,
+                  get_moving_average_signals
+  L2 (TTL 86400s): get_earnings_transcript, get_sec_filing_summary,
+                   get_recent_8k_events
+  No cache       : query_policy_updates (always live)
+"""
+from tools.base import BaseTool
+from tools.price_data import PriceDataTool
+from tools.moving_averages import get_moving_average_signals
+from tools.financials import FinancialsTool
+from tools.analyst_estimates import EstimatesTool
+from tools.earnings_transcript import EarningsTranscriptTool
+from tools.sec_filings import SecFilingsTool
+from tools.sec_8k_events import Sec8kTool
+from utils.cache_manager import cache
+
+
+# ---------------------------------------------------------------------------
+# Policy tool (not a BaseTool — keep as callable, no caching)
+# ---------------------------------------------------------------------------
+
 def _query_policy_updates(inp: dict) -> dict:
     from agent.policy_monitoring import PolicyMonitoringAgent
 
@@ -31,55 +41,82 @@ def _query_policy_updates(inp: dict) -> dict:
         "sources_queried": inp.get("sources") or ["EUR_LEX", "FEDERAL_REGISTER", "SEC"],
     }
 
-_REGISTRY = {
-    "query_policy_updates": _query_policy_updates,
-    "get_stock_price": lambda inp: get_stock_price(inp["ticker"]),
-    "get_moving_average_signals": lambda inp: get_moving_average_signals(
-        inp["ticker"], inp.get("lookback_days", 250)
-    ),
-    "get_key_financials": lambda inp: get_key_financials(inp["ticker"]),
-    "get_analyst_estimates": lambda inp: get_analyst_estimates(inp["ticker"]),
-    "get_earnings_transcript": lambda inp: get_earnings_transcript(
-        inp["ticker"], inp.get("year"), inp.get("quarter")
-    ),
-    "get_sec_filing_summary": lambda inp: get_sec_filing_summary(
-        inp["ticker"], inp.get("filing_type", "10-K")
-    ),
-    "get_recent_8k_events": lambda inp: get_recent_8k_events(
-        inp["ticker"], inp.get("lookback_count", 20)
-    ),
+
+# ---------------------------------------------------------------------------
+# Moving-averages shim (not yet a BaseTool — wrap in an adapter)
+# ---------------------------------------------------------------------------
+
+class _MovingAverageTool(BaseTool):
+    name = "get_moving_average_signals"
+    description = "Returns moving average signals for a ticker."
+
+    def execute(self, input: dict) -> dict:
+        return get_moving_average_signals(
+            input.get("ticker", ""),
+            input.get("lookback_days", 250),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Tool registry  — keyed by tool name
+# ---------------------------------------------------------------------------
+
+_TOOLS: dict[str, BaseTool] = {
+    "get_stock_price": PriceDataTool(),
+    "get_moving_average_signals": _MovingAverageTool(),
+    "get_key_financials": FinancialsTool(),
+    "get_analyst_estimates": EstimatesTool(),
+    "get_earnings_transcript": EarningsTranscriptTool(),
+    "get_sec_filing_summary": SecFilingsTool(),
+    "get_recent_8k_events": Sec8kTool(),
 }
 
-# Tools where caching is appropriate (exclude transcript/SEC which are rarely called twice)
-_CACHEABLE = {
-    "get_stock_price",
-    "get_moving_average_signals",
-    "get_key_financials",
-    "get_analyst_estimates",
-}
+# Cache layer assignment: tool_name → (layer, ttl)
+_L1_TOOLS = {"get_stock_price", "get_key_financials", "get_analyst_estimates", "get_moving_average_signals"}
+_L2_TOOLS = {"get_earnings_transcript", "get_sec_filing_summary", "get_recent_8k_events"}
 
+_L1_TTL = 300
+_L2_TTL = 86400
+
+
+# ---------------------------------------------------------------------------
+# dispatch
+# ---------------------------------------------------------------------------
 
 def dispatch(tool_name: str, tool_input: dict) -> dict:
-    """Execute a tool by name and return a result dict."""
-    handler = _REGISTRY.get(tool_name)
-    if handler is None:
+    """Execute a tool by name and return a JSON-serialisable result dict."""
+
+    # Policy tool — not a BaseTool, no caching
+    if tool_name == "query_policy_updates":
+        try:
+            return _query_policy_updates(tool_input)
+        except Exception as exc:
+            return {"error": f"Tool 'query_policy_updates' raised: {exc}"}
+
+    tool = _TOOLS.get(tool_name)
+    if tool is None:
         return {"error": f"Unknown tool: {tool_name}"}
 
     ticker = tool_input.get("ticker", "")
+    layer = 1 if tool_name in _L1_TOOLS else (2 if tool_name in _L2_TOOLS else None)
 
-    # Check cache
-    if tool_name in _CACHEABLE and ticker:
-        cached = cache.get(tool_name, ticker)
+    # Cache read
+    if layer and ticker:
+        cached = cache.get(layer, tool_name, ticker)
         if cached is not None:
             return cached
 
     try:
-        result = handler(tool_input)
-    except Exception as e:
-        return {"error": f"Tool '{tool_name}' raised an exception: {e}"}
+        result = tool.execute(tool_input)
+    except Exception as exc:
+        return {"error": f"Tool '{tool_name}' raised an exception: {exc}"}
 
-    # Store in cache
-    if tool_name in _CACHEABLE and ticker and "error" not in result:
-        cache.set(tool_name, ticker, result, ttl=settings.CACHE_TTL_SECONDS)
+    # Cache write (only on success)
+    if layer and ticker and "error" not in result:
+        ttl = _L1_TTL if layer == 1 else _L2_TTL
+        try:
+            cache.set(layer, tool_name, ticker, result, ttl=ttl)
+        except Exception:
+            pass  # cache write failure is non-fatal
 
     return result

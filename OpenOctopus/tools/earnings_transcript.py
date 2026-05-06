@@ -1,17 +1,80 @@
 """
-Fetches earnings call content from two complementary sources:
-  1. EDGAR (primary)  — 8-K Item 2.02 earnings press release via edgartools (free, no key)
-  2. FMP (secondary)  — full call transcript text (requires FMP_API_KEY)
+Fetches earnings call content with a three-source fallback chain:
+  1. FMP API       — full call transcript (requires FMP_API_KEY)
+  2. HF cache      — per-ticker JSONL downloaded by hf_downloader
+  3. EDGAR         — 8-K Item 2.02 earnings press release (free, no key)
 
-Returns both where available so Claude can extract:
-  - Key operating metrics (from press release numbers)
-  - Management tone, guidance, competitive commentary (from transcript text)
+Returns a unified dict so callers can use whichever source provided data.
 """
 from datetime import date, datetime, timedelta, timezone
 
 import requests
 from config import settings
 from utils.formatting import parse_item_string
+from tools.base import BaseTool
+from data_sources.transcripts.hf_cache import get_cached_transcript
+
+
+class EarningsTranscriptTool(BaseTool):
+    """Fetch earnings transcript — FMP → HF cache → EDGAR fallback chain."""
+
+    name = "get_earnings_transcript"
+    description = (
+        "Returns earnings call transcript or press release for a ticker. "
+        "Tries FMP full transcript first, then HuggingFace cached JSONL, then EDGAR 8-K."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = (input.get("ticker") or "").upper()
+        year = input.get("year")
+        quarter = input.get("quarter")
+        if not ticker:
+            return {"error": "ticker_required"}
+
+        result: dict = {"ticker": ticker}
+
+        # --- 1. FMP full call transcript ---
+        if settings.FMP_API_KEY:
+            fmp_data = _get_fmp_transcript(ticker, year, quarter)
+            if "error" not in fmp_data:
+                result["transcript_excerpt"] = fmp_data.get("transcript_excerpt")
+                result["transcript_year"] = fmp_data.get("year")
+                result["transcript_quarter"] = fmp_data.get("quarter")
+                result["transcript_date"] = fmp_data.get("date")
+                result["transcript_full_chars"] = fmp_data.get("full_length_chars")
+                result["transcript_truncated"] = fmp_data.get("truncated")
+                result["available_quarters"] = fmp_data.get("available_quarters", [])
+            else:
+                result["transcript_error"] = fmp_data.get("error")
+        else:
+            result["transcript_error"] = (
+                "fmp_key_missing — set FMP_API_KEY in .env for full call transcript"
+            )
+
+        # --- 2. HF per-ticker JSONL cache (if FMP gave nothing) ---
+        if not result.get("transcript_excerpt"):
+            hf_data = get_cached_transcript(ticker, year=year, quarter=quarter)
+            if "error" not in hf_data:
+                result["transcript_excerpt"] = hf_data.get("content_excerpt")
+                result["transcript_year"] = hf_data.get("year")
+                result["transcript_quarter"] = hf_data.get("quarter")
+                result["transcript_date"] = hf_data.get("date")
+                result["hf_cache_used"] = True
+
+        # --- 3. EDGAR 8-K press release (always try for press-release excerpt) ---
+        if year is not None and quarter is not None:
+            after_date, before_date = _quarter_date_window(year, quarter)
+            edgar_data = _get_edgar_earnings_release(
+                ticker, after_date=after_date, before_date=before_date
+            )
+            if "edgar_error" not in edgar_data and edgar_data:
+                edgar_data["edgar_year"] = year
+                edgar_data["edgar_quarter"] = quarter
+        else:
+            edgar_data = _get_edgar_earnings_release(ticker)
+        result.update(edgar_data)
+
+        return result
 
 
 def _quarter_date_window(year: int, quarter: int) -> tuple[date, date]:
@@ -35,38 +98,12 @@ def get_earnings_transcript(
     year: int | None = None,
     quarter: int | None = None,
 ) -> dict:
-    ticker = ticker.upper()
-    result: dict = {"ticker": ticker}
+    """Backward-compatible wrapper around EarningsTranscriptTool.execute()."""
+    return _tool.execute({"ticker": ticker, "year": year, "quarter": quarter})
 
-    # --- Primary: EDGAR 8-K earnings press release ---
-    if year is not None and quarter is not None:
-        after_date, before_date = _quarter_date_window(year, quarter)
-        edgar_data = _get_edgar_earnings_release(ticker, after_date=after_date, before_date=before_date)
-        # Tag the result with the requested period so callers can match it
-        if "edgar_error" not in edgar_data and edgar_data:
-            edgar_data["edgar_year"] = year
-            edgar_data["edgar_quarter"] = quarter
-    else:
-        edgar_data = _get_edgar_earnings_release(ticker)
-    result.update(edgar_data)
 
-    # --- Secondary: FMP full call transcript ---
-    if settings.FMP_API_KEY:
-        fmp_data = _get_fmp_transcript(ticker, year, quarter)
-        if "error" not in fmp_data:
-            result["transcript_excerpt"] = fmp_data.get("transcript_excerpt")
-            result["transcript_year"] = fmp_data.get("year")
-            result["transcript_quarter"] = fmp_data.get("quarter")
-            result["transcript_date"] = fmp_data.get("date")
-            result["transcript_full_chars"] = fmp_data.get("full_length_chars")
-            result["transcript_truncated"] = fmp_data.get("truncated")
-            result["available_quarters"] = fmp_data.get("available_quarters", [])
-        else:
-            result["transcript_error"] = fmp_data.get("error")
-    else:
-        result["transcript_error"] = "fmp_key_missing — set FMP_API_KEY in .env for full call transcript"
-
-    return result
+# Module-level singleton (defined here so the wrapper above can reference it)
+_tool = EarningsTranscriptTool()
 
 
 # ---------------------------------------------------------------------------
