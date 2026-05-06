@@ -6,15 +6,13 @@ Investment Analysis agentic loop.
   2. OpenAI         — 設定 OPENAI_API_KEY
   3. 開源模型/本地   — 設定 OPENAI_API_KEY + BASE_URL（Ollama / vLLM / LM Studio）
 """
-import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import APITimeoutError
 
 from config import settings
 from agent.llm_client import get_llm_client
 from agent.investment.system_prompt import SYSTEM_PROMPT
+from agent.investment.retrieval_agent import fetch_parallel
 from tools.definitions import TOOL_DEFINITIONS
-from tools.dispatcher import dispatch
 
 
 def run_analysis(user_query: str) -> str:
@@ -51,19 +49,12 @@ def run_analysis(user_query: str) -> str:
 
         if finish_reason == "tool_calls":
             messages.append(choice.message)
-            tool_calls = choice.message.tool_calls
-            with ThreadPoolExecutor(max_workers=len(tool_calls)) as executor:
-                futures = {
-                    executor.submit(dispatch, tc.function.name, json.loads(tc.function.arguments)): tc
-                    for tc in tool_calls
-                }
-                for future in as_completed(futures):
-                    tc = futures[future]
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tc.id,
-                        "content": json.dumps(future.result(), default=str),
-                    })
+            for tr in fetch_parallel(choice.message.tool_calls):
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tr["tool_call_id"],
+                    "content": tr["content"],
+                })
             continue
 
         break
