@@ -8,37 +8,18 @@ Investment Analysis agentic loop.
 """
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from openai import AzureOpenAI, OpenAI, APITimeoutError
+from openai import APITimeoutError
 
 from config import settings
+from agent.llm_client import get_llm_client
 from agent.investment.system_prompt import SYSTEM_PROMPT
 from tools.definitions import TOOL_DEFINITIONS
 from tools.dispatcher import dispatch
 
-# --- 自動選擇 client ---
-if settings.AZURE_OPENAI_ENDPOINT:
-    if not settings.AZURE_OPENAI_API_KEY:
-        raise EnvironmentError(
-            "AZURE_OPENAI_ENDPOINT 已設定，但 AZURE_OPENAI_API_KEY 未設定。請在 .env 補上。"
-        )
-    client = AzureOpenAI(
-        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY,
-        api_version=settings.AZURE_OPENAI_API_VERSION,
-    )
-else:
-    if not settings.OPENAI_API_KEY:
-        raise EnvironmentError(
-            "請在 .env 設定 OPENAI_API_KEY（OpenAI 填真實 key；Ollama 填 'ollama'）。"
-        )
-    client = OpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        base_url=settings.BASE_URL or None,
-    )
-
 
 def run_analysis(user_query: str) -> str:
     """Run a full investment analysis for the given user query."""
+    client = get_llm_client()
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_query},

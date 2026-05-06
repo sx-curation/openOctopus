@@ -4,6 +4,7 @@ from typing import Any
 
 from openai import APITimeoutError, AzureOpenAI, OpenAI
 
+from agent.llm_client import get_llm_client
 from config import settings
 from config.management_scoring import build_management_scoring_prompt
 from data_sources.transcripts.hf_cache import get_cached_transcript
@@ -116,23 +117,6 @@ def build_commitment_context(
     }
 
 
-def _build_llm_client():
-    if settings.AZURE_OPENAI_ENDPOINT:
-        if not settings.AZURE_OPENAI_API_KEY:
-            raise EnvironmentError("AZURE_OPENAI_ENDPOINT is set but AZURE_OPENAI_API_KEY is missing.")
-        return AzureOpenAI(
-            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            api_key=settings.AZURE_OPENAI_API_KEY,
-            api_version=settings.AZURE_OPENAI_API_VERSION,
-        )
-    if not settings.OPENAI_API_KEY:
-        raise EnvironmentError("OPENAI_API_KEY is missing for management LLM scoring.")
-    return OpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        base_url=settings.BASE_URL or None,
-    )
-
-
 _TRANSCRIPT_KEYWORDS = (
     "we expect", "we delivered", "we saw", "guidance", "outlook", "revenue",
     "earnings per share", "margin", "growth", "quarter", "fiscal",
@@ -183,7 +167,7 @@ def _score_commitments_with_llm(
         return cached
 
     try:
-        client = _build_llm_client()
+        client = get_llm_client()
     except EnvironmentError as exc:
         return {"error": str(exc)}
 
