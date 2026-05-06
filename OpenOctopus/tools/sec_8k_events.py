@@ -10,6 +10,8 @@ Uses edgartools (EDGAR) exclusively — no API key required.
 """
 from config import settings
 from utils.formatting import parse_item_string
+from tools.base import BaseTool
+from tools.resilience import retry_with_backoff, with_timeout
 
 # ---------------------------------------------------------------------------
 # Item classification map — 8-K item numbers → semantic categories
@@ -43,7 +45,33 @@ _POLICY_KEYWORDS = frozenset(
 )
 
 
-def get_recent_8k_events(ticker: str, lookback_count: int = 20) -> dict:
+class Sec8kTool(BaseTool):
+    """Fetch categorised recent 8-K events via edgartools."""
+
+    name = "get_recent_8k_events"
+    description = (
+        "Returns categorised recent 8-K events (executive changes, M&A, capital allocation, "
+        "policy/regulatory, restructuring) for a given ticker."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = input.get("ticker", "")
+        lookback_count = input.get("lookback_count", 20)
+        if not ticker:
+            return {"error": "ticker_required"}
+        try:
+            return retry_with_backoff(
+                lambda: with_timeout(
+                    lambda: _fetch_8k_events(ticker.upper(), lookback_count), seconds=45
+                ),
+                max_retries=3,
+                backoff_base=1.0,
+            )
+        except Exception as exc:
+            return {"error": str(exc), "ticker": ticker.upper()}
+
+
+def _fetch_8k_events(ticker: str, lookback_count: int = 20) -> dict:
     """
     Returns categorised recent 8-K events for the given ticker.
 
@@ -182,3 +210,14 @@ def _mentions_capital_allocation(text_lower: str) -> bool:
 
 def _mentions_policy(text_lower: str) -> bool:
     return any(kw in text_lower for kw in _POLICY_KEYWORDS)
+
+
+# ---------------------------------------------------------------------------
+# Module-level singleton + backward-compatible wrapper
+# ---------------------------------------------------------------------------
+_tool_8k = Sec8kTool()
+
+
+def get_recent_8k_events(ticker: str, lookback_count: int = 20) -> dict:
+    """Backward-compatible wrapper around Sec8kTool.execute()."""
+    return _tool_8k.execute({"ticker": ticker, "lookback_count": lookback_count})

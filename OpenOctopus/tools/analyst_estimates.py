@@ -3,17 +3,38 @@ import yfinance as yf
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 from config import settings
+from tools.base import BaseTool
+from tools.resilience import retry_with_backoff, with_timeout
 
 
-def get_analyst_estimates(ticker: str) -> dict:
-    """
-    Returns recent quarters of EPS/revenue actuals vs. estimates (beat/miss),
-    plus the next earnings date.
+class EstimatesTool(BaseTool):
+    """Fetch analyst EPS/revenue estimates and actuals for a ticker."""
 
-    Primary EPS source: yfinance earnings_dates.
-    Revenue estimates: FMP API (falls back gracefully if key not set).
-    """
-    ticker = ticker.upper()
+    name = "get_analyst_estimates"
+    description = (
+        "Returns recent quarters of EPS/revenue actuals vs. estimates (beat/miss) "
+        "plus the next earnings date."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = input.get("ticker", "")
+        if not ticker:
+            return {"error": "ticker_required"}
+        try:
+            return retry_with_backoff(
+                lambda: with_timeout(lambda: _fetch_estimates(ticker.upper()), seconds=30),
+                max_retries=3,
+                backoff_base=1.0,
+            )
+        except Exception as exc:
+            return {"error": str(exc), "ticker": ticker.upper()}
+
+
+# ---------------------------------------------------------------------------
+# Core fetch logic
+# ---------------------------------------------------------------------------
+
+def _fetch_estimates(ticker: str) -> dict:
     result = {
         "ticker": ticker,
         "quarters": [],
@@ -108,3 +129,14 @@ def get_analyst_estimates(ticker: str) -> dict:
         result["revenue_note"] = "FMP_API_KEY not set; revenue estimates unavailable."
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Module-level singleton + backward-compatible wrapper
+# ---------------------------------------------------------------------------
+_tool = EstimatesTool()
+
+
+def get_analyst_estimates(ticker: str) -> dict:
+    """Backward-compatible wrapper around EstimatesTool.execute()."""
+    return _tool.execute({"ticker": ticker})
