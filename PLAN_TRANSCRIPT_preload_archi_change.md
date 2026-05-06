@@ -330,31 +330,33 @@ Flask（routing + async trigger，只對 >10s 操作非同步）
 
 ---
 
-### Module 5：Service Layer 清理（依賴 3-3）
+### Module 5：Service Layer 整合（依賴 3-1）
 
-#### 5-1 `services/dashboard/commitment_analysis.py` — 去 LLM 化：移除直接 LLM 呼叫，改呼叫 commitment_scorer
+> ⚠️ **設計決策**：兩份 `commitment_analysis.py` **保留全部 LLM 功能與 openai import**。此模組只做一件事：把兩份檔案中各自重複建立的 `_build_llm_client()` 替換為共用的 `get_llm_client()`，不刪除任何 LLM 邏輯。
+
+#### 5-1 `services/dashboard/commitment_analysis.py` — 將 _build_llm_client() 替換為共用 lazy singleton，保留所有 LLM 功能
 
 **具體工作**：
-- 移除：`_build_llm_client()`, `_score_commitments_with_llm()`, `_LLM_CACHE`, `from openai import ...`
-- 新增 `from agent.investment.commitment_scorer import score_commitments`
-- `build_commitment_context()` 內把原來呼叫 `_score_commitments_with_llm(...)` 的地方改為 `score_commitments(previous_text, current_text, estimates, lang=lang)`
-- 確認回傳 dict 格式不變（`llm_commitment_analysis` 欄位名稱相同）
+- 在 import 區新增：`from agent.llm_client import get_llm_client`
+- 刪除整個 `_build_llm_client()` 函數（約 15 行）
+- 在 `_score_commitments_with_llm()` 內，把 `client = _build_llm_client()` 那一行改為 `client = get_llm_client()`
+- **所有其他程式碼不動**：`_score_commitments_with_llm()`、`_LLM_CACHE`、`from openai import APITimeoutError, AzureOpenAI, OpenAI` 全部保留
+- 確認回傳 dict 格式不變
 
-**驗收**：`test_management_snapshot.py` 和 `test_management_scoring_contract.py` 全部通過；`services/dashboard/commitment_analysis.py` 不再 import openai
+**驗收**：`test_management_snapshot.py` 和 `test_management_scoring_contract.py` 全部通過；`_build_llm_client` 函數不再存在於此檔案
 
-**依賴**：3-3（commitment_scorer）
+**依賴**：3-1（get_llm_client 必須先建立）
 
 ---
 
-#### 5-2 `services/us/dashboard/commitment_analysis.py` — 去重去 LLM 化：消除與 5-1 的程式碼重複
+#### 5-2 `services/us/dashboard/commitment_analysis.py` — 同步替換 _build_llm_client()，並確認兩份 commitment_analysis 的邏輯一致性
 
 **具體工作**：
-- 確認 `services/us/dashboard/commitment_analysis.py` 與 `services/dashboard/commitment_analysis.py` 的 `build_commitment_context()` signature 是否一致（expected：一致）
-- 若一致：讓 `services/us/dashboard/commitment_analysis.py` 直接 `from services.dashboard.commitment_analysis import build_commitment_context`，移除重複實作
-- 若不一致：個別修改去 LLM 化，加 TODO 標記後續合併
-- 同樣移除 openai import
+- 同 5-1 步驟：import `get_llm_client`，刪除 `_build_llm_client()`，把呼叫點改為 `get_llm_client()`
+- **額外工作**：對比 `services/dashboard/commitment_analysis.py` 和 `services/us/dashboard/commitment_analysis.py` 的 `_score_commitments_with_llm()` 邏輯是否一致；若有差異加 `# TODO(dedup)` 標記供後續合併
+- 所有 LLM 邏輯保留不動
 
-**驗收**：`services/us/dashboard/commitment_analysis.py` 不再 import openai；所有 us/ 相關測試通過
+**驗收**：`services/us/dashboard/commitment_analysis.py` 不再有 `_build_llm_client`；所有 us/ 相關測試通過
 
 **依賴**：5-1
 
@@ -513,8 +515,8 @@ def transcript_status():
 | 3-2 | Agent | Retrieval Agent fetch_parallel() | 3-1, 2-5 |
 | 3-4 | Agent | loop.py 瘦化 | 3-1, 3-2 |
 | 4-3 | Transcript | hf_cache 優先查 per-ticker JSONL | 4-2 |
-| 5-1 | Service | commitment_analysis 去 LLM 化 | 3-3 |
-| 5-2 | Service | us/commitment_analysis 去重去 LLM 化 | 5-1 |
+| 5-1 | Service | commitment_analysis 改用共用 LLM client（保留 LLM 功能） | 3-1 |
+| 5-2 | Service | us/commitment_analysis 同步改用共用 LLM client + 一致性對比 | 5-1 |
 | 6-1 | Flask | GET /api/transcripts/status 端點 | 4-2 |
 | 6-3 | Flask | /api/analyse 非同步化 | 1-3 |
 | 6-2 | Flask | management 端點整合 transcript 觸發 + 狀態旗標 | 4-2, 4-3, 6-1 |
@@ -524,15 +526,141 @@ def transcript_status():
 
 ---
 
-## 風險評估
+## 風險評估（全任務）
 
-| 任務 | 難度 | 出錯代價 | 主要陷阱 |
-|------|------|----------|----------|
-| 1-2 Resilience | 🟡 中等 | 🟡 中 | `with_timeout` 用 ThreadPoolExecutor 而非 threading.Timer，避免 daemon thread 問題 |
-| 1-3 AsyncRunner | 🟡 中等 | 🔴 高 | `_STATUS` dict 必須加 Lock；daemon thread exception 不冒泡，需 explicit try/except |
-| 3-1 lazy LLM client | 🟢 簡單 | 🔴 高 | 共 3 處要同步改；漏改一處會 silent 雙重初始化；singleton 需 threading.Lock |
-| 3-3 commitment_scorer | 🟡 中等 | 🔴 高 | JSON schema validation 必做；LLM 輸出非標準格式會 silent crash dashboard |
-| 4-2 hf_downloader | 🔴 複雜 | 🟡 中 | shard0 ~7min，必須全程在 AsyncRunner daemon thread；兩個 shard 都要查，不能假設 ticker 在 shard1 |
-| 6-2 management 端點 | 🟡 中等 | 🟡 中 | `transcript_cache_missing` vs `transcript_insufficient` 兩種 error 處理邏輯不同，不能混用觸發下載 |
-| 7-1 前端 polling | 🟡 中等 | 🟡 中 | 切 ticker 必須 clearInterval；transcript 下載完 ≠ LLM 分析完，re-render 期間保持 loading |
-| 2-5 Dispatcher | 🟡 中等 | 🟡 中 | TW tools（tw_price_data.py 等）目前不繼承 BaseTool，dispatcher 需要兼容舊格式直到 TW tools 跟進 |
+### 評估總表
+
+| 任務 ID | 標題 | 難度 | 出錯代價 | 建議順序 |
+|---------|------|------|----------|----------|
+| 1-1 | BaseTool 抽象類別 | 🟢 簡單 | 🟢 低 | 1 |
+| 1-3 | AsyncRunner 通用背景執行器 | 🟡 中等 | 🔴 高 | 2 |
+| 1-4 | CacheManager L1/L2/L3 介面 | 🟢 簡單 | 🟢 低 | 3 |
+| 3-1 | LLM client lazy singleton | 🟢 簡單 | 🔴 高 | 4 |
+| 4-1 | 新增 duckdb 依賴 | 🟢 簡單 | 🟡 中 | 5 |
+| 1-2 | Resilience 工具包 | 🟡 中等 | 🟡 中 | 6 |
+| 3-3 | commitment_scorer + JSON schema validation | 🟡 中等 | 🔴 高 | 7 |
+| 2-1 | PriceDataTool + stooq fallback | 🟢 簡單 | 🟡 中 | 8 |
+| 2-2 | FinancialsTool + EstimatesTool | 🟢 簡單 | 🟢 低 | 9 |
+| 2-3 | SecFilingsTool + Sec8kTool | 🟢 簡單 | 🟢 低 | 10 |
+| 2-4 | EarningsTranscriptTool（fallback 鏈） | 🟡 中等 | 🟡 中 | 11 |
+| 4-2 | hf_downloader 背景下載器 | 🔴 複雜 | 🟡 中 | 12 |
+| 2-5 | Dispatcher 改用 BaseTool + CacheManager | 🟡 中等 | 🔴 高 | 13 |
+| 3-2 | Retrieval Agent fetch_parallel() | 🟢 簡單 | 🟢 低 | 14 |
+| 3-4 | loop.py 瘦化 | 🟢 簡單 | 🟢 低 | 15 |
+| 4-3 | hf_cache 優先查 per-ticker JSONL | 🟢 簡單 | 🟡 中 | 16 |
+| 5-1 | commitment_analysis 改用共用 LLM client | 🟢 簡單 | 🔴 高 | 17 |
+| 5-2 | us/commitment_analysis 同步改用共用 LLM client | 🟢 簡單 | 🟡 中 | 18 |
+| 6-1 | GET /api/transcripts/status 端點 | 🟢 簡單 | 🟢 低 | 19 |
+| 6-3 | /api/analyse 非同步化 | 🟡 中等 | 🟡 中 | 20 |
+| 6-2 | management 端點整合 transcript 觸發 + 狀態旗標 | 🟡 中等 | 🟡 中 | 21 |
+| 7-1 | 前端 spinner + polling + interval 清除 | 🟡 中等 | 🟡 中 | 22 |
+| 8-1 | 端對端 AAPL 驗證 | 🟢 簡單 | 🟢 低 | 23 |
+| 8-2 | 96 測試回歸 + 多 ticker 快取隔離 | 🟢 簡單 | 🟢 低 | 24 |
+
+---
+
+### 重點任務詳細評估
+
+#### 🔴 1-3 AsyncRunner — 看起來簡單，實際有 3 個並發陷阱
+
+**難度：中等 ／ 出錯代價：高**
+
+**陷阱 1：`_STATUS` dict 未加 Lock**
+Flask 收到多個請求時 `_STATUS` 被多 thread 同時讀寫，導致 race condition。
+→ **解法**：所有 `_STATUS` 讀寫操作都在 `threading.Lock` 內執行；`is_running()` 和狀態更新必須是原子操作。
+
+**陷阱 2：daemon thread 內 exception 靜默消失**
+daemon thread 拋出的 exception 不會傳回主 thread，job 狀態卡在 `running` 永遠不會變 `done`。
+→ **解法**：thread 函數最外層加 `try/except Exception as e`，`finally` 區塊確保狀態被更新。
+
+**陷阱 3：重複提交同一 job**
+用戶連點或多分頁同時查詢同一 ticker，可能啟動多個下載 thread。
+→ **解法**：`submit()` 內先在 Lock 內檢查 `is_running(job_id)`，若已在跑直接回傳現有 job_id。
+
+---
+
+#### 🔴 3-1 lazy LLM client — 看起來是 3 行改動，實際有隱性問題
+
+**難度：簡單 ／ 出錯代價：高**
+
+**陷阱 1：3 個地方不同步改**
+`loop.py`、`services/dashboard/commitment_analysis.py`、`services/us/dashboard/commitment_analysis.py` 共 3 處。漏改任何一個：舊的 `_build_llm_client()` 還在 → module import 仍可能在某些路徑觸發雙重初始化。
+→ **解法**：改完後用 `grep -r "_build_llm_client\|AzureOpenAI\(\|OpenAI(" agent/ services/ --include="*.py"` 確認只剩 `llm_client.py` 一處建立 client。
+
+**陷阱 2：singleton 在多 thread 環境下初始化兩次**
+Flask dev server 雖單 thread，但 gunicorn 是多 process。process 層面每個 worker 有獨立 singleton，這是預期行為。但在同一 process 內若兩個 thread 同時 first call，會建立兩個 client。
+→ **解法**：`get_llm_client()` 內用 `threading.Lock` 包裝 `_client = None` → build → assign。
+
+---
+
+#### 🔴 3-3 commitment_scorer — JSON schema validation 是金融級必要，但容易漏做
+
+**難度：中等 ／ 出錯代價：高**
+
+**陷阱 1：LLM 偶爾輸出非 JSON 格式**
+GPT 有時輸出 markdown code block（````json ... ````）或在 JSON 前後加說明文字，直接 `json.loads()` 拋 `JSONDecodeError`，dashboard 顯示空白但無 error message。
+→ **解法**：先用 regex 提取 `{...}` 最長匹配，再 `json.loads()`；失敗則回傳 `{"error": "llm_response_not_json", "raw": raw_text[:200]}`。
+
+**陷阱 2：JSON 格式正確但欄位缺失**
+LLM 可能回傳 `{"commitment_checklist": [...]}` 但缺少 `sentiment_score` 欄位，上層程式碼 `data["sentiment_score"]` 拋 `KeyError`。
+→ **解法**：用 `jsonschema.validate(result, EXPECTED_SCHEMA)` 驗證必填欄位；失敗時回傳 `{"error": "llm_response_schema_invalid"}`。
+
+---
+
+#### 🔴 2-5 Dispatcher — 改 registry 結構會影響所有工具呼叫路徑
+
+**難度：中等 ／ 出錯代價：高**
+
+**陷阱 1：TW tools 尚未繼承 BaseTool**
+`tools/tw_price_data.py`、`tools/tw_financials.py` 等 TW 系列工具目前不在 dispatcher 的 `_REGISTRY` 中（TW 有獨立的呼叫路徑），改造時不需要處理，但需要確認 TW tools 不會被意外加入 US 的 registry。
+→ **解法**：明確只改 US tools 的 registry；TW tools 的 dispatcher 另行處理（非本次範圍）。
+
+**陷阱 2：cache key 格式改變**
+現有 `cache.get(tool_name, ticker)` 改為 `CacheManager.get(layer=1, tool_name, ticker)` 後，原有的 in-memory cache entries 格式不同 → 第一次改完 cache hit 都消失（重新填充），**這是預期行為**，但要確保沒有 code 仍然直接操作舊的 `utils.cache`。
+→ **解法**：改完後 grep 確認只剩 `CacheManager` 操作；舊 `utils/cache.py` 降級為 `CacheManager` 的 L1 實作。
+
+---
+
+#### 🔴 4-2 hf_downloader — 最複雜任務，多個獨立陷阱
+
+**難度：複雜 ／ 出錯代價：中**
+
+**陷阱 1：DuckDB shard0 全表掃描 ~7 分鐘**
+`kurry/sp500_earnings_transcripts` shard0（1.79 GB）無 predicate pushdown，每個 ticker 都要全表掃描。AAPL 等大多數 ticker 在 shard0。
+→ **解法**：`_download_ticker()` **必須在 AsyncRunner daemon thread 執行**，禁止在主 thread 呼叫。
+
+**陷阱 2：不能假設 ticker 只在 shard1**
+shard1（33 MB）只有 53 個 ticker，其餘都在 shard0。
+→ **解法**：兩個 shard URL 都要 scan：`parquet_scan([shard0_url, shard1_url]) WHERE symbol = 'X'`。
+
+**陷阱 3：manifest atomic write**
+concurrent 兩個 ticker 同時完成下載，各自 `_write_manifest()` → 最後一個覆蓋第一個 → 資料遺失。
+→ **解法**：`_write_manifest()` 在 Lock 內：先 read，再 merge，再 atomic write（`.tmp` → `os.replace()`）。
+
+---
+
+#### 🟡 5-1 commitment_analysis 改用共用 client — 看起來 3 行改動，但有靜默失敗風險
+
+**難度：簡單 ／ 出錯代價：高**
+
+**陷阱：改完後舊的 `_build_llm_client` 仍被某條程式碼路徑呼叫**
+若 `_build_llm_client()` 刪除不完全（例如還有其他函數呼叫它），會拋 `NameError` 但只在 LLM scoring 路徑才觸發，平時測試可能無法發現。
+→ **解法**：刪除後執行 `grep "_build_llm_client" services/` 確認為零；跑 `test_management_scoring_contract.py` 確認 LLM 路徑被測試到。
+
+---
+
+#### 🟡 7-1 前端 polling — interval 洩漏是最常見的陷阱
+
+**難度：中等 ／ 出錯代價：中**
+
+**陷阱 1：切換 ticker 時舊 interval 未清除**
+用戶查 AAPL 後切換 MSFT，AAPL 的 `setInterval` 仍在跑，3 秒後用 AAPL 的狀態覆蓋 MSFT 的 UI。
+→ **解法**：使用 `window._ooTranscriptPollInterval` 全域變數；每次新查詢前 `clearInterval(window._ooTranscriptPollInterval)`。
+
+**陷阱 2：transcript 下載完成後 re-render 又觸發 spinner**
+`management` API 若在 manifest 更新前被呼叫，仍回傳 `transcript_downloading: true` → 無限 polling。
+→ **解法**：`trigger_background_download()` 在 `_download_ticker()` 完成且 manifest 寫入後才更新狀態為 `done`（AsyncRunner 的正確實作已保證此點）。
+
+**陷阱 3：transcript 下載完 ≠ LLM 分析完**
+polling 到 `done` 後，`re-fetch management` 還需呼叫 LLM（約 10-30 秒），期間不能清除 spinner。
+→ **解法**：polling `done` 後，重新 fetch management 的回應到來**之前**保持 loading state；收到完整 response 才呼叫 `renderManagement(data)` 並清除 loading。
