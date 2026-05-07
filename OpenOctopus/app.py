@@ -61,14 +61,20 @@ def index() -> Response:
 def dashboard_us() -> Response:
     html_path = str(UI_DIR / "index.html")
     with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
+        return f.read(), 200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        }
 
 
 @app.route("/dashboard/tw")
 def dashboard_tw() -> Response:
     html_path = str(UI_DIR / "dashboard-tw.html")
     with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
+        return f.read(), 200, {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        }
 
 
 @app.route("/test")
@@ -255,7 +261,66 @@ def analyze_status(job_id: str) -> Response:
     return jsonify(async_runner.get_status(job_id))
 
 
-# ── Policy Query ─────────────────────────────────────────────────────────────
+# ── Screener endpoints ────────────────────────────────────────────────────────
+
+from services.screener import runner as _screener_runner  # noqa: E402
+
+_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50"}
+
+
+@app.route("/api/screener/start", methods=["POST"])
+def screener_start() -> Response:
+    """Start (or resume) a screener job for a given market.
+
+    Request JSON: {"market": "SP500" | "NASDAQ100" | "DAX40" | "TW50"}
+    Response:     {"job_id": "<uuid>", "status": "running" | "done"}
+    """
+    data = request.get_json(silent=True) or {}
+    market = (data.get("market") or "").strip().upper()
+    force  = bool(data.get("force", False))
+    if market not in _SCREENER_VALID_MARKETS:
+        return jsonify({"error": f"Invalid market: {market!r}. Choose from {sorted(_SCREENER_VALID_MARKETS)}"}), 400
+    try:
+        job_id = _screener_runner.start_screener(market, force=force)
+        state = _screener_runner.get_screener_status(job_id)
+        return jsonify({"job_id": job_id, "status": state.get("status", "running")})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.route("/api/screener/pause/<job_id>", methods=["POST"])
+def screener_pause(job_id: str) -> Response:
+    """Pause a running screener job."""
+    ok = _screener_runner.pause_screener(job_id)
+    if not ok:
+        return jsonify({"error": "Job not found or not in running state"}), 404
+    return jsonify({"ok": True})
+
+
+@app.route("/api/screener/resume/<job_id>", methods=["POST"])
+def screener_resume(job_id: str) -> Response:
+    """Resume a paused screener job."""
+    ok = _screener_runner.resume_screener(job_id)
+    if not ok:
+        return jsonify({"error": "Job not found or not in paused state"}), 404
+    return jsonify({"ok": True})
+
+
+@app.route("/api/screener/cancel/<job_id>", methods=["POST"])
+def screener_cancel(job_id: str) -> Response:
+    """Cancel a running or paused screener job."""
+    ok = _screener_runner.cancel_screener(job_id)
+    return jsonify({"ok": ok})
+
+
+@app.route("/api/screener/status/<job_id>")
+def screener_status(job_id: str) -> Response:
+    """Get the current status of a screener job."""
+    state = _screener_runner.get_screener_status(job_id)
+    return jsonify(state)
+
+
+
 
 @app.route("/api/policy", methods=["GET"])
 def policy() -> Response:

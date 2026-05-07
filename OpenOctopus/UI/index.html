@@ -7,8 +7,9 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js"></script>
+<script src="/static/i18n.js?v=20260508b"></script>
 <script src="/static/market-switcher.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
   tailwind.config = {
     darkMode: "class",
@@ -140,7 +141,7 @@
       <span class="material-symbols-outlined mr-3 text-primary">dashboard</span>
       <span class="font-label text-[11px] uppercase tracking-widest font-bold" data-i18n="nav.dashboard">US Dashboard</span>
     </a>
-    <a href="/dashboard/tw" class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer">
+    <a href="/dashboard/tw" class="nav-ext-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer">
       <span class="material-symbols-outlined mr-3">public</span>
       <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.taiwan">Taiwan Dashboard</span>
     </a>
@@ -159,6 +160,10 @@
     <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="documents">
       <span class="material-symbols-outlined mr-3">description</span>
       <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.documents">Documents</span>
+    </a>
+    <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="screener">
+      <span class="material-symbols-outlined mr-3">trending_up</span>
+      <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.screener">Filter Upward Ticker</span>
     </a>
   </nav>
 
@@ -183,7 +188,7 @@
     <h1 class="text-base font-headline font-bold tracking-[0.15em] text-primary uppercase">OpenOctopus</h1>
     <div class="flex items-center gap-5">
       <!-- Language Switcher (hidden – default EN) -->
-      <div class="flex items-center gap-0.5 mr-1 hidden" id="lang-switcher">
+      <div class="flex items-center gap-0.5 mr-1" id="lang-switcher">
         <button id="lang-btn-en" onclick="I18N.setLang('en'); if(window._ooRerenderAll) window._ooRerenderAll();"
           class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
           style="background:#000f27;color:#ffffff;">EN</button>
@@ -872,7 +877,160 @@
     </div>
   </div>
 
+  <!-- ─────────── SCREENER PAGE ─────────── -->
+  <div id="page-screener" class="page-section">
+    <div class="p-8 max-w-6xl">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="screener.title">Upward Ticker Screener</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6" data-i18n="screener.title">Upward Ticker Screener</h2>
+
+      <!-- Market Tabs -->
+      <div class="flex gap-2 mb-5" id="screener-market-tabs">
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-primary text-white" data-market="SP500">
+          <span data-i18n="screener.market.sp500">S&amp;P 500</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="NASDAQ100">
+          <span data-i18n="screener.market.ndx">NASDAQ 100</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="DAX40">
+          <span data-i18n="screener.market.dax">DAX 40</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="TW50">
+          <span data-i18n="screener.market.tw50">TW50</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+      </div>
+
+      <!-- Control Row -->
+      <div class="flex items-center flex-wrap gap-4 mb-4">
+        <button id="screener-btn-start" onclick="startScreener()" class="px-5 py-2 rounded bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors" data-i18n="screener.start">Start Scan</button>
+        <button id="screener-btn-pause" onclick="pauseScreener()" class="hidden px-5 py-2 rounded bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-amber-600 transition-colors" data-i18n="screener.stop">Pause</button>
+        <button id="screener-btn-resume" onclick="resumeScreener()" class="hidden px-5 py-2 rounded bg-green-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors" data-i18n="screener.resume">Resume</button>
+        <button id="screener-btn-cancel" onclick="cancelScreener()" class="hidden px-5 py-2 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors" data-i18n="screener.cancel">Cancel</button>
+        <button id="screener-btn-rescan" onclick="rescanScreener()" class="hidden px-4 py-2 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 border border-outline-variant/30 transition-colors">↺ Rescan</button>
+        <span id="screener-status-badge" class="text-[10px] text-on-surface-variant font-label uppercase tracking-widest" data-i18n="screener.status.idle">Ready</span>
+        <span id="screener-cache-badge" class="hidden text-[9px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-bold border border-amber-300"></span>
+        <span id="screener-last-scan-ts" class="text-[9px] text-on-surface-variant/50"></span>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-2">
+        <div class="flex justify-between items-center text-[9px] text-on-surface-variant mb-1 gap-4">
+          <span id="screener-progress-text" class="flex gap-3">0 / 0</span>
+          <span id="screener-date-range" class="shrink-0 text-on-surface-variant"></span>
+        </div>
+        <div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+          <div id="screener-progress-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Resizable two-panel layout: Scanning (left) + Passing Tickers (right) -->
+      <div class="flex mt-6 items-stretch" id="screener-panels" style="min-height: 440px;">
+
+        <!-- Scanning Progress Panel (left, resizable) -->
+        <div id="screener-scan-panel" class="shrink-0 overflow-hidden" style="width: 20%; min-width: 120px; max-width: 50%;">
+          <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="screener.scanning_label">Scanning Progress</p>
+          <div id="screener-scanning-list" class="space-y-1 overflow-y-auto" style="height: 420px;">
+            <p class="text-[10px] text-on-surface-variant" data-i18n="screener.status.idle">Ready</p>
+          </div>
+        </div>
+
+        <!-- Drag Handle -->
+        <div id="screener-resize-handle"
+          class="shrink-0 w-1.5 mx-2 rounded cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors"
+          style="background: rgba(0,0,0,0.06); align-self: stretch; min-height: 100%;">
+        </div>
+
+        <!-- Results Panel (right, fills remaining space) -->
+        <div id="screener-results-panel" class="flex-1 min-w-0">
+          <!-- Results header toolbar: [Title + hit-rate + tooltip] [☐ SelectAll · N sel | ExportSel | SendAnalysis] [ExportAll] -->
+          <div class="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <!-- Left: title + hit-rate + tooltip -->
+            <div class="flex items-center gap-1.5 min-w-0">
+              <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap" data-i18n="screener.results_label">Passing Tickers</p>
+              <span id="screener-hit-rate" class="text-[9px] text-on-surface-variant font-normal"></span>
+              <div class="relative inline-block group">
+                <span class="text-[10px] text-on-surface-variant/50 cursor-help hover:text-primary transition-colors select-none">ℹ</span>
+                <div class="absolute left-0 top-full mt-1 w-60 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow">
+                  <p class="font-bold mb-1.5 text-[10px]">7 Upward Trend Conditions</p>
+                  <p class="mb-0.5">C1 &nbsp;Price &gt; MA200 &amp; MA150</p>
+                  <p class="mb-0.5">C2 &nbsp;MA150 &gt; MA200</p>
+                  <p class="mb-0.5">C3 &nbsp;MA200 trending up (vs 1M ago)</p>
+                  <p class="mb-0.5">C4 &nbsp;MA50 &gt; MA200 &amp; MA150</p>
+                  <p class="mb-0.5">C5 &nbsp;Price &gt; MA50</p>
+                  <p class="mb-0.5">C6 &nbsp;Price ≥ 30% above 52W low</p>
+                  <p>C7 &nbsp;Price within 25% of 52W high</p>
+                </div>
+              </div>
+            </div>
+            <!-- Middle: select-all checkbox + count + inline action buttons -->
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="screener-select-all" onchange="_onSelectAll(this.checked)"
+                class="w-3 h-3 rounded accent-primary cursor-pointer" title="Select All">
+              <span id="screener-selected-count" class="text-[9px] text-primary font-bold hidden"></span>
+              <span id="screener-action-inline" class="hidden flex items-center gap-2">
+                <button onclick="_exportExcel(true)"
+                  class="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/90 transition-colors"
+                  id="screener-btn-export-sel">Export Selected</button>
+                <button onclick="_sendToAnalysis()"
+                  class="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface border border-outline-variant/30 hover:bg-surface-container-low transition-colors"
+                  id="screener-btn-send-analysis">Send to Analysis</button>
+              </span>
+            </div>
+            <!-- Right: filter + density + Export All -->
+            <div class="flex items-center gap-2">
+              <!-- E-2: Quick filter -->
+              <input type="search" id="screener-filter" placeholder="Filter…"
+                oninput="_onFilterInput(this.value)"
+                class="hidden w-24 px-2 py-0.5 rounded text-[9px] bg-surface-container-high text-on-surface border border-outline-variant/20 focus:outline-none focus:border-primary placeholder:text-on-surface-variant/40">
+              <!-- E-3: Density toggle -->
+              <button id="screener-density-btn" onclick="_toggleDensity()"
+                class="hidden px-2 py-1 rounded text-[9px] bg-surface-container-high text-on-surface-variant border border-outline-variant/20 hover:bg-primary/10 transition-colors" title="Toggle row density">☰</button>
+              <button id="screener-btn-export-all" onclick="_exportExcel(false)"
+                class="hidden px-3 py-1 rounded text-[9px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant hover:bg-primary/10 transition-colors border border-outline-variant/20"
+                data-i18n="screener.export_all">Export All → Excel</button>
+            </div>
+          </div>
+
+          <!-- Results Table with sticky header -->
+          <div class="overflow-x-auto overflow-y-auto" style="max-height:400px;">
+            <table class="w-full text-[10px]" id="screener-results-table">
+              <thead class="sticky top-0 bg-surface z-10">
+                <tr class="border-b border-outline-variant/20">
+                  <th class="py-1.5 pr-2 w-5"></th>
+                  <th class="text-left py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="ticker" onclick="_onSortClick('ticker')" data-i18n="screener.col.ticker">Ticker<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="price" onclick="_onSortClick('price')" data-i18n="screener.col.price">Price<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="change_pct" onclick="_onSortClick('change_pct')" data-i18n="screener.col.chg_pct">vs 52W Low<span class="sort-arrow text-[8px]"> ▼</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="w52_chg_pct" onclick="_onSortClick('w52_chg_pct')" data-i18n="screener.col.w52_chg">52w Change %<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="ma50" onclick="_onSortClick('ma50')" data-i18n="screener.col.ma50">MA50<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant" data-i18n="screener.col.ma150">MA150</th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant" data-i18n="screener.col.ma200">MA200</th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="w52_high" onclick="_onSortClick('w52_high')" data-i18n="screener.col.w52h">52W High<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant cursor-pointer hover:text-primary select-none" data-sortkey="w52_low" onclick="_onSortClick('w52_low')" data-i18n="screener.col.w52l">52W Low<span class="sort-arrow text-[8px]"> ↕</span></th>
+                  <th class="text-right py-1.5 pr-3 font-label text-on-surface-variant" data-i18n="screener.col.source">Source</th>
+                  <th class="py-1.5 w-6 text-center font-label text-on-surface-variant/50" title="Watchlist">★</th>
+                </tr>
+              </thead>
+              <tbody id="screener-results-body"
+                onclick="_onResultsBodyClick(event)">
+              </tbody>
+            </table>
+            <p id="screener-no-results" class="hidden text-[10px] text-on-surface-variant mt-3" data-i18n="screener.no_results">No tickers matched all 7 conditions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main><!-- end main -->
+
+<!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
+<div id="screener-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[200] hidden px-5 py-3 rounded-lg shadow-lg text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 flex items-center gap-2 min-w-72 max-w-lg transition-opacity">
+  <span class="material-symbols-outlined text-amber-600" style="font-size:16px;">warning</span>
+  <span id="screener-toast-msg"></span>
+</div>
 
 <!-- ───────────────────────── JAVASCRIPT ───────────────────────── -->
 <script>
@@ -912,6 +1070,7 @@
   let currentTrinityTab = 'ai';
 
   function showPage(page) {
+    if (!page) return;  // guard: skip external nav links without data-page
     navLinks.forEach(l => {
       l.classList.remove('nav-active', 'text-primary', 'font-bold');
       l.classList.add('text-slate-500');
@@ -2189,6 +2348,927 @@
     loadDashboardFeeds();
   })();
 })();
+
+// ═══════════════════════════════════════════════════════
+// SCREENER MODULE v2
+// ═══════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  // ─── Per-market state store ─────────────────────────────────────────────────
+  // Each market independently tracks its own job, rendering state, and selection.
+  const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50'];
+  const _mktState = {};
+  MARKETS.forEach(m => {
+    _mktState[m] = {
+      jobId:           null,
+      pollTimer:       null,
+      renderedCount:   0,
+      lastData:        null,   // last full status response
+      selectedTickers: new Set(),
+      selectAllChecked: false,
+      toastTimer:      null,
+      lastRlSource:    null,
+      sortKey:         'change_pct', // 'ticker'|'price'|'change_pct'|'ma50'|'ma150'|'ma200'|'w52_high'|'w52_low'|null
+      sortDir:         'desc',       // 'asc'|'desc'
+    };
+  });
+
+  let _currentMarket = 'SP500';
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  function _t(key, ...subs) {
+    // Use typeof guard — `const I18N` in i18n.js is not on window
+    let s = (typeof I18N !== 'undefined' ? I18N.t(key) : null) || key;
+    subs.forEach(v => { s = s.replace('%d', String(v)).replace('%s', String(v)); });
+    return s;
+  }
+
+  function _fmt(n, decimals = 2) {
+    return n != null ? Number(n).toFixed(decimals) : '—';
+  }
+
+  function _todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  // ─── localStorage persistence ────────────────────────────────────────────────
+  const LS_PREFIX = 'oo_screener_';
+
+  function _saveToLocalStorage(market, data) {
+    try {
+      const payload = {
+        date:       _todayStr(),
+        passing:    data.passing || [],
+        total:      data.total   || 0,
+        date_range: data.date_range || {},
+      };
+      localStorage.setItem(LS_PREFIX + market, JSON.stringify(payload));
+    } catch(e) { /* quota or private browsing */ }
+  }
+
+  function _loadFromLocalStorage(market) {
+    try {
+      const raw = localStorage.getItem(LS_PREFIX + market);
+      if (!raw) return null;
+      const saved = JSON.parse(raw);
+      if (saved.date !== _todayStr()) return null; // stale — don't show
+      return saved;
+    } catch(e) { return null; }
+  }
+
+  // Restore today's cached results for all markets on page load
+  function _restoreAllFromLocalStorage() {
+    MARKETS.forEach(market => {
+      const saved = _loadFromLocalStorage(market);
+      if (saved && saved.passing && saved.passing.length > 0) {
+        _mktState[market].lastData = {
+          status:     'done',
+          market,
+          total:      saved.total,
+          done:       saved.total,
+          pct:        100,
+          passing:    saved.passing,
+          scanning:   [],
+          date_range: saved.date_range || {},
+          from_cache: true,
+          rate_limited: false,
+          rate_limited_source: null,
+          error:      null,
+        };
+        _updateTabBadge(market, saved.passing.length, 'done');
+      }
+    });
+    // Render restored data for current market if available
+    if (_mktState[_currentMarket].lastData) {
+      _renderFullMarketState(_currentMarket);
+    }
+  }
+
+  // ─── Tab badge ───────────────────────────────────────────────────────────────
+  function _updateTabBadge(market, passingCount, status) {
+    const btn = document.querySelector(`.screener-market-tab[data-market="${market}"]`);
+    if (!btn) return;
+    const badge     = btn.querySelector('.screener-tab-badge');
+    const labelSpan = btn.querySelector('[data-i18n]');  // the market name span
+
+    // Tab label: dark green when done, inherit otherwise
+    if (labelSpan) {
+      if (status === 'done') {
+        labelSpan.classList.add('text-green-700');
+      } else {
+        labelSpan.classList.remove('text-green-700');
+      }
+    }
+
+    if (!badge) return;
+    if (status === 'running')       { badge.textContent = '⟳'; badge.className = 'screener-tab-badge text-[10px] animate-spin'; }
+    else if (status === 'paused')   { badge.textContent = '⏸'; badge.className = 'screener-tab-badge text-[10px]'; }
+    else                            { badge.textContent = ''; badge.className = 'screener-tab-badge'; }
+  }
+
+  // ─── Market tab switching ─────────────────────────────────────────────────────
+  document.querySelectorAll('.screener-market-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newMarket = btn.dataset.market;
+      if (newMarket === _currentMarket) return;
+
+      // Update tab active styles
+      document.querySelectorAll('.screener-market-tab').forEach(b => {
+        b.classList.remove('bg-primary', 'text-white');
+        b.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      });
+      btn.classList.add('bg-primary', 'text-white');
+      btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+
+      _currentMarket = newMarket;
+
+      // Clear selection state for new market display
+      _clearSelectionUI();
+
+      // Render the new market's last known state
+      _clearResultsDOM();
+      _renderLastScanTs(_currentMarket);
+      if (_mktState[_currentMarket].lastData) {
+        _renderFullMarketState(_currentMarket);
+      } else {
+        _setButtonState('idle');
+        _renderProgress({done:0, total:0, pct:0, passing:[], date_range:{}});
+      }
+    });
+  });
+
+  // ─── DOM clearing helpers ─────────────────────────────────────────────────────
+  function _clearResultsDOM() {
+    const tbody = document.getElementById('screener-results-body');
+    if (tbody) tbody.innerHTML = '';
+    const scanList = document.getElementById('screener-scanning-list');
+    if (scanList) scanList.innerHTML = '';
+    document.getElementById('screener-progress-bar').style.width = '0%';
+    document.getElementById('screener-progress-text').innerHTML = '0 / 0';
+    document.getElementById('screener-date-range').textContent = '';
+    document.getElementById('screener-no-results').classList.add('hidden');
+    document.getElementById('screener-btn-export-all').classList.add('hidden');
+    const hitRateEl = document.getElementById('screener-hit-rate');
+    if (hitRateEl) hitRateEl.textContent = '';
+    _setCacheBadge(false);
+  }
+
+  function _clearSelectionUI() {
+    const st = _mktState[_currentMarket];
+    st.selectedTickers.clear();
+    st.selectAllChecked = false;
+    const saBox = document.getElementById('screener-select-all');
+    if (saBox) saBox.checked = false;
+    _updateActionBar();
+  }
+
+  // ─── Button state machine ──────────────────────────────────────────────────────
+  function _setButtonState(state) {
+    const btnStart  = document.getElementById('screener-btn-start');
+    const btnPause  = document.getElementById('screener-btn-pause');
+    const btnResume = document.getElementById('screener-btn-resume');
+    const btnCancel = document.getElementById('screener-btn-cancel');
+    const btnRescan = document.getElementById('screener-btn-rescan');
+    const badge     = document.getElementById('screener-status-badge');
+    if (!btnStart) return;
+    [btnStart, btnPause, btnResume, btnCancel, btnRescan].forEach(b => b && b.classList.add('hidden'));
+    if (badge) {
+      badge.dataset.status = state;
+      // Hide badge when done/cancelled — the tab badge conveys this
+      if (state === 'done' || state === 'cancelled') {
+        badge.textContent = '';
+      } else {
+        badge.textContent = _t('screener.status.' + state);
+      }
+    }
+    switch (state) {
+      case 'idle':      btnStart.classList.remove('hidden'); break;
+      case 'running':   btnPause.classList.remove('hidden'); break;
+      case 'paused':    btnResume.classList.remove('hidden'); btnCancel && btnCancel.classList.remove('hidden'); break;
+      case 'done':      btnRescan && btnRescan.classList.remove('hidden'); _updateLastScanTs(); break;
+      case 'cancelled': btnStart.classList.remove('hidden'); break;
+      case 'error':     btnStart.classList.remove('hidden'); break;
+    }
+  }
+
+  // C-3: Last scan timestamp display
+  function _updateLastScanTs() {
+    const market = _currentMarket;
+    const tsKey  = `oo_screener_scan_ts_${market}`;
+    const now    = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const today  = new Date().toLocaleDateString([], {month:'short', day:'numeric'});
+    localStorage.setItem(tsKey, `${today} ${now}`);
+    _renderLastScanTs(market);
+  }
+
+  function _renderLastScanTs(market) {
+    const el = document.getElementById('screener-last-scan-ts');
+    if (!el) return;
+    const ts = localStorage.getItem(`oo_screener_scan_ts_${market}`);
+    el.textContent = ts ? `Last scan: ${ts}` : '';
+  }
+
+  // ─── Cache badge ──────────────────────────────────────────────────────────────
+  function _setCacheBadge(fromCache) {
+    const badge = document.getElementById('screener-cache-badge');
+    if (!badge) return;
+    if (fromCache) {
+      badge.textContent = _t('screener.from_cache');
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  // ─── Progress rendering ───────────────────────────────────────────────────────
+  function _renderProgress(data) {
+    const bar     = document.getElementById('screener-progress-bar');
+    const txtEl   = document.getElementById('screener-progress-text');
+    const drEl    = document.getElementById('screener-date-range');
+    if (bar) bar.style.width = (data.pct || 0) + '%';
+
+    const done    = data.done    || 0;
+    const total   = data.total   || 0;
+    const pct     = (data.pct    || 0).toFixed(1);
+    const passing = (data.passing || []).length;
+    const failed  = Math.max(0, done - passing);
+
+    if (txtEl) {
+      const passHtml = done > 0
+        ? `&nbsp;&nbsp;<span class="text-green-600 font-bold">✅ ${passing}</span>&nbsp;<span class="text-slate-400">❌ ${failed}</span>`
+        : '';
+      txtEl.innerHTML = `<span>${done} / ${total} (${pct}%)</span>${passHtml}`;
+    }
+
+    if (drEl) {
+      const dr = data.date_range || {};
+      if (dr.start) {
+        drEl.textContent = `${dr.start} → ${dr.end || '…'}`;
+      } else {
+        drEl.textContent = '';
+      }
+    }
+  }
+
+  // ─── Scanning list ─────────────────────────────────────────────────────────────
+  function _renderScanningList(scanning) {
+    const container = document.getElementById('screener-scanning-list');
+    if (!container || !scanning) return;
+    container.innerHTML = (scanning.slice().reverse()).map(item => {
+      let icon, rowCls, labelCls;
+      if (item.status === 'pass') {
+        icon = '✅'; rowCls = ''; labelCls = 'text-green-600 font-bold';
+      } else if (item.status === 'fail') {
+        icon = '✕'; rowCls = 'opacity-50'; labelCls = 'text-on-surface-variant';
+      } else if (item.status === 'error') {
+        icon = '⚠'; rowCls = ''; labelCls = 'text-amber-500';
+      } else {
+        icon = '⟳'; rowCls = ''; labelCls = 'text-slate-400';
+      }
+      let metricStr = '';
+      if (item.status === 'pass' && item.change_pct != null) {
+        metricStr = ` — <span class="text-green-600 font-bold">+${Number(item.change_pct).toFixed(1)}%</span>`;
+      } else if (item.status === 'fail' && item.price != null) {
+        metricStr = ` — <span class="text-on-surface-variant/60">$${item.price}</span>`;
+      }
+      return `<div class="flex items-center gap-1.5 py-0.5 ${rowCls}">
+        <span class="text-[10px] w-4 text-center shrink-0">${icon}</span>
+        <span class="font-label text-[10px] ${labelCls}">${item.ticker}</span>
+        <span class="text-[9px]">${metricStr}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── Results table (incremental append) ─────────────────────────────────────────
+  function _renderResultsTable(passing, market) {
+    const st    = _mktState[market];
+    const tbody = document.getElementById('screener-results-body');
+    const noRes = document.getElementById('screener-no-results');
+    const expBtn = document.getElementById('screener-btn-export-all');
+    if (!tbody) return;
+
+    const newItems = (passing || []).slice(st.renderedCount);
+    const wl = _getWatchlist();
+    const densityCls = localStorage.getItem('oo_screener_density') === 'compact' ? 'py-0.5' : 'py-1.5';
+    newItems.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-outline-variant/10 hover:bg-surface-container-low cursor-default';
+      tr.dataset.ticker = item.ticker;
+      const checked = st.selectedTickers.has(item.ticker) || st.selectAllChecked;
+      if (checked && !st.selectedTickers.has(item.ticker)) {
+        st.selectedTickers.add(item.ticker);
+      }
+      // D-1: Price vs MA50 color hint
+      const priceDiff = item.ma50 ? (item.price - item.ma50) / item.ma50 : 0;
+      const priceColorCls = priceDiff > 0.02 ? 'text-green-500 font-bold' : priceDiff < -0.02 ? 'text-amber-500' : 'text-on-surface';
+      // change_pct display
+      const chgPctHtml = item.change_pct != null
+        ? `<span class="text-green-600 font-bold">+${item.change_pct.toFixed(1)}%</span>`
+        : '—';
+      // 52w Change%: (52W High - 52W Low) / 52W Low × 100 — compute and cache back onto entry
+      const w52ChgVal = (item.w52_high != null && item.w52_low != null && item.w52_low > 0)
+        ? (item.w52_high - item.w52_low) / item.w52_low * 100
+        : null;
+      item.w52_chg_pct = w52ChgVal;  // cache for sort
+      const w52ChgHtml = w52ChgVal != null ? `${w52ChgVal.toFixed(1)}%` : '—';
+      // E-4: Watchlist star
+      const starred = wl.has(item.ticker);
+      tr.innerHTML = `
+        <td class="${densityCls} pr-2">
+          <input type="checkbox" class="screener-row-cb w-3 h-3 rounded accent-primary cursor-pointer"
+            data-ticker="${item.ticker}" ${checked ? 'checked' : ''}>
+        </td>
+        <td class="${densityCls} pr-3 font-bold text-primary cursor-pointer hover:underline"
+          data-action="navigate" data-ticker="${item.ticker}">${item.ticker}</td>
+        <td class="${densityCls} pr-3 text-right ${priceColorCls}">${_fmt(item.price)}</td>
+        <td class="${densityCls} pr-3 text-right tabular-nums">${chgPctHtml}</td>
+        <td class="${densityCls} pr-3 text-right tabular-nums text-on-surface-variant">${w52ChgHtml}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_fmt(item.ma50, 1)}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_fmt(item.ma150, 1)}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_fmt(item.ma200, 1)}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_fmt(item.w52_high)}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_fmt(item.w52_low)}</td>
+        <td class="${densityCls} pr-3 text-right text-on-surface-variant">${item.source || '—'}</td>
+        <td class="${densityCls} text-center">
+          <button class="screener-star text-[11px] leading-none cursor-pointer hover:scale-110 transition-transform"
+            data-ticker="${item.ticker}" data-action="star"
+            title="${starred ? 'Remove from watchlist' : 'Add to watchlist'}"
+          >${starred ? '★' : '☆'}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    st.renderedCount = (passing || []).length;
+
+    if (noRes) noRes.classList.toggle('hidden', st.renderedCount > 0);
+    if (expBtn) expBtn.classList.toggle('hidden', st.renderedCount === 0);
+    // Show/hide filter and density controls when results are visible
+    const filterEl = document.getElementById('screener-filter');
+    const densityBtn = document.getElementById('screener-density-btn');
+    if (filterEl) filterEl.classList.toggle('hidden', st.renderedCount === 0);
+    if (densityBtn) densityBtn.classList.toggle('hidden', st.renderedCount === 0);
+  }
+
+  // C-1: Update hit-rate span in results header
+  function _updateHitRate(passingCount, total) {
+    const el = document.getElementById('screener-hit-rate');
+    if (!el) return;
+    if (total > 0 && passingCount > 0) {
+      const pct = ((passingCount / total) * 100).toFixed(1);
+      el.textContent = `(${passingCount} / ${total} · ${pct}%)`;
+    } else {
+      el.textContent = '';
+    }
+  }
+
+  // D-3: Cross-market summary bar
+  function _updateMarketSummary() {
+    const el = document.getElementById('screener-market-summary');
+    if (!el) return;
+    const parts = ['SP500', 'NASDAQ100', 'DAX40'].map(mkt => {
+      const st = _mktState[mkt];
+      if (!st || !st.lastData) return `<span class="text-on-surface-variant/50">${mkt} —</span>`;
+      const n = (st.lastData.passing || []).length;
+      const status = st.lastData.status;
+      if (status === 'done' && n > 0)
+        return `<span class="text-green-700 font-bold">${mkt} ${n}✅</span>`;
+      if (status === 'running')
+        return `<span class="text-primary">${mkt} ⟳</span>`;
+      return `<span class="text-on-surface-variant/50">${mkt} —</span>`;
+    });
+    el.innerHTML = parts.join('<span class="text-outline-variant mx-1.5">·</span>');
+  }
+
+  // C-2: Column sort — click table header to sort results (only when scan not running)
+  window._onSortClick = function(key) {
+    const st = _mktState[_currentMarket];
+    if (!st.lastData || st.lastData.status === 'running') return;  // disabled while scanning
+    if (st.sortKey === key) {
+      st.sortDir = st.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      st.sortKey = key;
+      st.sortDir = 'desc';
+    }
+    _updateSortArrows();
+    _rerenderResultsTable(_currentMarket);
+  };
+
+  function _updateSortArrows() {
+    const st = _mktState[_currentMarket];
+    document.querySelectorAll('#screener-results-table th[data-sortkey]').forEach(th => {
+      const arrow = th.querySelector('.sort-arrow');
+      if (!arrow) return;
+      if (th.dataset.sortkey === st.sortKey) {
+        arrow.textContent = st.sortDir === 'desc' ? ' ▼' : ' ▲';
+        th.classList.add('text-primary');
+      } else {
+        arrow.textContent = ' ↕';
+        th.classList.remove('text-primary');
+      }
+    });
+  }
+
+  function _rerenderResultsTable(market) {
+    const st = _mktState[market];
+    const tbody = document.getElementById('screener-results-body');
+    if (!tbody || !st.lastData) return;
+    // Clear and full re-render with sorted data
+    tbody.innerHTML = '';
+    st.renderedCount = 0;
+    let sorted = [...(st.lastData.passing || [])];
+    if (st.sortKey) {
+      const dir = st.sortDir === 'asc' ? 1 : -1;
+      sorted.sort((a, b) => {
+        const av = a[st.sortKey];
+        const bv = b[st.sortKey];
+        // String sort (ticker)
+        if (typeof av === 'string' || typeof bv === 'string') {
+          const as = (av ?? ''), bs = (bv ?? '');
+          return as.localeCompare(bs) * dir;
+        }
+        // Numeric sort — null values go to end regardless of direction
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return (av - bv) * dir;
+      });
+    }
+    _renderResultsTable(sorted, market);
+  }
+
+  // E-1: Row expand toggle — show 7-condition breakdown
+  window._onExpandRow = function(ticker, item) {
+    const tbody = document.getElementById('screener-results-body');
+    const existingExpand = tbody.querySelector(`tr.screener-expand-row[data-ticker="${ticker}"]`);
+    if (existingExpand) {
+      existingExpand.remove();
+      return;
+    }
+    const sourceRow = tbody.querySelector(`tr[data-ticker="${ticker}"]:not(.screener-expand-row)`);
+    if (!sourceRow || !item) return;
+
+    const p  = item.price,   m50 = item.ma50,   m150 = item.ma150,
+          m200 = item.ma200, m200ago = item.ma200_1mago,
+          w52h = item.w52_high, w52l = item.w52_low,
+          abv30 = item.above30_low, w25 = item.within25_high;
+
+    const ok = '<span class="text-green-600">✅</span>';
+    const conds = [
+      `C1 Price>${_fmt(m200,0)}&${_fmt(m150,0)} ${ok}`,
+      `C2 MA150>${_fmt(m200,0)} ${ok}`,
+      `C3 MA200↑ ${m200ago != null ? `(${_fmt(m200,0)} vs ${_fmt(m200ago,0)}) ${ok}` : ok}`,
+      `C4 MA50>${_fmt(m200,0)}&${_fmt(m150,0)} ${ok}`,
+      `C5 Price>${_fmt(m50,0)} ${ok}`,
+      `C6 ≥30%↑52wk ${abv30 != null ? `(${_fmt(p,0)}>${_fmt(abv30,0)}) ${ok}` : ok}`,
+      `C7 ≤25%↓52wk ${w25 != null ? `(${_fmt(p,0)}>${_fmt(w25,0)}) ${ok}` : ok}`,
+    ];
+
+    const colSpan = sourceRow.cells.length;
+    const expandTr = document.createElement('tr');
+    expandTr.className = 'screener-expand-row bg-surface-container-low/50';
+    expandTr.dataset.ticker = ticker;
+    expandTr.innerHTML = `<td colspan="${colSpan}" class="px-4 py-2 text-[9px] text-on-surface-variant">
+      <div class="flex flex-wrap gap-x-4 gap-y-1">${conds.map(c => `<span>${c}</span>`).join('')}</div>
+    </td>`;
+    sourceRow.insertAdjacentElement('afterend', expandTr);
+  };
+
+  // E-2: Quick filter — hide rows that don't match ticker text
+  window._onFilterInput = function(val) {
+    const v = val.trim().toUpperCase();
+    document.querySelectorAll('#screener-results-body tr').forEach(tr => {
+      if (!tr.dataset.ticker) return;  // skip expand rows
+      tr.classList.toggle('hidden', v.length > 0 && !tr.dataset.ticker.includes(v));
+    });
+  };
+
+  // E-3: Row density toggle (compact / comfortable)
+  window._toggleDensity = function() {
+    const current = localStorage.getItem('oo_screener_density') || 'comfortable';
+    const next = current === 'comfortable' ? 'compact' : 'comfortable';
+    localStorage.setItem('oo_screener_density', next);
+    // Re-render current market to apply new density
+    if (_mktState[_currentMarket].lastData) {
+      _rerenderResultsTable(_currentMarket);
+    }
+    const btn = document.getElementById('screener-density-btn');
+    if (btn) btn.title = next === 'compact' ? 'Switch to comfortable' : 'Switch to compact';
+  };
+
+  // E-4: Watchlist helpers
+  function _getWatchlist() {
+    try { return new Set(JSON.parse(localStorage.getItem('oo_watchlist') || '[]')); }
+    catch(e) { return new Set(); }
+  }
+
+  function _saveWatchlist(wl) {
+    localStorage.setItem('oo_watchlist', JSON.stringify([...wl]));
+  }
+
+  window._onStarClick = function(ticker) {
+    const wl = _getWatchlist();
+    const starred = wl.has(ticker);
+    if (starred) wl.delete(ticker); else wl.add(ticker);
+    _saveWatchlist(wl);
+    // Update all star buttons for this ticker in the DOM
+    document.querySelectorAll(`.screener-star[data-ticker="${ticker}"]`).forEach(btn => {
+      btn.textContent = wl.has(ticker) ? '★' : '☆';
+      btn.title = wl.has(ticker) ? 'Remove from watchlist' : 'Add to watchlist';
+    });
+  };
+
+  // ─── Results table click delegation ──────────────────────────────────────────
+  window._onResultsBodyClick = function(e) {
+    const cb = e.target.closest('.screener-row-cb');
+    if (cb) {
+      _onRowCheckbox(cb.dataset.ticker, cb.checked);
+      return;
+    }
+    const nav = e.target.closest('[data-action="navigate"]');
+    if (nav) {
+      _onResultTickerClick(nav.dataset.ticker);
+      return;
+    }
+    const star = e.target.closest('[data-action="star"]');
+    if (star) {
+      _onStarClick(star.dataset.ticker);
+      return;
+    }
+    // E-1: Row expand (click anywhere else on the row)
+    const row = e.target.closest('tr[data-ticker]:not(.screener-expand-row)');
+    if (row) {
+      const ticker = row.dataset.ticker;
+      const st = _mktState[_currentMarket];
+      const item = (st.lastData && st.lastData.passing || []).find(p => p.ticker === ticker);
+      _onExpandRow(ticker, item);
+    }
+  };
+
+  // ─── Select All / Row Checkbox ───────────────────────────────────────────────
+  window._onSelectAll = function(checked) {
+    const st = _mktState[_currentMarket];
+    st.selectAllChecked = checked;
+    document.querySelectorAll('#screener-results-body .screener-row-cb').forEach(cb => {
+      cb.checked = checked;
+      if (checked) st.selectedTickers.add(cb.dataset.ticker);
+    });
+    if (!checked) st.selectedTickers.clear();
+    _updateActionBar();
+  };
+
+  function _onRowCheckbox(ticker, checked) {
+    const st = _mktState[_currentMarket];
+    if (checked) st.selectedTickers.add(ticker);
+    else {
+      st.selectedTickers.delete(ticker);
+      // Uncheck "select all" if any row deselected
+      st.selectAllChecked = false;
+      const saBox = document.getElementById('screener-select-all');
+      if (saBox) saBox.checked = false;
+    }
+    _updateActionBar();
+  }
+
+  // ─── Action Bar (inline in header toolbar) ───────────────────────────────────
+  function _updateActionBar() {
+    const st         = _mktState[_currentMarket];
+    const inlineBar  = document.getElementById('screener-action-inline');
+    const cnt        = document.getElementById('screener-selected-count');
+    const btnSel     = document.getElementById('screener-btn-export-sel');
+    const btnSend    = document.getElementById('screener-btn-send-analysis');
+    if (!inlineBar) return;
+    const n = st.selectedTickers.size;
+    if (n > 0) {
+      inlineBar.classList.remove('hidden');
+      if (cnt)  { cnt.textContent = _t('screener.selected_n', n); cnt.classList.remove('hidden'); }
+      if (btnSel)  btnSel.textContent  = _t('screener.export_selected', n);
+      if (btnSend) btnSend.textContent = _t('screener.send_analysis', n);
+    } else {
+      inlineBar.classList.add('hidden');
+      if (cnt) cnt.classList.add('hidden');
+    }
+  }
+
+  // ─── Rate-limit Toast ─────────────────────────────────────────────────────────
+  function _showRateLimitToast(fromSrc, toSrc) {
+    const toast = document.getElementById('screener-toast');
+    const msg   = document.getElementById('screener-toast-msg');
+    if (!toast || !msg) return;
+    msg.textContent = _t('screener.ratelimit', fromSrc, toSrc || 'next source');
+    toast.classList.remove('hidden');
+    const st = _mktState[_currentMarket];
+    clearTimeout(st.toastTimer);
+    st.toastTimer = setTimeout(() => toast.classList.add('hidden'), 5000);
+  }
+
+  function _showGenericToast(message) {
+    const toast = document.getElementById('screener-toast');
+    const msg   = document.getElementById('screener-toast-msg');
+    if (!toast || !msg) return;
+    msg.textContent = message;
+    toast.classList.remove('hidden');
+    clearTimeout(_mktState[_currentMarket].toastTimer);
+    _mktState[_currentMarket].toastTimer = setTimeout(() => toast.classList.add('hidden'), 3000);
+  }
+
+  // ─── Main render function ─────────────────────────────────────────────────────
+  function renderScreenerStatus(data, market) {
+    if (!data) return;
+    // Always update the tab badge + summary regardless of which market is active
+    _updateTabBadge(market, (data.passing || []).length, data.status);
+    _updateMarketSummary();
+
+    // Only update DOM if this is the currently visible market
+    if (market !== _currentMarket) return;
+
+    _setButtonState(data.status || 'idle');
+    _renderProgress(data);
+    _renderScanningList(data.scanning);
+    _renderResultsTable(data.passing, market);
+    _setCacheBadge(data.from_cache);
+    _updateHitRate((data.passing || []).length, data.total || 0);
+    _updateMarketSummary();
+
+    // Rate-limit toast
+    const st = _mktState[market];
+    if (data.rate_limited && data.rate_limited_source && data.rate_limited_source !== st.lastRlSource) {
+      st.lastRlSource = data.rate_limited_source;
+      _showRateLimitToast(data.rate_limited_source, data.current_price_source);
+    }
+
+    // Stop polling on terminal states
+    if (['done', 'cancelled', 'error', 'not_found'].includes(data.status)) {
+      _clearPoll(market);
+      if (data.status === 'done') {
+        _saveToLocalStorage(market, data);
+        if (st.renderedCount === 0) {
+          document.getElementById('screener-no-results').classList.remove('hidden');
+        }
+      }
+    }
+  }
+
+  // Full re-render for a market (used when switching tabs or restoring from localStorage)
+  function _renderFullMarketState(market) {
+    const st = _mktState[market];
+    if (!st.lastData) return;
+    st.renderedCount = 0;
+    const data = st.lastData;
+    _setButtonState(data.status || 'idle');
+    _renderProgress(data);
+    _renderScanningList(data.scanning);
+    if (st.sortKey) {
+      _rerenderResultsTable(market);
+    } else {
+      _renderResultsTable(data.passing, market);
+    }
+    _setCacheBadge(data.from_cache);
+    _updateHitRate((data.passing || []).length, data.total || 0);
+    _updateSortArrows();
+    _updateActionBar();
+    _updateMarketSummary();
+  }
+
+  // ─── Poll management ──────────────────────────────────────────────────────────
+  function _clearPoll(market) {
+    const st = _mktState[market];
+    if (st.pollTimer) { clearInterval(st.pollTimer); st.pollTimer = null; }
+  }
+
+  async function _pollMarket(market) {
+    const st = _mktState[market];
+    if (!st.jobId) return;
+    try {
+      const data = await fetch(`/api/screener/status/${st.jobId}`).then(r => r.json());
+      st.lastData = data;
+      renderScreenerStatus(data, market);
+    } catch(e) { /* network hiccup */ }
+  }
+
+  // ─── Public control API ───────────────────────────────────────────────────────
+  window.startScreener = async function (force = false) {
+    const market = _currentMarket;
+    const st = _mktState[market];
+    _clearPoll(market);
+    // Reset market-specific state
+    st.renderedCount = 0;
+    st.selectedTickers.clear();
+    st.selectAllChecked = false;
+    st.lastRlSource = null;
+    st.lastData = null;
+    st.sortKey = null;
+    st.sortDir = 'desc';
+    _clearResultsDOM();
+    _updateActionBar();
+    _updateSortArrows();
+    _setButtonState('running');
+    try {
+      const res = await fetch('/api/screener/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({market, force: !!force}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Start failed');
+      st.jobId = data.job_id;
+      const status = await fetch(`/api/screener/status/${st.jobId}`).then(r => r.json());
+      st.lastData = status;
+      renderScreenerStatus(status, market);
+      if (!['done', 'cancelled', 'error'].includes(status.status)) {
+        st.pollTimer = setInterval(() => _pollMarket(market), 2000);
+      }
+    } catch(err) {
+      _setButtonState('error');
+      console.error('Screener start error:', err);
+    }
+  };
+
+  // C-3: Rescan (force refresh, skip cache)
+  window.rescanScreener = function () { window.startScreener(true); };
+
+  window.pauseScreener = async function () {
+    const st = _mktState[_currentMarket];
+    if (!st.jobId) return;
+    await fetch(`/api/screener/pause/${st.jobId}`, {method: 'POST'});
+    _setButtonState('paused');
+  };
+
+  window.resumeScreener = async function () {
+    const market = _currentMarket;
+    const st = _mktState[market];
+    if (!st.jobId) return;
+    await fetch(`/api/screener/resume/${st.jobId}`, {method: 'POST'});
+    _setButtonState('running');
+    if (!st.pollTimer) {
+      st.pollTimer = setInterval(() => _pollMarket(market), 2000);
+    }
+  };
+
+  window.cancelScreener = async function () {
+    const market = _currentMarket;
+    const st = _mktState[market];
+    if (!st.jobId) return;
+    await fetch(`/api/screener/cancel/${st.jobId}`, {method: 'POST'});
+    _clearPoll(market);
+    _setButtonState('cancelled');
+    _updateTabBadge(market, (st.lastData && st.lastData.passing || []).length, 'cancelled');
+  };
+
+  // ─── Ticker click → Dashboard ─────────────────────────────────────────────────
+  window._onResultTickerClick = function (ticker) {
+    if (typeof showPage === 'function') showPage('dashboard');
+    setTimeout(() => {
+      const input = document.getElementById('ticker-input');
+      if (input) {
+        input.value = ticker.toUpperCase();
+        if (typeof loadDashboardData === 'function') loadDashboardData(ticker.toUpperCase());
+      }
+    }, 80);
+  };
+
+  // ─── Export Excel ──────────────────────────────────────────────────────────────
+  window._exportExcel = function (selectedOnly) {
+    if (typeof XLSX === 'undefined') {
+      alert('Export library not loaded yet. Please wait a moment and try again.');
+      return;
+    }
+    const st     = _mktState[_currentMarket];
+    const data   = st.lastData;
+    if (!data || !data.passing || data.passing.length === 0) return;
+
+    const scanDate = _todayStr();
+    const rows = data.passing
+      .filter(r => !selectedOnly || st.selectedTickers.has(r.ticker))
+      .map(r => [
+        _currentMarket,
+        r.ticker,
+        r.price      != null ? r.price      : '',
+        r.change_pct != null ? r.change_pct : '',
+        r.w52_chg_pct != null ? r.w52_chg_pct.toFixed(1) + '%' : '',
+        r.ma50       != null ? r.ma50       : '',
+        r.ma150      != null ? r.ma150      : '',
+        r.ma200      != null ? r.ma200      : '',
+        r.w52_high   != null ? r.w52_high   : '',
+        r.w52_low    != null ? r.w52_low    : '',
+        r.source     || '',
+        scanDate,
+      ]);
+
+    if (rows.length === 0) return;
+
+    const headers = ['Market', 'Ticker', 'Price', 'Chg% vs 52W Low', '52w Change%', 'MA50', 'MA150', 'MA200',
+                     '52W High', '52W Low', 'Source', 'Scan Date'];
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+    // Column widths
+    ws['!cols'] = [10, 10, 10, 14, 12, 10, 10, 10, 10, 10, 10, 12].map(w => ({wch: w}));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Upward Tickers');
+
+    const filename = `upward_tickers_${_currentMarket}_${scanDate}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  };
+
+  // ─── Send to Analysis (localStorage preload) ───────────────────────────────────
+  window._sendToAnalysis = function () {
+    const st   = _mktState[_currentMarket];
+    const data = st.lastData;
+    if (!data || !data.passing) return;
+
+    const selected = data.passing.filter(r => st.selectedTickers.has(r.ticker));
+    if (selected.length === 0) return;
+
+    const payload = selected.map(r => ({
+      ticker:   r.ticker,
+      market:   _currentMarket,
+      price:    r.price,
+      ma50:     r.ma50,
+      ma150:    r.ma150,
+      ma200:    r.ma200,
+      w52_high: r.w52_high,
+      w52_low:  r.w52_low,
+      source:   r.source,
+      date:     _todayStr(),
+    }));
+
+    try {
+      localStorage.setItem('oo_screener_selected', JSON.stringify(payload));
+    } catch(e) { /* quota */ }
+
+    _showGenericToast(_t('screener.saved_analysis', selected.length));
+  };
+
+  // ─── Nav hook: clear poll when leaving screener page ──────────────────────────
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      if (link.dataset.page !== 'screener') {
+        // Don't stop running scans — just let them keep running in background
+        // (poll timers continue; they update lastData but skip DOM since market check fails)
+      } else {
+        // Returning to screener: restore current market and resume poll if needed
+        _clearResultsDOM();
+        if (_mktState[_currentMarket].lastData) {
+          _renderFullMarketState(_currentMarket);
+          const st = _mktState[_currentMarket];
+          const status = st.lastData && st.lastData.status;
+          if ((status === 'running' || status === 'paused') && !st.pollTimer) {
+            if (status === 'running') {
+              st.pollTimer = setInterval(() => _pollMarket(_currentMarket), 2000);
+            }
+          }
+        } else {
+          _setButtonState('idle');
+        }
+      }
+    });
+  });
+
+  // ─── Init: restore any localStorage results on load ───────────────────────────
+  _restoreAllFromLocalStorage();
+  // Show initial sort arrows (change_pct ▼ by default)
+  _updateSortArrows();
+
+  // ─── Resizable Panels (Scanning ↔ Passing Tickers) ──────────────────────────
+  (function _initResize() {
+    const handle   = document.getElementById('screener-resize-handle');
+    const panels   = document.getElementById('screener-panels');
+    const scanPanel = document.getElementById('screener-scan-panel');
+    if (!handle || !panels || !scanPanel) return;
+
+    // Restore saved width
+    const saved = localStorage.getItem('oo_screener_scan_width');
+    if (saved) scanPanel.style.width = saved;
+
+    let dragging = false, startX = 0, startW = 0;
+
+    handle.addEventListener('mousedown', function(e) {
+      dragging = true;
+      startX = e.clientX;
+      startW = scanPanel.getBoundingClientRect().width;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      const containerW = panels.getBoundingClientRect().width;
+      const newW = Math.max(120, Math.min(startW + (e.clientX - startX), containerW * 0.5));
+      scanPanel.style.width = newW + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      localStorage.setItem('oo_screener_scan_width', scanPanel.style.width);
+    });
+  })();
+})();
+
 </script>
 </body>
 </html>

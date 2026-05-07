@@ -11,3 +11,4 @@ gunicorn>=21.0.0
 beautifulsoup4>=4.11.0
 selenium>=4.0.0
 duckdb>=0.10.0
+pandas-datareader>=0.10.0

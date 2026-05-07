@@ -25,6 +25,51 @@ const I18N = (() => {
       'nav.documents':    'Documents',
       'nav.support':      'Support',
       'nav.signout':      'Sign Out',
+      'nav.screener':     'Filter Upward Ticker',
+
+      // Screener
+      'screener.title':         'Upward Ticker Screener',
+      'screener.start':         'Start Scan',
+      'screener.stop':          'Pause',
+      'screener.resume':        'Resume',
+      'screener.cancel':        'Cancel',
+      'screener.market.sp500':  'S&P 500',
+      'screener.market.ndx':    'NASDAQ 100',
+      'screener.market.dax':    'DAX 40',
+      'screener.market.tw50':   'TW50',
+      'screener.progress':      '%d / %d (%s%%)',
+      'screener.date_range':    'Data range: %s → %s',
+      'screener.col.ticker':    'Ticker',
+      'screener.col.price':     'Price',
+      'screener.col.chg_pct':   'vs 52W Low',
+      'screener.col.w52_chg':   '52w Change %',
+      'screener.col.ma50':      'MA50',
+      'screener.col.ma150':     'MA150',
+      'screener.col.ma200':     'MA200',
+      'screener.col.source':    'Source',
+      'screener.from_cache':    'Using cached results',
+      'screener.scanning_label':'Scanning Progress',
+      'screener.results_label': 'Passing Tickers',
+      'screener.status.idle':   'Ready',
+      'screener.status.running':'Scanning…',
+      'screener.status.paused': 'Paused',
+      'screener.status.done':   'Complete',
+      'screener.status.cancelled': 'Cancelled',
+      'screener.status.error':  'Error',
+      'screener.no_results':    'No tickers matched all 7 conditions.',
+      'screener.col.w52h':      '52W High',
+      'screener.col.w52l':      '52W Low',
+      'screener.export_all':    'Export All → Excel',
+      'screener.export_selected': 'Export Selected (%d)',
+      'screener.send_analysis': 'Send to Backlog (%d)',
+      'screener.select_all':    'Select All',
+      'screener.selected_n':    '%d selected',
+      'screener.pass_count':    '✅ %d passed',
+      'screener.fail_count':    '❌ %d failed',
+      'screener.tab.done':      '%d✅',
+      'screener.tab.scanning':  'Scanning…',
+      'screener.tab.paused':    'Paused',
+      'screener.saved_analysis':'Saved %d tickers for future analysis',
       'brand.subtitle':   'Institutional Grade',
 
       // Header
@@ -296,6 +341,49 @@ const I18N = (() => {
       'nav.documents':    'Dokumente',
       'nav.support':      'Support',
       'nav.signout':      'Abmelden',
+      'nav.screener':     'Aufwärtsaktien filtern',
+
+      // Screener (DE)
+      'screener.title':         'Aufwärtsaktien-Scanner',
+      'screener.start':         'Scan starten',
+      'screener.stop':          'Pausieren',
+      'screener.resume':        'Fortsetzen',
+      'screener.cancel':        'Abbrechen',
+      'screener.market.sp500':  'S&P 500',
+      'screener.market.ndx':    'NASDAQ 100',
+      'screener.market.dax':    'DAX 40',
+      'screener.market.tw50':   'TW50',
+      'screener.col.ticker':    'Ticker',
+      'screener.col.price':     'Kurs',
+      'screener.col.chg_pct':   'vs 52W Tief',
+      'screener.col.w52_chg':   '52W Spanne %',
+      'screener.col.ma50':      'MA50',
+      'screener.col.ma150':     'MA150',
+      'screener.col.ma200':     'MA200',
+      'screener.col.source':    'Quelle',
+      'screener.from_cache':    'Cache-Ergebnisse',
+      'screener.scanning_label':'Scan-Fortschritt',
+      'screener.results_label': 'Bestanden',
+      'screener.status.idle':   'Bereit',
+      'screener.status.running':'Scannt…',
+      'screener.status.paused': 'Pausiert',
+      'screener.status.done':   'Abgeschlossen',
+      'screener.status.cancelled': 'Abgebrochen',
+      'screener.status.error':  'Fehler',
+      'screener.no_results':    'Kein Ticker erfüllt alle 7 Bedingungen.',
+      'screener.col.w52h':      '52W Hoch',
+      'screener.col.w52l':      '52W Tief',
+      'screener.export_all':    'Alle → Excel',
+      'screener.export_selected': 'Auswahl exportieren (%d)',
+      'screener.send_analysis': 'Zum Backlog (%d)',
+      'screener.select_all':    'Alle auswählen',
+      'screener.selected_n':    '%d ausgewählt',
+      'screener.pass_count':    '✅ %d bestanden',
+      'screener.fail_count':    '❌ %d gefiltert',
+      'screener.tab.done':      '%d✅',
+      'screener.tab.scanning':  'Scannt…',
+      'screener.tab.paused':    'Pausiert',
+      'screener.saved_analysis':'%d Aktien für Analyse gespeichert',
       'brand.subtitle':   'Institutionell',
 
       // Header
@@ -567,6 +655,51 @@ const I18N = (() => {
       'nav.documents':    '文件',
       'nav.support':      '帮助',
       'nav.signout':      '退出登录',
+      'nav.screener':     '筛选升势股',
+
+      // Screener (ZH)
+      'screener.title':         '升势股筛选器',
+      'screener.start':         '开始扫描',
+      'screener.stop':          '暂停',
+      'screener.resume':        '继续',
+      'screener.cancel':        '取消',
+      'screener.market.sp500':  'S&P 500',
+      'screener.market.ndx':    'NASDAQ 100',
+      'screener.market.dax':    'DAX 40',
+      'screener.market.tw50':   'TW50',
+      'screener.progress':      '%d / %d (%s%%)',
+      'screener.date_range':    '数据范围：%s → %s',
+      'screener.col.ticker':    '股票代码',
+      'screener.col.price':     '当前价',
+      'screener.col.chg_pct':   'vs 52周低',
+      'screener.col.w52_chg':   '52周振幅 %',
+      'screener.col.ma50':      'MA50',
+      'screener.col.ma150':     'MA150',
+      'screener.col.ma200':     'MA200',
+      'screener.col.source':    '数据源',
+      'screener.from_cache':    '使用缓存结果',
+      'screener.scanning_label':'扫描进度',
+      'screener.results_label': '通过筛选',
+      'screener.status.idle':   '就绪',
+      'screener.status.running':'扫描中…',
+      'screener.status.paused': '已暂停',
+      'screener.status.done':   '完成',
+      'screener.status.cancelled': '已取消',
+      'screener.status.error':  '出错',
+      'screener.no_results':    '没有股票满足全部 7 个条件。',
+      'screener.col.w52h':      '52周最高',
+      'screener.col.w52l':      '52周最低',
+      'screener.export_all':    '全部导出 → Excel',
+      'screener.export_selected': '导出已选 (%d)',
+      'screener.send_analysis': '加入 Backlog (%d)',
+      'screener.select_all':    '全选',
+      'screener.selected_n':    '已选 %d 支',
+      'screener.pass_count':    '✅ %d 通过',
+      'screener.fail_count':    '❌ %d 筛除',
+      'screener.tab.done':      '%d✅',
+      'screener.tab.scanning':  '扫描中…',
+      'screener.tab.paused':    '已暂停',
+      'screener.saved_analysis':'已保存 %d 支股票等待分析接入',
       'brand.subtitle':   '机构级',
 
       // Header
@@ -856,9 +989,20 @@ const I18N = (() => {
   }
 
   function applyToDOM() {
-    // text content
+    // text content — preserve child elements (e.g. sort-arrow spans inside <th>)
     document.querySelectorAll('[data-i18n]').forEach(el => {
-      el.textContent = t(el.dataset.i18n);
+      const translated = t(el.dataset.i18n);
+      if (el.children.length > 0) {
+        // Update only the leading text node; leave child elements intact
+        const firstChild = el.firstChild;
+        if (firstChild && firstChild.nodeType === Node.TEXT_NODE) {
+          firstChild.textContent = translated;
+        } else {
+          el.insertBefore(document.createTextNode(translated), el.firstChild);
+        }
+      } else {
+        el.textContent = translated;
+      }
     });
     // placeholders
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
