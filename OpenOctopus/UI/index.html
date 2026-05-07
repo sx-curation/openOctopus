@@ -1568,6 +1568,41 @@
     return            `±${v} · ${I18N ? I18N.t('reliability.var_high') : 'High Variance'}`;
   }
 
+  // 7-1: Polling helper — starts a 3 s interval that watches transcript download
+  //      progress and re-renders the management panel once the file is ready.
+  function _startTranscriptPolling(ticker) {
+    if (window._ooTranscriptPollInterval) clearInterval(window._ooTranscriptPollInterval);
+    const pollTicker = ticker.toUpperCase();
+    window._ooTranscriptPollInterval = setInterval(async () => {
+      // Guard: user switched ticker — stop polling immediately
+      if (currentTicker !== pollTicker) {
+        clearInterval(window._ooTranscriptPollInterval);
+        window._ooTranscriptPollInterval = null;
+        return;
+      }
+      try {
+        const status = await fetchJson(`/api/transcripts/status?ticker=${encodeURIComponent(pollTicker)}`);
+        if (status.status === 'done') {
+          clearInterval(window._ooTranscriptPollInterval);
+          window._ooTranscriptPollInterval = null;
+          const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+          // Re-fetch management data (transcript now local; LLM may still run)
+          const data = await fetchJson(
+            `/api/dashboard/management?ticker=${encodeURIComponent(pollTicker)}&lang=${encodeURIComponent(lang)}`
+          );
+          renderManagement(data);
+        } else if (status.status === 'error') {
+          clearInterval(window._ooTranscriptPollInterval);
+          window._ooTranscriptPollInterval = null;
+          setText('mgmt-narrative', 'Transcript download failed: ' + (status.message || 'unknown error'));
+        }
+        // 'running' / 'not_found' → keep polling
+      } catch (_e) {
+        // transient fetch error — will retry on next tick
+      }
+    }, 3000);
+  }
+
   function renderManagement(data) {
     const heuristics = data.heuristics || {};
     const reliability = heuristics.reliability_index || {};
@@ -1617,6 +1652,24 @@
       'mgmt-narrative',
       `${transcriptDate ? `${I18N ? I18N.t('transcript.date') : 'Transcript Date'}: ${transcriptDate} · ` : ''}${data.methodology?.note || (I18N ? I18N.t('loading.mgmt_scoring') : 'Management scoring methodology pending.')}`
     );
+
+    // 7-1: Override specific panels based on transcript download state
+    if (data.transcript_downloading) {
+      const spinnerHtml = `<div class="flex items-center gap-2 text-[10px] text-on-surface-variant py-1">`
+        + `<svg class="animate-spin mr-1 h-3 w-3 text-primary inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">`
+        + `<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>`
+        + `<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`
+        + `Fetching earnings transcripts\u2026</div>`;
+      setHtml('mgmt-commitment-checklist', spinnerHtml);
+      setHtml('mgmt-mention-topics', spinnerHtml);
+      setText('mgmt-narrative', 'Downloading transcript data, results will appear shortly.');
+      _startTranscriptPolling(data.ticker || currentTicker);
+    } else if (data.transcript_insufficient) {
+      const msg = '<div class="text-[10px] text-on-surface-variant py-1">Transcript data is insufficient for AI analysis this quarter.</div>';
+      setHtml('mgmt-commitment-checklist', msg);
+      setHtml('mgmt-mention-topics', msg);
+    }
+
     setText('mgmt-transparency-score', transparency.status === 'interim_solution' ? `${transparency.value} / 10.0` : (I18N ? I18N.t('status.no_data') : 'NO AVAILABLE DATA'));
     const indicator = document.getElementById('mgmt-transparency-indicator');
     if (indicator) {
@@ -1814,6 +1867,11 @@
   };
 
   async function loadDashboardData(ticker) {
+    // 7-1: Stop any in-progress transcript polling for the previous ticker
+    if (window._ooTranscriptPollInterval) {
+      clearInterval(window._ooTranscriptPollInterval);
+      window._ooTranscriptPollInterval = null;
+    }
     currentTicker = ticker.toUpperCase();
     renderDashboardLoading(currentTicker);
     try {
@@ -1859,17 +1917,37 @@
     analysisBtn.textContent = '…';
 
     try {
+      // 6-3 async: POST returns {job_id} immediately; poll for result
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
-      const data = await res.json();
-      if (data.error) {
-        analysisText.textContent = (I18N ? I18N.t('analysis.error_prefix') : '⚠ Error: ') + data.error;
-      } else {
-        analysisText.textContent = data.result;
+      const initial = await res.json();
+      if (initial.error) {
+        analysisText.textContent = (I18N ? I18N.t('analysis.error_prefix') : '⚠ Error: ') + initial.error;
+        return;
       }
+      const jobId = initial.job_id;
+      analysisText.textContent = I18N ? I18N.t('analysis.connecting') : 'Connecting to Azure model… this may take 15–30 seconds.';
+      // Poll until done or error
+      await new Promise((resolve) => {
+        const poll = setInterval(async () => {
+          try {
+            const s = await fetchJson(`/api/analyze/status/${encodeURIComponent(jobId)}`);
+            if (s.status === 'done') {
+              clearInterval(poll);
+              analysisText.textContent = s.result ?? '';
+              resolve();
+            } else if (s.status === 'error') {
+              clearInterval(poll);
+              analysisText.textContent = (I18N ? I18N.t('analysis.error_prefix') : '⚠ Error: ') + s.message;
+              resolve();
+            }
+            // 'running' → keep polling
+          } catch (_e) { /* transient — retry */ }
+        }, 2000);
+      });
     } catch (err) {
       analysisText.textContent = (I18N ? I18N.t('analysis.network_error') : '⚠ Network error: ') + err.message +
         '\n\n' + (I18N ? I18N.t('analysis.flask_hint') : 'Make sure the Flask server (app.py) is running on port 5000.');
