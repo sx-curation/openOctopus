@@ -24,6 +24,8 @@ from flask.wrappers import Response
 from agent import investment_run_analysis
 from agent.policy_monitoring import PolicyMonitoringAgent
 from config import settings
+from data_sources.transcripts import hf_downloader
+import utils.async_runner as async_runner
 from config.ui_data_contracts import get_ui_data_contracts
 from services.dashboard.earnings_cycle import build_earnings_cycle
 from services.dashboard.management import build_management_snapshot
@@ -123,7 +125,23 @@ def dashboard_management() -> Response:
     if not ticker:
         return jsonify({"error": "ticker is required"}), 400
 
-    return jsonify(build_management_snapshot(ticker, year=year, quarter=quarter, lang=lang))
+    result = build_management_snapshot(ticker, year=year, quarter=quarter, lang=lang)
+
+    # 6-2: Transcript download orchestration.
+    hf_error = result.get("cached_transcript_error")
+    if hf_error == "transcript_cache_missing":
+        # File is completely absent — kick off a background download and let the
+        # frontend know so it can poll /api/transcripts/status.
+        hf_downloader.trigger_background_download(ticker)
+        result["transcript_downloading"] = True
+    else:
+        # Transcript file exists but LLM couldn't score (content too short / missing
+        # previous quarter).  Not a download issue — surface to the UI differently.
+        llm_err = result.get("llm_commitment_analysis_error") or ""
+        if "insufficient" in llm_err or "missing" in llm_err:
+            result["transcript_insufficient"] = True
+
+    return jsonify(result)
 
 
 @app.route("/api/debug/transcript")
@@ -155,6 +173,15 @@ def debug_transcript() -> Response:
         "fmp_transcript_error": edgar_fallback.get("transcript_error"),
         "fmp_key_set": bool(settings.FMP_API_KEY),
     })
+
+
+@app.route("/api/transcripts/status")
+def transcript_status() -> Response:
+    """6-1: Poll the per-ticker HuggingFace transcript download status."""
+    ticker = (request.args.get("ticker") or "").strip().upper()
+    if not ticker:
+        return jsonify({"error": "ticker required"}), 400
+    return jsonify(hf_downloader.get_download_status(ticker))
 
 
 @app.route("/api/dashboard/summary")
@@ -209,13 +236,23 @@ def analyze() -> Response:
     if not query:
         return jsonify({"error": "query is required"}), 400
 
-    try:
-        result = investment_run_analysis(query)
-        return jsonify({"result": result})
-    except TimeoutError as e:
-        return jsonify({"error": str(e)}), 504
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # 6-3: Submit to AsyncRunner and return immediately.
+    # Frontend polls GET /api/analyze/status/<job_id> until status == "done".
+    job_id = async_runner.submit(investment_run_analysis, query)
+    return jsonify({"job_id": job_id, "status": "running"})
+
+
+@app.route("/api/analyze/status/<job_id>")
+def analyze_status(job_id: str) -> Response:
+    """6-3: Poll analysis job status.
+
+    Returns:
+        running:  {"status": "running", "message": "started"}
+        done:     {"status": "done", "result": "<analysis text>"}
+        error:    {"status": "error", "message": "<reason>"}
+        not_found:{"status": "not_found"}
+    """
+    return jsonify(async_runner.get_status(job_id))
 
 
 # ── Policy Query ─────────────────────────────────────────────────────────────
