@@ -49,8 +49,8 @@ MANIFEST_PATH = CACHE_DIR / "download_manifest.json"
 # Shard1 is ~33 MB and covers ~53 tickers.
 # Both shards are always queried so we never miss a ticker.
 _DEFAULT_SHARD_URLS = [
-    "https://huggingface.co/datasets/kurry/sp500_earnings_transcripts/resolve/main/data/train-00000-of-00002.parquet",
-    "https://huggingface.co/datasets/kurry/sp500_earnings_transcripts/resolve/main/data/train-00001-of-00002.parquet",
+    "https://huggingface.co/api/datasets/kurry/sp500_earnings_transcripts/parquet/default/train/0.parquet",
+    "https://huggingface.co/api/datasets/kurry/sp500_earnings_transcripts/parquet/default/train/1.parquet",
 ]
 
 def _shard_urls() -> list[str]:
