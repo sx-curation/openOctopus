@@ -1248,7 +1248,7 @@
   function i18nDesc(val) {
     if (typeof val === 'string') return val;
     if (val && typeof val === 'object') {
-      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang() : null) || 'en';
       return val[lang] || val['en'] || Object.values(val)[0] || '';
     }
     return '';
@@ -1585,7 +1585,7 @@
         if (status.status === 'done') {
           clearInterval(window._ooTranscriptPollInterval);
           window._ooTranscriptPollInterval = null;
-          const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+          const lang = (typeof I18N !== 'undefined' ? I18N.currentLang() : null) || 'en';
           // Re-fetch management data (transcript now local; LLM may still run)
           const data = await fetchJson(
             `/api/dashboard/management?ticker=${encodeURIComponent(pollTicker)}&lang=${encodeURIComponent(lang)}`
@@ -1848,7 +1848,7 @@
     renderDashboardSummary(c.summary);
     renderEarningsCycle(c.earnings);
     // Use language-specific management data if cached; otherwise re-fetch asynchronously
-    const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+    const lang = (typeof I18N !== 'undefined' ? I18N.currentLang() : null) || 'en';
     const mgmtData = window._ooMgmtCache[lang] || c.management;
     renderManagement(mgmtData);
     if (!window._ooMgmtCache[lang] && currentTicker) {
@@ -1875,7 +1875,7 @@
     currentTicker = ticker.toUpperCase();
     renderDashboardLoading(currentTicker);
     try {
-      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang : null) || 'en';
+      const lang = (typeof I18N !== 'undefined' ? I18N.currentLang() : null) || 'en';
       const [summary, earnings, management, portfolio, market, documents] = await Promise.all([
         fetchJson(`/api/dashboard/summary?ticker=${encodeURIComponent(currentTicker)}`),
         fetchJson(`/api/dashboard/earnings-cycle?ticker=${encodeURIComponent(currentTicker)}`),
