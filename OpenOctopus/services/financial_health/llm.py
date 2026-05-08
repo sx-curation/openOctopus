@@ -55,7 +55,7 @@ _DRILLDOWN_PROMPTS = {
         "Each section: 2-3 concise sentences with specific numbers where possible. "
         "Classify each as POSITIVE, NEUTRAL, or NEGATIVE. "
         "Return ONLY valid JSON: "
-        '{"sections": [{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}, ...]} '
+        '{{"sections": [{{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}}, ...]}} '
         "No markdown, no extra text."
     ),
     "de": (
@@ -65,7 +65,7 @@ _DRILLDOWN_PROMPTS = {
         "4. Free Cashflow Qualität\n5. Guidance-Signal\n"
         "Jeder Abschnitt: 2-3 präzise Sätze mit Zahlen. Klassifizieren Sie als POSITIVE, NEUTRAL oder NEGATIVE. "
         "Geben Sie NUR gültiges JSON zurück: "
-        '{"sections": [{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}, ...]} '
+        '{{"sections": [{{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}}, ...]}} '
         "Kein Markdown."
     ),
     "zh": (
@@ -78,7 +78,7 @@ _DRILLDOWN_PROMPTS = {
         "5. 前瞻指引信號（展望、vs 前次指引差異）\n"
         "每個面向 2-3 句話，盡量引用具體數字，分類為 POSITIVE / NEUTRAL / NEGATIVE。"
         "只回傳合法 JSON："
-        '{"sections": [{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}, ...]} '
+        '{{"sections": [{{"title": "...", "content": "...", "sentiment": "positive|neutral|negative"}}, ...]}} '
         "不加 markdown 或解釋。"
     ),
 }
