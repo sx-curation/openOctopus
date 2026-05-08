@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260509b"></script>
+<script src="/static/i18n.js?v=20260509c"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -1102,14 +1102,14 @@
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
-              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.score">Score</th>
+              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma50" data-i18n="backlog.col.ma50">MA50 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low" title="Lowest price in the past 52 weeks. A stock near this level may be near a support zone.">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10" title="10-day Moving Average. A short-term trend indicator. Price above MA10 suggests recent momentum.">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma50" data-i18n="backlog.col.ma50" title="50-day Moving Average. A medium-term trend indicator. Price above MA50 generally indicates an uptrend.">MA50 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="py-2 w-8"></th>
             </tr>
           </thead>
@@ -1131,35 +1131,53 @@
 
       <!-- Ticker control row -->
       <div class="flex flex-wrap items-center gap-3 mb-6">
-        <input id="fh-ticker-input" type="text" autocomplete="off" spellcheck="false"
-          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-32 focus:outline-none focus:ring-1 focus:ring-primary"
-          data-i18n-placeholder="fh.input.placeholder" placeholder="Ticker, e.g. AAPL">
+        <input id="fh-ticker-input" type="text" autocomplete="off" spellcheck="false" maxlength="12"
+          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-36 focus:outline-none focus:ring-1 focus:ring-primary"
+          data-i18n-placeholder="fh.input.placeholder" placeholder="e.g. AAPL, MSFT">
         <select id="fh-backlog-select"
-          class="h-9 min-w-[140px] px-2 text-[11px] bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary hidden" style="line-height:1.6">
-          <option value="" data-i18n="fh.select.placeholder">— From Backlog —</option>
+          class="h-9 min-w-[160px] px-2 text-[11px] bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary hidden" style="line-height:1.6">
+          <option value="" data-i18n="fh.select.placeholder">— Select from Watchlist —</option>
         </select>
         <button id="fh-analyze-btn"
           class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
           data-i18n="fh.btn.analyze">Analyze</button>
+        <span id="fh-current-ticker-badge" class="hidden px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded-full"></span>
         <span id="fh-status" class="text-[10px] text-on-surface-variant/60 italic"></span>
       </div>
 
+      <!-- Onboarding card (shown when no ticker yet) -->
+      <div id="fh-onboarding" class="mb-6 p-6 bg-surface-container rounded-xl border border-outline-variant/40 text-center">
+        <span class="material-symbols-outlined text-3xl text-primary/60 mb-2 block">monitoring</span>
+        <p class="text-[12px] font-semibold text-on-surface mb-1" data-i18n="fh.onboarding.title">Analyze Financial Health</p>
+        <p class="text-[10px] text-on-surface-variant/70" data-i18n="fh.onboarding.hint">Enter a US stock ticker above (e.g. AAPL, NVDA, MSFT) or select from your Watchlist, then click Analyze to score its financial strength across Growth, Balance Sheet Health, and Risk indicators.</p>
+      </div>
+
       <!-- Score summary card -->
-        <div id="fh-score-card" class="hidden mb-6 p-5 bg-surface-container rounded-xl border border-outline-variant">
+      <div id="fh-score-card" class="hidden mb-4 p-5 bg-surface-container rounded-xl border border-outline-variant">
         <div class="flex flex-wrap items-center gap-6">
           <div class="text-center">
             <div id="fh-score-big" class="font-headline text-5xl font-extrabold text-primary">—</div>
-            <div class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1" data-i18n="fh.score.label">Health Score / 100</div>
+            <div class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1 flex items-center gap-1 justify-center" data-i18n="fh.score.label">
+              Health Score / 100
+              <span class="cursor-help text-on-surface-variant/50 hover:text-primary transition-colors" title="Composite financial health score (0–100) weighted across Growth, Health, and Risk indicators. Above 70 = strong, 45–70 = fair, below 45 = needs attention.">ⓘ</span>
+            </div>
           </div>
           <div class="flex flex-col gap-2 flex-1 min-w-48">
-            <div id="fh-group-growth" class="fh-group-bar" data-group="growth"></div>
-            <div id="fh-group-health" class="fh-group-bar" data-group="health"></div>
-            <div id="fh-group-risk"   class="fh-group-bar" data-group="risk"></div>
+            <div id="fh-group-growth" class="fh-group-bar" data-group="growth" title="Growth: Measures revenue growth, EPS growth, ROE, ROIC, and free cash flow trends"></div>
+            <div id="fh-group-health" class="fh-group-bar" data-group="health" title="Health: Measures balance sheet strength — current ratio, debt levels, and interest coverage"></div>
+            <div id="fh-group-risk"   class="fh-group-bar" data-group="risk"   title="Risk: Measures quality flags — cash flow vs. earnings consistency and leverage risk signals"></div>
           </div>
           <div class="text-right text-[10px] text-on-surface-variant/70">
             <div id="fh-company-name" class="font-semibold text-[12px] text-on-surface"></div>
             <div id="fh-sector-info"></div>
           </div>
+        </div>
+        <!-- Score color legend -->
+        <div class="flex items-center gap-4 mt-3 pt-2 border-t border-outline-variant/20">
+          <span class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">Score key:</span>
+          <span class="flex items-center gap-1 text-[9px] text-emerald-600"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>≥70 Strong</span>
+          <span class="flex items-center gap-1 text-[9px] text-amber-600"><span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>45–69 Fair</span>
+          <span class="flex items-center gap-1 text-[9px] text-red-500"><span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>&lt;45 Weak</span>
         </div>
         <!-- Year trend mini chart -->
         <div id="fh-year-trend" class="hidden mt-4 pt-3 border-t border-outline-variant/30">
@@ -1170,25 +1188,31 @@
 
       <!-- Sub-tabs -->
       <div id="fh-tabs-bar" class="hidden flex gap-1 mb-4 p-1 bg-surface-container rounded-xl w-fit">
-        <button class="fh-tab fh-tab-active px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors" data-fh-tab="indicators" data-i18n="fh.tab.indicators">Indicator &amp; Scoring</button>
-        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="drilldown" data-i18n="fh.tab.drilldown">Contribution Drill Down</button>
+        <button class="fh-tab fh-tab-active px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors" data-fh-tab="indicators" data-i18n="fh.tab.indicators">Health Metrics</button>
+        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="drilldown" data-i18n="fh.tab.drilldown">AI Factor Analysis</button>
       </div>
 
-      <!-- ── Tab 1: Indicator & Scoring ── -->
+      <!-- ── Tab 1: Health Metrics ── -->
       <div id="fh-panel-indicators" class="fh-panel">
         <div id="fh-indicators-loading" class="hidden py-12 text-center text-on-surface-variant/50 text-[11px]">
           <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
-          <p class="mt-2" data-i18n="fh.loading">Loading financial data…</p>
+          <p id="fh-loading-text" class="mt-2" data-i18n="fh.loading">Loading financial data…</p>
         </div>
         <div id="fh-indicators-content" class="hidden flex flex-col gap-6">
           <!-- Fundamentals table -->
           <div>
-            <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.fundamentals.title">5-Year Fundamentals</h3>
+            <div class="flex items-center gap-2 mb-3">
+              <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="fh.fundamentals.title">5-Year Fundamentals</h3>
+              <span class="text-[9px] text-on-surface-variant/50 italic">B = billions · M = millions</span>
+            </div>
             <div id="fh-fundamentals-table" class="overflow-x-auto text-[10px]"></div>
           </div>
           <!-- Score groups -->
           <div>
-            <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.score_groups.title">Scoring Breakdown</h3>
+            <div class="flex items-center gap-2 mb-3">
+              <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="fh.score_groups.title">Scoring Breakdown</h3>
+              <span class="cursor-help text-[9px] text-on-surface-variant/50 hover:text-primary transition-colors" title="Each indicator is scored 0–5 points based on rules. Group % = weighted sum of indicator scores within the group. Hover any indicator name for formula details.">ⓘ</span>
+            </div>
             <div id="fh-score-groups" class="space-y-6"></div>
           </div>
         </div>
@@ -1207,28 +1231,28 @@
           <div id="fh-summary-error" class="hidden p-3 bg-error/10 border border-error/30 rounded-lg text-[11px] text-error flex items-center gap-2">
             <span class="material-symbols-outlined text-[16px]">error</span>
             <span id="fh-summary-error-msg"></span>
-            <button id="fh-summary-retry" class="ml-auto text-[10px] underline" data-i18n="fh.btn.retry">Retry</button>
+            <button id="fh-summary-retry" class="ml-auto px-3 py-1 text-[10px] font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors" data-i18n="fh.btn.retry">Retry</button>
           </div>
         </div>
       </div>
 
-      <!-- ── Tab 2: Contribution Drill Down ── -->
+      <!-- ── Tab 2: AI Factor Analysis ── -->
       <div id="fh-panel-drilldown" class="fh-panel hidden">
-        <div class="mb-4 flex items-center gap-3">
+        <div class="mb-4 p-4 bg-surface-container rounded-xl border border-outline-variant/40">
+          <p class="text-[10px] text-on-surface-variant mb-3" data-i18n="fh.drilldown.hint">AI breakdown of which indicators drove the score — and how recent earnings transcripts (if available) corroborate or challenge each factor.</p>
           <button id="fh-drilldown-btn"
             class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
-            data-i18n="fh.btn.drilldown">Analyze Contribution</button>
-          <span class="text-[10px] text-on-surface-variant/60 italic" data-i18n="fh.drilldown.hint">Uses financial data + latest transcript (if available)</span>
+            data-i18n="fh.btn.drilldown">Run Factor Analysis</button>
         </div>
         <div id="fh-drilldown-loading" class="hidden py-12 text-center text-on-surface-variant/50 text-[11px]">
           <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
-          <p class="mt-2" data-i18n="fh.drilldown.analyzing">Analyzing contributions…</p>
+          <p class="mt-2" data-i18n="fh.drilldown.analyzing">Analyzing factor contributions…</p>
         </div>
         <div id="fh-drilldown-sections" class="hidden space-y-4"></div>
         <div id="fh-drilldown-error" class="hidden p-3 bg-error/10 border border-error/30 rounded-lg text-[11px] text-error flex items-center gap-2">
           <span class="material-symbols-outlined text-[16px]">error</span>
           <span id="fh-drilldown-error-msg"></span>
-          <button id="fh-drilldown-retry" class="ml-auto text-[10px] underline" data-i18n="fh.btn.retry">Retry</button>
+          <button id="fh-drilldown-retry" class="ml-auto px-3 py-1 text-[10px] font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors" data-i18n="fh.btn.retry">Retry</button>
         </div>
       </div>
 
@@ -1261,6 +1285,13 @@
         <p class="text-[11px] text-rose-700" id="sc-error-msg"></p>
       </div>
 
+      <!-- Empty state -->
+      <div id="sc-empty" class="mb-6 p-6 bg-surface-container rounded-xl border border-outline-variant/40 text-center">
+        <span class="material-symbols-outlined text-3xl text-primary/60 mb-2 block">account_tree</span>
+        <p class="text-[12px] font-semibold text-on-surface mb-1">Map a Supply Chain</p>
+        <p class="text-[10px] text-on-surface-variant/70">Enter a company ticker (e.g. TSMC, NVDA, AAPL) and click Analyze to discover upstream suppliers, downstream customers, and peer companies — with AI-generated read-through signals.</p>
+      </div>
+
       <!-- Results -->
       <div id="sc-results" class="hidden">
         <!-- Top: Table -->
@@ -1275,8 +1306,14 @@
                 <tr class="bg-surface-container-high text-on-surface-variant uppercase text-[9px] tracking-wider">
                   <th class="text-left px-4 py-2" data-i18n="sc.col.ticker">Ticker</th>
                   <th class="text-left px-4 py-2" data-i18n="sc.col.name">Company</th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="relation">↕</span></th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="tier">↕</span></th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">
+                    <span title="Upstream: supplies components to the analyzed company. Downstream: depends on the analyzed company's products. Peer: competitor or partner in the same sector.">Relation ⓘ</span>
+                    <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="relation">↕</span>
+                  </th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">
+                    <span title="Tier 1: directly connected to the center company. Tier 2: one step removed (supplier's supplier or customer's customer).">Tier ⓘ</span>
+                    <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="tier">↕</span>
+                  </th>
                   <th class="text-left px-4 py-2" data-i18n="sc.col.direction">Signal</th>
                   <th class="text-left px-4 py-2 max-w-xs" data-i18n="sc.col.reason">Read-through Reason</th>
                 </tr>
@@ -1290,7 +1327,17 @@
         <div class="flex gap-4 flex-wrap lg:flex-nowrap">
           <!-- SVG Graph -->
           <div class="flex-1 min-w-0 bg-surface-container rounded-xl border border-outline-variant p-4">
-            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.graph.title">Causal Graph</h3>
+            <div class="flex items-start justify-between mb-3">
+              <h3 class="font-bold text-[12px] text-on-surface" data-i18n="sc.graph.title">Causal Graph</h3>
+              <!-- Color legend -->
+              <div class="flex flex-wrap gap-x-3 gap-y-1 text-[8px] text-on-surface-variant/70">
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#3b82f6"></span>Upstream T1</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#93c5fd"></span>Upstream T2</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#10b981"></span>Downstream T1</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#6ee7b7"></span>Downstream T2</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm" style="background:#94a3b8"></span>Peer</span>
+              </div>
+            </div>
             <p class="text-[10px] text-on-surface-variant/70 mb-3" data-i18n="sc.graph.hint">Click a node to trigger read-through analysis</p>
             <div id="sc-graph-container" style="width:100%;height:420px;position:relative;overflow:hidden;"></div>
           </div>
@@ -1366,7 +1413,7 @@
   let currentTicker = 'AAPL';
   let currentTrinityTab = 'ai';
 
-  function showPage(page) {
+  function showPage(page, autoTicker) {
     if (!page) return;  // guard: skip external nav links without data-page
     navLinks.forEach(l => {
       l.classList.remove('nav-active', 'text-primary', 'font-bold');
@@ -1383,7 +1430,7 @@
     if (target) target.classList.add('active');
     if (page === 'documents') loadDocumentLibrary();
     if (page === 'backlog') loadBacklogPage();
-    if (page === 'financial-health') loadFinancialHealthPage();
+    if (page === 'financial-health') loadFinancialHealthPage(autoTicker || null);
     if (page === 'supply-chain' && typeof window.loadSupplyChainPage === 'function') window.loadSupplyChainPage();
   }
 
@@ -3981,7 +4028,7 @@
         <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
         <td class="pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
         <td class="pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
-        <td id="bscore-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
+        <td id="bscore-${safeId}" data-ticker="${_esc(item.ticker)}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.price)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
@@ -4068,7 +4115,25 @@
       const dCls = delta >= 0 ? 'text-emerald-500' : 'text-red-400';
       deltaHtml = '<span class="' + dCls + ' text-[8px] ml-0.5">' + (delta >= 0 ? '↑' : '↓') + Math.abs(delta).toFixed(0) + '</span>';
     }
-    cell.innerHTML = '<span class="' + colorCls + ' font-semibold">' + score.toFixed(0) + '</span>' + deltaHtml;
+    // Make cell clickable → navigate to Financial Health page
+    const ticker = cell.dataset.ticker || '';
+    cell.style.cursor = 'pointer';
+    cell.title = 'Click to view full Financial Health analysis';
+    cell.innerHTML = '<span class="' + colorCls + ' font-semibold hover:underline">' + score.toFixed(0) + '</span>' + deltaHtml;
+    if (ticker && !cell._scoreClickWired) {
+      cell._scoreClickWired = true;
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (typeof window.showPage === 'function') window.showPage('financial-health', ticker);
+        else if (typeof window.loadFinancialHealthPage === 'function') {
+          // Fallback: navigate manually
+          document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+          const fp = document.getElementById('page-financial-health');
+          if (fp) fp.classList.add('active');
+          window.loadFinancialHealthPage(ticker);
+        }
+      });
+    }
   }
 
   // Manual add handler
@@ -4349,20 +4414,38 @@
   }
 
   // ── Fundamentals table ──────────────────────────────────────────────
+  const _METRIC_TOOLTIPS = {
+    revenueGrowth:               "Revenue Growth (YoY %). Core top-line expansion rate — higher is better.",
+    grossProfitMargin:           "Gross Profit / Revenue. Reflects pricing power and cost efficiency.",
+    epsgrowth:                   "EPS Growth (YoY %). Measures earnings per share acceleration.",
+    returnOnEquity:              "Return on Equity = Net Income / Shareholders' Equity. How efficiently equity capital is used.",
+    returnOnInvestedCapital:     "Return on Invested Capital (ROIC). Return generated on all invested capital.",
+    operatingCashFlowToNetIncome:"OCF / Net Income. Ratio >1 means earnings are fully backed by real cash.",
+    freeCashFlowGrowth:          "Free Cash Flow Growth (YoY %). FCF = Operating CF − CapEx.",
+    interestCoverage:            "Interest Coverage = EBIT / Interest Expense. >3× is generally healthy.",
+    DebtToEquity:                "Total Debt / Shareholders' Equity. Higher = more leverage risk.",
+    actualDebtRatio:             "Total Debt / Total Assets. Overall leverage ratio.",
+    currentRatio:                "Current Assets / Current Liabilities. >1.2 = adequate short-term liquidity.",
+    revenue:                     "Total Revenue for the fiscal year (in billions or millions).",
+    netIncome:                   "Net profit after all expenses and taxes (in billions or millions).",
+    freeCashFlow:                "Free Cash Flow = Operating Cash Flow − Capital Expenditures (in B/M).",
+  };
+
   function renderFundamentalsTable(fundamentals, years) {
     const container = document.getElementById('fh-fundamentals-table');
     if (!container) return;
 
-    const displayYears = years.slice(0, 4);
-    const headerCols = displayYears.map(y => `<th>${y}</th>`).join('');
+    const displayYears = years.slice(0, 5);
+    const headerCols = displayYears.map(y => `<th class="text-right px-2 py-1">${y}</th>`).join('');
 
     const rows = FH_TABLE_METRICS.map(m => {
       const vals = fundamentals[m.key] || [];
-      const cells = displayYears.map((_, i) => `<td>${_fmtVal(vals[i], m.fmt)}</td>`).join('');
-      return `<tr><td title="${m.key}">${m.label}</td>${cells}</tr>`;
+      const tip = _METRIC_TOOLTIPS[m.key] || m.key;
+      const cells = displayYears.map((_, i) => `<td class="text-right px-2 py-1">${_fmtVal(vals[i], m.fmt)}</td>`).join('');
+      return `<tr><td class="pr-4 py-1 whitespace-nowrap text-on-surface-variant" title="${_escFH(tip)}" style="cursor:help">${_escFH(m.label)}</td>${cells}</tr>`;
     }).join('');
 
-    container.innerHTML = `<table class="fh-fundamentals-tbl"><thead><tr><th>Metric</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
+    container.innerHTML = `<table class="fh-fundamentals-tbl w-full"><thead><tr><th class="text-left pr-4 py-1 font-medium text-on-surface-variant/70">Metric</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   // ── Score groups ────────────────────────────────────────────────────
@@ -4376,6 +4459,26 @@
     }
     return fallback;
   }
+
+  // ── Indicator tooltips dictionary ──────────────────────────────────
+  const _IND_TOOLTIPS = {
+    returnOnEquity_r:              "Return on Equity (Net Income ÷ Equity). Measures capital efficiency. Score: 0–5 pts.",
+    returnOnInvestedCapital_r:     "Return on Invested Capital. Total returns on all invested capital. Score: 0–5 pts.",
+    operatingCashFlowToNetIncome_r:"OCF ÷ Net Income. Ratio >1.0 means earnings are cash-backed. Score: 0–5 pts.",
+    epsgrowth_r:                   "EPS Growth (YoY). Measures earnings per share acceleration. Score: 0–5 pts.",
+    revenueGrowth_r:               "Revenue Growth (YoY %). Top-line expansion rate. Score: 0–5 pts.",
+    freeCashFlowGrowth_r:          "Free Cash Flow Growth. FCF = Operating CF − CapEx. Score: 0–5 pts.",
+    interestCoverage_r:            "Interest Coverage = EBIT ÷ Interest Expense. >3× = healthy. Score: 0–5 pts.",
+    DebtToEquity_r:                "Debt ÷ Equity. Lower = less leverage. Score: 0–5 pts.",
+    actualDebtRatio_r:             "Total Debt ÷ Total Assets. Measures overall leverage. Score: 0–5 pts.",
+    currentRatio_r:                "Current Assets ÷ Current Liabilities. >1.2 = adequate liquidity. Score: 0–5 pts.",
+    grossProfitMargin_r:           "Gross Profit ÷ Revenue. Reflects pricing power and cost efficiency. Score: 0–5 pts.",
+    epsVsRevenue_bonus:            "Bonus: EPS growth outpacing Revenue growth (last 2 years). Score: 0–2 pts.",
+    marginTrend_bonus:             "Bonus: Gross margin trending upward. Score: 0–2 pts.",
+    liquidityStability_bonus:      "Bonus: Current ratio consistently above 1.0 for 2 years. Score: 0–5 pts.",
+    qualityFlag_bonus:             "Bonus: Revenue growing but OCF/NI healthy (not a quality trap). Score: 0 or −3 pts.",
+    debtTrend_bonus:               "Bonus: Debt ratio consistently below 0.6. Score: 0–2 pts.",
+  };
 
   function renderScoreGroups(groupScores, yearScores) {
     const container = document.getElementById('fh-score-groups');
@@ -4433,9 +4536,10 @@
           return `<td class="px-3 py-2 text-center text-[11px] ${cls}">${sc}${maxStr}</td>`;
         }).join('');
 
-        const indDisplay = ind.name.replace(/_r$/, '').replace(/_/g, ' ');
+        const indDisplay = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
+        const indTip = _escFH(_IND_TOOLTIPS[ind.name] || ind.name);
         return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
-          <td class="px-3 py-2 text-[11px] text-on-surface-variant capitalize whitespace-nowrap">${indDisplay}</td>
+          <td class="px-3 py-2 text-[11px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${_escFH(indDisplay)}</td>
           ${tdCells}
         </tr>`;
       }).join('');
@@ -4522,9 +4626,33 @@
     }
   }
 
+  // ── Ticker validation ──────────────────────────────────────────────
+  const _TICKER_RE = /^[A-Z0-9.\-]{1,12}$/;
+  function _validateTicker(raw) {
+    const t = (raw || '').trim().toUpperCase();
+    if (!t) return { ok: false, ticker: '', msg: 'Please enter a ticker symbol (e.g. AAPL).' };
+    if (!_TICKER_RE.test(t)) return { ok: false, ticker: t, msg: `"${t}" doesn't look like a valid ticker. Use letters and numbers only (e.g. AAPL, BRK-B).` };
+    return { ok: true, ticker: t, msg: '' };
+  }
+
+  // ── HTML escape helper ─────────────────────────────────────────────
+  function _escFH(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   // ── Main data load ──────────────────────────────────────────────────
   async function loadFinancialHealthData(ticker) {
-    if (!ticker) return;
+    const v = _validateTicker(ticker);
+    if (!v.ok) { _setFhStatus(v.msg); return; }
+    ticker = v.ticker;
+
+    // Update UI: hide onboarding, show ticker badge
+    _showHide('fh-onboarding', false);
+    const badge = document.getElementById('fh-current-ticker-badge');
+    if (badge) { badge.textContent = ticker; badge.classList.remove('hidden'); }
+    const loadingText = document.getElementById('fh-loading-text');
+    if (loadingText) loadingText.textContent = `Loading 5-year financials for ${ticker}…`;
 
     _setFhStatus(_t('fh.status.loading', 'Loading…'));
     _showHide('fh-indicators-loading', true);
@@ -4541,12 +4669,15 @@
     }
 
     try {
-      const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+      const lang = encodeURIComponent((typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en');
       const res = await fetch(`/api/financial_health/data?ticker=${encodeURIComponent(ticker)}&lang=${lang}`);
-      const data = await res.json();
+      let data;
+      try { data = await res.json(); } catch (_) { data = {}; }
+      _showHide('fh-indicators-loading', false);
       if (!res.ok) {
-        _showHide('fh-indicators-loading', false);
-        _setFhStatus(`Error: ${data.error || 'fetch failed'}`);
+        const errMsg = data.error || 'Data not available';
+        const hint = res.status === 502 ? ` — Check that "${ticker}" is a valid US ticker symbol (e.g. TSMC is listed as TSM in the US).` : '';
+        _setFhStatus(`Error: ${errMsg}${hint}`);
         return;
       }
       _saveCache(ticker, data);
@@ -4554,7 +4685,7 @@
       _setFhStatus('');
     } catch (e) {
       _showHide('fh-indicators-loading', false);
-      _setFhStatus(`Error: ${e.message}`);
+      _setFhStatus(`Error loading data: ${e.message || 'Unknown error'}. Please try again.`);
     }
   }
 
@@ -4565,9 +4696,9 @@
     _showHide('fh-tabs-bar', true);
     _showHide('fh-summary-area', true);
 
-    renderScoreCard(data);
-    renderFundamentalsTable(data.fundamentals || {}, data.years || []);
-    renderScoreGroups(data.group_scores || {}, data.year_scores || []);
+    try { renderScoreCard(data); } catch(e) { console.warn('renderScoreCard error:', e); }
+    try { renderFundamentalsTable(data.fundamentals || {}, data.years || []); } catch(e) { console.warn('renderFundamentalsTable error:', e); }
+    try { renderScoreGroups(data.group_scores || {}, data.year_scores || []); } catch(e) { console.warn('renderScoreGroups error:', e); }
   }
 
   // ── LLM Summary ────────────────────────────────────────────────────
@@ -4699,7 +4830,9 @@
         if (!ticker) return;
         const opt = document.createElement('option');
         opt.value = ticker;
-        opt.textContent = ticker;
+        // Show ticker + sector if available, for clarity
+        const sector = (typeof item === 'object' && item.sector) ? ` · ${item.sector}` : '';
+        opt.textContent = `${ticker}${sector}`;
         sel.appendChild(opt);
       });
     } catch (e) { sel.classList.add('hidden'); }
@@ -4710,20 +4843,24 @@
     _populateFhBacklogSelect();
     _initFhTabs();
 
+    // Show/hide onboarding based on whether a ticker is already loaded
+    _showHide('fh-onboarding', !_fhCurrentTicker);
+
     // Wire up analyze button
     const analyzeBtn = document.getElementById('fh-analyze-btn');
     if (analyzeBtn && !analyzeBtn._fhWired) {
       analyzeBtn._fhWired = true;
       analyzeBtn.addEventListener('click', () => {
         const input = document.getElementById('fh-ticker-input');
-        const ticker = ((input && input.value) || '').trim().toUpperCase();
-        if (!ticker) return;
-        _fhCurrentTicker = ticker;
-        loadFinancialHealthData(ticker);
+        const raw = (input && input.value) || '';
+        const v = _validateTicker(raw);
+        if (!v.ok) { _setFhStatus(v.msg); return; }
+        _fhCurrentTicker = v.ticker;
+        loadFinancialHealthData(v.ticker);
       });
     }
 
-    // Wire up backlog select
+    // Wire up backlog select → auto-analyze on selection
     const sel = document.getElementById('fh-backlog-select');
     if (sel && !sel._fhWired) {
       sel._fhWired = true;
@@ -4731,6 +4868,8 @@
         if (!sel.value) return;
         const input = document.getElementById('fh-ticker-input');
         if (input) input.value = sel.value;
+        _fhCurrentTicker = sel.value;
+        loadFinancialHealthData(sel.value);
       });
     }
 
@@ -5066,7 +5205,7 @@
     _renderTable(data);
     _renderGraph(data);
     _show('sc-panel-placeholder'); _hide('sc-panel-content'); _hide('sc-panel-loading'); _hide('sc-panel-error');
-    _show('sc-results');
+    _show('sc-results'); _hide('sc-empty');
     _setStatus(`${_scCurrentNodes.length} ${_t('sc.status.nodes', 'companies found')}`);
     // Bind sort listeners once after results are visible
     setTimeout(_bindScSortListeners, 0);
