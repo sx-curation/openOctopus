@@ -78,7 +78,7 @@ def analyze_transcript(
             "error": f"Transcript not found: {cached['error']}",
         }
 
-    content = (cached.get("content") or "").strip()
+    content = (cached.get("content_excerpt") or cached.get("content") or "").strip()
     if not content:
         return {
             "ticker": t, "period": period,

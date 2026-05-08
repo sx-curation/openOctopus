@@ -35,6 +35,9 @@ from services.documents.library import build_document_library
 from services.documents.analyzer import analyze_transcript as analyze_doc_transcript
 from services.backlog.refresh import fetch_backlog_data
 from services.backlog.search import search_ticker as backlog_search_ticker
+from services.financial_health.fetcher import fetch_financial_health
+from services.financial_health.scorer import score_financial_health
+from services.financial_health.llm import health_summary as fh_health_summary, drilldown_analysis as fh_drilldown_analysis
 from services.market.overview import build_market_overview
 from services.market.commodities import build_market_commodities
 from services.market.sentiment import build_market_sentiment
@@ -526,6 +529,111 @@ def tw_annual_report() -> Response:
     result = build_annual_report_summary(ticker)
     status_code = 200 if "error" not in result else 502
     return jsonify(result), status_code
+
+
+# ── Financial Health ─────────────────────────────────────────────────────────
+
+# In-memory cache: {ticker: {data, scores, cached_at}}
+_fh_data_cache = {}
+_FH_CACHE_TTL = 1800  # 30 minutes
+
+import time as _time
+
+
+def _fh_cache_get(ticker: str):
+    entry = _fh_data_cache.get(ticker.upper())
+    if entry and (_time.time() - entry["cached_at"]) < _FH_CACHE_TTL:
+        return entry
+    return None
+
+
+@app.route("/api/financial_health/data")
+def financial_health_data() -> Response:
+    """Fetch + score financial health data for a ticker."""
+    ticker = (request.args.get("ticker") or "").strip().upper()
+    lang   = (request.args.get("lang") or "en").strip().lower()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    cached = _fh_cache_get(ticker)
+    if cached:
+        return jsonify({**cached["payload"], "cached": True}), 200
+
+    raw = fetch_financial_health(ticker)
+    if raw.get("error"):
+        return jsonify(raw), 502
+
+    scoring = score_financial_health(raw["fundamentals"])
+
+    payload = {
+        "ticker":       raw["ticker"],
+        "years":        raw["years"],
+        "fundamentals": raw["fundamentals"],
+        "info":         raw["info"],
+        "scores":       scoring["indicator_scores"],
+        "group_scores": scoring["group_scores"],
+        "weighted_100": scoring["weighted_100"],
+        "cached":       False,
+    }
+    _fh_data_cache[ticker] = {"payload": payload, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
+    return jsonify(payload), 200
+
+
+@app.route("/api/financial_health/summary", methods=["POST"])
+def financial_health_summary() -> Response:
+    """LLM financial health summary for a ticker."""
+    body   = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    lang   = (body.get("lang") or "en").strip().lower()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    cached = _fh_cache_get(ticker)
+    if cached:
+        raw     = cached["raw"]
+        scoring = cached["scoring"]
+    else:
+        raw = fetch_financial_health(ticker)
+        if raw.get("error"):
+            return jsonify(raw), 502
+        scoring = score_financial_health(raw["fundamentals"])
+        _fh_data_cache[ticker] = {"payload": {}, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
+
+    result = fh_health_summary(ticker, raw["fundamentals"], raw["years"], scoring, lang)
+    return jsonify(result), 200
+
+
+@app.route("/api/financial_health/drilldown", methods=["POST"])
+def financial_health_drilldown() -> Response:
+    """LLM contribution drill-down analysis for a ticker."""
+    body   = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    lang   = (body.get("lang") or "en").strip().lower()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    cached = _fh_cache_get(ticker)
+    if cached:
+        raw = cached["raw"]
+    else:
+        raw = fetch_financial_health(ticker)
+        if raw.get("error"):
+            return jsonify(raw), 502
+        scoring = score_financial_health(raw["fundamentals"])
+        _fh_data_cache[ticker] = {"payload": {}, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
+
+    # Try to get latest transcript excerpt (graceful fallback)
+    transcript_excerpt = None
+    try:
+        from data_sources.transcripts.hf_cache import get_cached_transcript
+        tc = get_cached_transcript(ticker)
+        if "error" not in tc:
+            transcript_excerpt = tc.get("content_excerpt") or tc.get("content")
+    except Exception:
+        pass
+
+    result = fh_drilldown_analysis(ticker, raw["fundamentals"], raw["years"], transcript_excerpt, lang)
+    return jsonify(result), 200
 
 
 if __name__ == "__main__":

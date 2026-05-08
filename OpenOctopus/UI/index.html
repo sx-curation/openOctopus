@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260508f"></script>
+<script src="/static/i18n.js?v=20260508g"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -96,6 +96,32 @@
   * { transition-property: background-color, color, opacity, transform; transition-duration: 150ms; }
   /* Gauge circle animation */
   .gauge-circle { transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  /* Financial Health page */
+  .fh-tab-active { background: white; color: var(--md-sys-color-primary, #5b5ea6); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+  .fh-panel { }
+  .fh-score-bar-fill { transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .fh-group-bar { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+  .fh-group-label { width: 52px; flex-shrink: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .fh-group-track { flex: 1; height: 6px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; }
+  .fh-group-fill { height: 100%; border-radius: 999px; transition: width 0.8s; }
+  .fh-group-pct { width: 32px; text-align: right; flex-shrink: 0; color: #666; }
+  .fh-ind-row { display: flex; align-items: center; gap: 6px; font-size: 10px; padding: 3px 0; }
+  .fh-ind-name { flex: 1; color: #555; }
+  .fh-ind-track { width: 80px; height: 4px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; }
+  .fh-ind-fill { height: 100%; border-radius: 999px; transition: width 0.6s; }
+  .fh-ind-score { width: 28px; text-align: right; font-weight: 600; }
+  .fh-section-card { border-left: 3px solid transparent; padding: 12px 14px; border-radius: 8px; background: rgba(0,0,0,0.02); }
+  .fh-section-card.positive { border-color: #22c55e; }
+  .fh-section-card.negative { border-color: #ef4444; }
+  .fh-section-card.neutral  { border-color: #94a3b8; }
+  .fh-fundamentals-tbl { width: 100%; border-collapse: collapse; }
+  .fh-fundamentals-tbl th { text-align: right; padding: 3px 8px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; border-bottom: 1px solid rgba(0,0,0,0.07); }
+  .fh-fundamentals-tbl th:first-child { text-align: left; }
+  .fh-fundamentals-tbl td { text-align: right; padding: 2px 8px; font-size: 10px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .fh-fundamentals-tbl td:first-child { text-align: left; color: #555; }
+  .fh-fundamentals-tbl tr:hover td { background: rgba(0,0,0,0.02); }
+  .fh-val-pos { color: #16a34a; }
+  .fh-val-neg { color: #dc2626; }
   /* Page section transitions */
   .page-section { display: none; }
   .page-section.active { display: block; }
@@ -168,6 +194,10 @@
     <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="backlog">
       <span class="material-symbols-outlined mr-3 text-[18px]">bookmark_add</span>
       <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.backlog">Backlog</span>
+    </a>
+    <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="financial-health">
+      <span class="material-symbols-outlined mr-3 text-[18px]">monitor_heart</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.financial_health">Financial Health</span>
     </a>
   </nav>
 
@@ -1088,6 +1118,113 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════ FINANCIAL HEALTH PAGE ══════════════════════════════ -->
+  <div id="page-financial-health" class="page-section">
+    <div class="p-8 max-w-7xl mx-auto">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="fh.label">Screener · Financial Health</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-6" data-i18n="fh.title">Financial Health Scoring</h2>
+
+      <!-- Ticker control row -->
+      <div class="flex flex-wrap items-center gap-3 mb-6">
+        <input id="fh-ticker-input" type="text" autocomplete="off" spellcheck="false"
+          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-32 focus:outline-none focus:ring-1 focus:ring-primary"
+          data-i18n-placeholder="fh.input.placeholder" placeholder="Ticker, e.g. AAPL">
+        <select id="fh-backlog-select"
+          class="h-8 px-2 text-[11px] bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary hidden">
+          <option value="" data-i18n="fh.select.placeholder">— From Backlog —</option>
+        </select>
+        <button id="fh-analyze-btn"
+          class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+          data-i18n="fh.btn.analyze">Analyze</button>
+        <span id="fh-status" class="text-[10px] text-on-surface-variant/60 italic"></span>
+      </div>
+
+      <!-- Score summary card -->
+      <div id="fh-score-card" class="hidden mb-6 p-5 bg-surface-container rounded-xl border border-outline-variant">
+        <div class="flex flex-wrap items-center gap-6">
+          <div class="text-center">
+            <div id="fh-score-big" class="font-headline text-5xl font-extrabold text-primary">—</div>
+            <div class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mt-1" data-i18n="fh.score.label">Health Score / 100</div>
+          </div>
+          <div class="flex flex-col gap-2 flex-1 min-w-48">
+            <div id="fh-group-growth" class="fh-group-bar" data-group="growth"></div>
+            <div id="fh-group-health" class="fh-group-bar" data-group="health"></div>
+            <div id="fh-group-risk"   class="fh-group-bar" data-group="risk"></div>
+          </div>
+          <div class="text-right text-[10px] text-on-surface-variant/70">
+            <div id="fh-company-name" class="font-semibold text-[12px] text-on-surface"></div>
+            <div id="fh-sector-info"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div id="fh-tabs-bar" class="hidden flex gap-1 mb-4 p-1 bg-surface-container rounded-xl w-fit">
+        <button class="fh-tab fh-tab-active px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors" data-fh-tab="indicators" data-i18n="fh.tab.indicators">Indicator &amp; Scoring</button>
+        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="drilldown" data-i18n="fh.tab.drilldown">Contribution Drill Down</button>
+      </div>
+
+      <!-- ── Tab 1: Indicator & Scoring ── -->
+      <div id="fh-panel-indicators" class="fh-panel">
+        <div id="fh-indicators-loading" class="hidden py-12 text-center text-on-surface-variant/50 text-[11px]">
+          <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+          <p class="mt-2" data-i18n="fh.loading">Loading financial data…</p>
+        </div>
+        <div id="fh-indicators-content" class="hidden grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <!-- Fundamentals table -->
+          <div>
+            <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.fundamentals.title">5-Year Fundamentals</h3>
+            <div id="fh-fundamentals-table" class="overflow-x-auto text-[10px]"></div>
+          </div>
+          <!-- Score groups -->
+          <div>
+            <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.score_groups.title">Scoring Breakdown</h3>
+            <div id="fh-score-groups" class="space-y-4"></div>
+          </div>
+        </div>
+        <!-- LLM Summary area -->
+        <div id="fh-summary-area" class="hidden mt-6">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="fh.summary.title">AI Health Summary</h3>
+            <button id="fh-summary-btn"
+              class="h-7 px-3 text-[10px] font-bold bg-secondary text-on-secondary rounded-lg hover:bg-secondary/90 transition-colors"
+              data-i18n="fh.btn.summary">Generate Summary</button>
+          </div>
+          <div id="fh-summary-content" class="hidden p-4 bg-surface-container-high rounded-xl text-[11px] space-y-3"></div>
+          <div id="fh-summary-loading" class="hidden py-4 text-center text-[11px] text-on-surface-variant/50">
+            <span class="material-symbols-outlined animate-spin text-primary text-xl">progress_activity</span>
+          </div>
+          <div id="fh-summary-error" class="hidden p-3 bg-error/10 border border-error/30 rounded-lg text-[11px] text-error flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">error</span>
+            <span id="fh-summary-error-msg"></span>
+            <button id="fh-summary-retry" class="ml-auto text-[10px] underline" data-i18n="fh.btn.retry">Retry</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab 2: Contribution Drill Down ── -->
+      <div id="fh-panel-drilldown" class="fh-panel hidden">
+        <div class="mb-4 flex items-center gap-3">
+          <button id="fh-drilldown-btn"
+            class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+            data-i18n="fh.btn.drilldown">Analyze Contribution</button>
+          <span class="text-[10px] text-on-surface-variant/60 italic" data-i18n="fh.drilldown.hint">Uses financial data + latest transcript (if available)</span>
+        </div>
+        <div id="fh-drilldown-loading" class="hidden py-12 text-center text-on-surface-variant/50 text-[11px]">
+          <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+          <p class="mt-2" data-i18n="fh.drilldown.analyzing">Analyzing contributions…</p>
+        </div>
+        <div id="fh-drilldown-sections" class="hidden space-y-4"></div>
+        <div id="fh-drilldown-error" class="hidden p-3 bg-error/10 border border-error/30 rounded-lg text-[11px] text-error flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px]">error</span>
+          <span id="fh-drilldown-error-msg"></span>
+          <button id="fh-drilldown-retry" class="ml-auto text-[10px] underline" data-i18n="fh.btn.retry">Retry</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </main><!-- end main -->
 
 <!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
@@ -1150,6 +1287,7 @@
     if (target) target.classList.add('active');
     if (page === 'documents') loadDocumentLibrary();
     if (page === 'backlog') loadBacklogPage();
+    if (page === 'financial-health') loadFinancialHealthPage();
   }
 
   async function fetchJson(url) {
@@ -3963,6 +4101,462 @@
       localStorage.setItem('oo_screener_scan_width', scanPanel.style.width);
     });
   })();
+})();
+
+// ══════════════════════ FINANCIAL HEALTH MODULE ══════════════════════
+(function () {
+  'use strict';
+
+  // ── Constants ──────────────────────────────────────────────────────
+  const FH_CACHE_TTL_MS = 30 * 60 * 1000;  // 30 minutes localStorage
+  let _fhCurrentTicker = '';
+  let _fhDataCache = null;
+
+  // ── Key metrics shown in fundamentals table ──
+  const FH_TABLE_METRICS = [
+    { key: 'revenueGrowth',              label: 'Revenue Growth',         fmt: 'pct' },
+    { key: 'grossProfitMargin',           label: 'Gross Profit Margin',    fmt: 'pct' },
+    { key: 'epsgrowth',                   label: 'EPS Growth',             fmt: 'pct' },
+    { key: 'returnOnEquity',              label: 'ROE',                    fmt: 'pct' },
+    { key: 'returnOnInvestedCapital',     label: 'ROIC',                   fmt: 'pct' },
+    { key: 'operatingCashFlowToNetIncome',label: 'OCF / Net Income',       fmt: 'ratio' },
+    { key: 'freeCashFlowGrowth',          label: 'FCF Growth',             fmt: 'pct' },
+    { key: 'interestCoverage',            label: 'Interest Coverage',      fmt: 'x' },
+    { key: 'DebtToEquity',                label: 'Debt / Equity',          fmt: 'ratio' },
+    { key: 'actualDebtRatio',             label: 'Debt / Assets',          fmt: 'pct' },
+    { key: 'currentRatio',                label: 'Current Ratio',          fmt: 'ratio' },
+    { key: 'revenue',                     label: 'Revenue',                fmt: 'B' },
+    { key: 'netIncome',                   label: 'Net Income',             fmt: 'B' },
+    { key: 'freeCashFlow',               label: 'Free Cash Flow',          fmt: 'B' },
+  ];
+
+  // ── Format helpers ──────────────────────────────────────────────────
+  function _fmtVal(v, fmt) {
+    if (v === null || v === undefined) return '<span class="text-on-surface-variant/30">—</span>';
+    const n = parseFloat(v);
+    if (isNaN(n)) return '<span class="text-on-surface-variant/30">—</span>';
+    let s;
+    switch (fmt) {
+      case 'pct':   s = (n * 100).toFixed(1) + '%'; break;
+      case 'ratio': s = n.toFixed(2) + 'x'; break;
+      case 'x':     s = n.toFixed(1) + 'x'; break;
+      case 'B':
+        if (Math.abs(n) >= 1e9)  s = (n / 1e9).toFixed(2) + 'B';
+        else if (Math.abs(n) >= 1e6) s = (n / 1e6).toFixed(0) + 'M';
+        else s = n.toFixed(0);
+        break;
+      default: s = n.toFixed(2);
+    }
+    const colorClass = (fmt === 'pct' || fmt === 'ratio' || fmt === 'x') ? (n > 0 ? 'fh-val-pos' : n < 0 ? 'fh-val-neg' : '') : '';
+    return colorClass ? `<span class="${colorClass}">${s}</span>` : s;
+  }
+
+  function _cacheKey(ticker) { return `oo_fh_data_${ticker}`; }
+
+  function _loadCached(ticker) {
+    try {
+      const raw = localStorage.getItem(_cacheKey(ticker));
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || Date.now() - obj.ts > FH_CACHE_TTL_MS) return null;
+      return obj.data;
+    } catch (e) { return null; }
+  }
+
+  function _saveCache(ticker, data) {
+    try { localStorage.setItem(_cacheKey(ticker), JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+  }
+
+  // ── UI helpers ──────────────────────────────────────────────────────
+  function _setFhStatus(msg) {
+    const el = document.getElementById('fh-status');
+    if (el) el.textContent = msg || '';
+  }
+
+  function _showHide(id, show) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !show);
+  }
+
+  // ── Tab switching ───────────────────────────────────────────────────
+  function _initFhTabs() {
+    document.querySelectorAll('.fh-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.fh-tab').forEach(b => {
+          b.classList.remove('fh-tab-active');
+          b.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
+        });
+        btn.classList.add('fh-tab-active');
+        btn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+        const tab = btn.dataset.fhTab;
+        document.querySelectorAll('.fh-panel').forEach(p => p.classList.add('hidden'));
+        const panel = document.getElementById(`fh-panel-${tab}`);
+        if (panel) panel.classList.remove('hidden');
+      });
+    });
+  }
+
+  // ── Fundamentals table ──────────────────────────────────────────────
+  function renderFundamentalsTable(fundamentals, years) {
+    const container = document.getElementById('fh-fundamentals-table');
+    if (!container) return;
+
+    const displayYears = years.slice(0, 4);
+    const headerCols = displayYears.map(y => `<th>${y}</th>`).join('');
+
+    const rows = FH_TABLE_METRICS.map(m => {
+      const vals = fundamentals[m.key] || [];
+      const cells = displayYears.map((_, i) => `<td>${_fmtVal(vals[i], m.fmt)}</td>`).join('');
+      return `<tr><td title="${m.key}">${m.label}</td>${cells}</tr>`;
+    }).join('');
+
+    container.innerHTML = `<table class="fh-fundamentals-tbl"><thead><tr><th>Metric</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // ── Score groups ────────────────────────────────────────────────────
+  const _GROUP_COLORS = { growth: '#22c55e', health: '#3b82f6', risk: '#f59e0b' };
+  const _GROUP_LABELS_KEY = { growth: 'fh.group.growth', health: 'fh.group.health', risk: 'fh.group.risk' };
+  const _GROUP_LABELS_FB  = { growth: 'Growth', health: 'Health', risk: 'Risk' };
+
+  function _t(key, fallback) {
+    if (typeof I18N !== 'undefined' && I18N && I18N.t) {
+      try { const r = I18N.t(key); return (r && r !== key) ? r : fallback; } catch (e) {}
+    }
+    return fallback;
+  }
+
+  function renderScoreGroups(groupScores) {
+    const container = document.getElementById('fh-score-groups');
+    if (!container) return;
+
+    const html = Object.entries(groupScores).map(([group, data]) => {
+      const color = _GROUP_COLORS[group] || '#888';
+      const label = _t(_GROUP_LABELS_KEY[group], _GROUP_LABELS_FB[group] || group);
+      const pct = data.pct || 0;
+
+      const indicators = (data.indicators || []).map(ind => {
+        const indPct = ind.pct || 0;
+        const scoreColor = ind.score > 0 ? '#22c55e' : ind.score < 0 ? '#ef4444' : '#94a3b8';
+        const scoreClass = ind.score > 0 ? 'fh-val-pos' : ind.score < 0 ? 'fh-val-neg' : 'text-on-surface-variant/50';
+        return `<div class="fh-ind-row">
+          <span class="fh-ind-name">${ind.name.replace(/_r$/, '').replace(/_/g, ' ')}</span>
+          <div class="fh-ind-track"><div class="fh-ind-fill" style="width:${indPct}%;background:${scoreColor};"></div></div>
+          <span class="fh-ind-score ${scoreClass}">${ind.score}/${ind.max}</span>
+        </div>`;
+      }).join('');
+
+      return `<div class="p-4 bg-surface-container rounded-xl">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-label text-[10px] uppercase tracking-widest font-bold" style="color:${color}">${label}</span>
+          <span class="text-[11px] font-bold" style="color:${color}">${pct}%</span>
+        </div>
+        <div class="h-1.5 bg-surface-container-high rounded-full mb-3 overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <div class="space-y-0.5">${indicators}</div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = html;
+  }
+
+  // ── Score summary card ──────────────────────────────────────────────
+  function renderScoreCard(data) {
+    _showHide('fh-score-card', true);
+
+    const bigEl = document.getElementById('fh-score-big');
+    if (bigEl) {
+      const score = data.weighted_100;
+      bigEl.textContent = score != null ? score.toFixed(0) : '—';
+      bigEl.style.color = score >= 70 ? '#22c55e' : score >= 45 ? '#f59e0b' : '#ef4444';
+    }
+
+    const info = data.info || {};
+    const nameEl = document.getElementById('fh-company-name');
+    const secEl  = document.getElementById('fh-sector-info');
+    if (nameEl) nameEl.textContent = info.companyName || data.ticker || '';
+    if (secEl)  secEl.textContent  = [info.sector, info.industry].filter(Boolean).join(' · ');
+
+    // Group bars
+    const groupScores = data.group_scores || {};
+    ['growth', 'health', 'risk'].forEach(g => {
+      const bar = document.getElementById(`fh-group-${g}`);
+      if (!bar || !groupScores[g]) return;
+      const pct = groupScores[g].pct || 0;
+      const color = _GROUP_COLORS[g];
+      const label = _t(_GROUP_LABELS_KEY[g], _GROUP_LABELS_FB[g]);
+      bar.innerHTML = `
+        <span class="fh-group-label" style="color:${color}">${label}</span>
+        <div class="fh-group-track"><div class="fh-group-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="fh-group-pct">${pct}%</span>`;
+    });
+  }
+
+  // ── Main data load ──────────────────────────────────────────────────
+  async function loadFinancialHealthData(ticker) {
+    if (!ticker) return;
+
+    _setFhStatus(_t('fh.status.loading', 'Loading…'));
+    _showHide('fh-indicators-loading', true);
+    _showHide('fh-indicators-content', false);
+    _showHide('fh-summary-area', false);
+    _showHide('fh-tabs-bar', false);
+    _showHide('fh-score-card', false);
+
+    const cached = _loadCached(ticker);
+    if (cached) {
+      _renderFhData(cached);
+      _setFhStatus(_t('fh.status.cached', 'Cached data'));
+      return;
+    }
+
+    try {
+      const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+      const res = await fetch(`/api/financial_health/data?ticker=${encodeURIComponent(ticker)}&lang=${lang}`);
+      const data = await res.json();
+      if (!res.ok) {
+        _showHide('fh-indicators-loading', false);
+        _setFhStatus(`Error: ${data.error || 'fetch failed'}`);
+        return;
+      }
+      _saveCache(ticker, data);
+      _renderFhData(data);
+      _setFhStatus('');
+    } catch (e) {
+      _showHide('fh-indicators-loading', false);
+      _setFhStatus(`Error: ${e.message}`);
+    }
+  }
+
+  function _renderFhData(data) {
+    _fhDataCache = data;
+    _showHide('fh-indicators-loading', false);
+    _showHide('fh-indicators-content', true);
+    _showHide('fh-tabs-bar', true);
+    _showHide('fh-summary-area', true);
+
+    renderScoreCard(data);
+    renderFundamentalsTable(data.fundamentals || {}, data.years || []);
+    renderScoreGroups(data.group_scores || {});
+  }
+
+  // ── LLM Summary ────────────────────────────────────────────────────
+  async function _triggerFHSummary(ticker, lang) {
+    const cacheKey = `oo_fh_summary_${ticker}_${lang}`;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj.ts < FH_CACHE_TTL_MS) { _renderFHSummary(obj.data); return; }
+      }
+    } catch (e) {}
+
+    _showHide('fh-summary-content', false);
+    _showHide('fh-summary-error', false);
+    _showHide('fh-summary-loading', true);
+
+    try {
+      const res = await fetch('/api/financial_health/summary', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker, lang }),
+      });
+      const data = await res.json();
+      _showHide('fh-summary-loading', false);
+      if (!res.ok || data.error) {
+        document.getElementById('fh-summary-error-msg').textContent = data.error || 'Analysis failed';
+        _showHide('fh-summary-error', true);
+        return;
+      }
+      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+      _renderFHSummary(data);
+    } catch (e) {
+      _showHide('fh-summary-loading', false);
+      document.getElementById('fh-summary-error-msg').textContent = e.message;
+      _showHide('fh-summary-error', true);
+    }
+  }
+
+  function _renderFHSummary(data) {
+    const el = document.getElementById('fh-summary-content');
+    if (!el) return;
+
+    const strHtml = (data.strengths || []).map(s => `<li class="text-[11px] text-emerald-700">✓ ${s}</li>`).join('');
+    const wkHtml  = (data.weaknesses || []).map(w => `<li class="text-[11px] text-rose-600">✗ ${w}</li>`).join('');
+
+    el.innerHTML = `
+      <p class="text-[11px] text-on-surface leading-relaxed">${data.summary || ''}</p>
+      ${strHtml ? `<div><p class="font-bold text-[10px] uppercase tracking-widest text-emerald-600 mb-1">${_t('fh.summary.strengths','Strengths')}</p><ul class="space-y-0.5 pl-1">${strHtml}</ul></div>` : ''}
+      ${wkHtml  ? `<div><p class="font-bold text-[10px] uppercase tracking-widest text-rose-500 mb-1">${_t('fh.summary.weaknesses','Weaknesses')}</p><ul class="space-y-0.5 pl-1">${wkHtml}</ul></div>` : ''}
+    `;
+    _showHide('fh-summary-content', true);
+  }
+
+  // ── LLM Drilldown ──────────────────────────────────────────────────
+  async function _triggerFHDrilldown(ticker, lang) {
+    const cacheKey = `oo_fh_drilldown_${ticker}_${lang}`;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj.ts < FH_CACHE_TTL_MS) { _renderFHDrilldown(obj.data); return; }
+      }
+    } catch (e) {}
+
+    _showHide('fh-drilldown-sections', false);
+    _showHide('fh-drilldown-error', false);
+    _showHide('fh-drilldown-loading', true);
+
+    try {
+      const res = await fetch('/api/financial_health/drilldown', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker, lang }),
+      });
+      const data = await res.json();
+      _showHide('fh-drilldown-loading', false);
+      if (!res.ok || data.error) {
+        document.getElementById('fh-drilldown-error-msg').textContent = data.error || 'Analysis failed';
+        _showHide('fh-drilldown-error', true);
+        return;
+      }
+      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+      _renderFHDrilldown(data);
+    } catch (e) {
+      _showHide('fh-drilldown-loading', false);
+      document.getElementById('fh-drilldown-error-msg').textContent = e.message;
+      _showHide('fh-drilldown-error', true);
+    }
+  }
+
+  function _renderFHDrilldown(data) {
+    const container = document.getElementById('fh-drilldown-sections');
+    if (!container) return;
+
+    const sections = data.sections || [];
+    container.innerHTML = sections.map(sec => {
+      const sentiment = (sec.sentiment || 'neutral').toLowerCase();
+      const badgeClass = sentiment === 'positive' ? 'bg-emerald-100 text-emerald-700' : sentiment === 'negative' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600';
+      const icon = sentiment === 'positive' ? 'trending_up' : sentiment === 'negative' ? 'trending_down' : 'remove';
+      return `<div class="fh-section-card ${sentiment}">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-semibold text-[11px] text-on-surface">${sec.title || ''}</span>
+          <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${badgeClass}">
+            <span class="material-symbols-outlined" style="font-size:12px">${icon}</span>${sentiment}
+          </span>
+        </div>
+        <p class="text-[11px] text-on-surface-variant leading-relaxed">${sec.content || ''}</p>
+      </div>`;
+    }).join('');
+
+    _showHide('fh-drilldown-sections', true);
+  }
+
+  // ── Backlog picker population ───────────────────────────────────────
+  function _populateFhBacklogSelect() {
+    const sel = document.getElementById('fh-backlog-select');
+    if (!sel) return;
+    try {
+      const raw = localStorage.getItem('oo_backlog');
+      const items = raw ? JSON.parse(raw) : [];
+      if (!items.length) { sel.classList.add('hidden'); return; }
+      sel.classList.remove('hidden');
+      const placeholder = sel.querySelector('option[value=""]');
+      sel.innerHTML = '';
+      if (placeholder) sel.appendChild(placeholder);
+      items.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      });
+    } catch (e) { sel.classList.add('hidden'); }
+  }
+
+  // ── Page init ───────────────────────────────────────────────────────
+  window.loadFinancialHealthPage = function (autoTicker) {
+    _populateFhBacklogSelect();
+    _initFhTabs();
+
+    // Wire up analyze button
+    const analyzeBtn = document.getElementById('fh-analyze-btn');
+    if (analyzeBtn && !analyzeBtn._fhWired) {
+      analyzeBtn._fhWired = true;
+      analyzeBtn.addEventListener('click', () => {
+        const input = document.getElementById('fh-ticker-input');
+        const ticker = ((input && input.value) || '').trim().toUpperCase();
+        if (!ticker) return;
+        _fhCurrentTicker = ticker;
+        loadFinancialHealthData(ticker);
+      });
+    }
+
+    // Wire up backlog select
+    const sel = document.getElementById('fh-backlog-select');
+    if (sel && !sel._fhWired) {
+      sel._fhWired = true;
+      sel.addEventListener('change', () => {
+        if (!sel.value) return;
+        const input = document.getElementById('fh-ticker-input');
+        if (input) input.value = sel.value;
+      });
+    }
+
+    // Wire LLM summary button
+    const summaryBtn = document.getElementById('fh-summary-btn');
+    if (summaryBtn && !summaryBtn._fhWired) {
+      summaryBtn._fhWired = true;
+      summaryBtn.addEventListener('click', () => {
+        if (!_fhCurrentTicker) return;
+        const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+        _triggerFHSummary(_fhCurrentTicker, lang);
+      });
+    }
+
+    // Wire summary retry
+    const summaryRetry = document.getElementById('fh-summary-retry');
+    if (summaryRetry && !summaryRetry._fhWired) {
+      summaryRetry._fhWired = true;
+      summaryRetry.addEventListener('click', () => {
+        if (!_fhCurrentTicker) return;
+        const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+        const cacheKey = `oo_fh_summary_${_fhCurrentTicker}_${lang}`;
+        localStorage.removeItem(cacheKey);
+        _triggerFHSummary(_fhCurrentTicker, lang);
+      });
+    }
+
+    // Wire drilldown button
+    const drillBtn = document.getElementById('fh-drilldown-btn');
+    if (drillBtn && !drillBtn._fhWired) {
+      drillBtn._fhWired = true;
+      drillBtn.addEventListener('click', () => {
+        if (!_fhCurrentTicker) return;
+        const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+        _triggerFHDrilldown(_fhCurrentTicker, lang);
+      });
+    }
+
+    // Wire drilldown retry
+    const drillRetry = document.getElementById('fh-drilldown-retry');
+    if (drillRetry && !drillRetry._fhWired) {
+      drillRetry._fhWired = true;
+      drillRetry.addEventListener('click', () => {
+        if (!_fhCurrentTicker) return;
+        const lang = (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+        const cacheKey = `oo_fh_drilldown_${_fhCurrentTicker}_${lang}`;
+        localStorage.removeItem(cacheKey);
+        _triggerFHDrilldown(_fhCurrentTicker, lang);
+      });
+    }
+
+    // Auto-load if ticker supplied (e.g. navigated from backlog)
+    if (autoTicker) {
+      _fhCurrentTicker = autoTicker;
+      const input = document.getElementById('fh-ticker-input');
+      if (input) input.value = autoTicker;
+      loadFinancialHealthData(autoTicker);
+    }
+  };
+
 })();
 
 </script>
