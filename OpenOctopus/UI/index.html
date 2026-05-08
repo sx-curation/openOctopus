@@ -2760,6 +2760,10 @@
 (function () {
   'use strict';
 
+  // HTML escape helper (local to this IIFE; _esc in the first IIFE is not accessible here)
+  const _esc = str => str == null ? '' : String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
   // ─── Per-market state store ─────────────────────────────────────────────────
   // Each market independently tracks its own job, rendering state, and selection.
   const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50'];
