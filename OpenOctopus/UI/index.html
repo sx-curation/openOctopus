@@ -2535,27 +2535,30 @@
       });
     });
 
-    // Bind retry buttons (event delegation)
-    listEl.addEventListener('click', e => {
-      const retryBtn = e.target.closest('.doc-retry-btn');
-      if (retryBtn) {
-        const card = retryBtn.closest('.doc-card');
-        if (card) {
-          // Clear cache for this card and re-analyze
-          const cacheKey = _docSignalCacheKey(card);
-          if (cacheKey) {
-            try { localStorage.removeItem(cacheKey); } catch(_) {}
+    // Bind retry + analyze buttons via event delegation (once per listEl)
+    if (!listEl._docDelegateWired) {
+      listEl._docDelegateWired = true;
+      listEl.addEventListener('click', e => {
+        const retryBtn = e.target.closest('.doc-retry-btn');
+        if (retryBtn) {
+          const card = retryBtn.closest('.doc-card');
+          if (card) {
+            // Clear cache for this card and re-analyze
+            const cacheKey = _docSignalCacheKey(card);
+            if (cacheKey) {
+              try { localStorage.removeItem(cacheKey); } catch(_) {}
+            }
+            _triggerDocAnalysis(card);
           }
-          _triggerDocAnalysis(card);
         }
-      }
-      // Re-trigger Analyze button
-      const analyzeBtn = e.target.closest('.doc-analyze-btn');
-      if (analyzeBtn) {
-        const card = analyzeBtn.closest('.doc-card');
-        if (card) _triggerDocAnalysis(card);
-      }
-    });
+        // Re-trigger Analyze button
+        const analyzeBtn = e.target.closest('.doc-analyze-btn');
+        if (analyzeBtn) {
+          const card = analyzeBtn.closest('.doc-card');
+          if (card) _triggerDocAnalysis(card);
+        }
+      });
+    }
   }
 
   function _docSignalCacheKey(card) {
@@ -2613,9 +2616,17 @@
       const data = await res.json();
       if (loadingEl) loadingEl.classList.add('hidden');
       if (data.error && !data.positive_signals?.length && !data.negative_signals?.length) {
-        // Show error state
+        // Show error state with user-friendly message
         const errMsg = card.querySelector('.doc-analyze-error-msg');
-        if (errMsg) errMsg.textContent = (I18N ? I18N.t('doc.lib.analyze_error') : 'Analysis failed. ') + data.error;
+        let userMsg = data.error || 'Analysis failed.';
+        if (userMsg.includes('content is empty') || userMsg.includes('content_excerpt')) {
+          userMsg = 'Transcript text is unavailable for this filing — try re-downloading the document.';
+        } else if (userMsg.includes('not found') || userMsg.includes('transcript_not_found')) {
+          userMsg = 'No transcript found for this period. It may not have been downloaded yet.';
+        } else if (userMsg.includes('LLM') || userMsg.includes('invalid JSON')) {
+          userMsg = 'AI analysis failed. The LLM returned an unexpected response — please retry.';
+        }
+        if (errMsg) errMsg.textContent = userMsg;
         if (errorEl) errorEl.classList.remove('hidden');
         if (triggerEl) triggerEl.classList.remove('hidden');
       } else {
@@ -2630,7 +2641,7 @@
     } catch(e) {
       if (loadingEl) loadingEl.classList.add('hidden');
       const errMsg = card.querySelector('.doc-analyze-error-msg');
-      if (errMsg) errMsg.textContent = (I18N ? I18N.t('doc.lib.analyze_error') : 'Analysis failed. ') + e.message;
+      if (errMsg) errMsg.textContent = 'Network error — check your connection and retry.';
       if (errorEl) errorEl.classList.remove('hidden');
       if (triggerEl) triggerEl.classList.remove('hidden');
     }
