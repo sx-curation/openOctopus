@@ -31,6 +31,7 @@ from services.dashboard.earnings_cycle import build_earnings_cycle
 from services.dashboard.management import build_management_snapshot
 from services.dashboard.summary import build_dashboard_summary
 from services.documents.recent_filings import build_recent_filings
+from services.documents.library import build_document_library
 from services.market.overview import build_market_overview
 from services.market.commodities import build_market_commodities
 from services.market.sentiment import build_market_sentiment
@@ -231,6 +232,12 @@ def documents_recent_filings() -> Response:
         return jsonify({"error": "ticker is required"}), 400
 
     return jsonify(build_recent_filings(ticker))
+
+
+@app.route("/api/documents/library")
+def documents_library() -> Response:
+    """Return all locally cached transcript entries for the Document Library tab."""
+    return jsonify(build_document_library())
 
 
 # ── Investment Analysis ─────────────────────────────────────────────────────
