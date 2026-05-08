@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260509a"></script>
+<script src="/static/i18n.js?v=20260509b"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -1180,7 +1180,7 @@
           <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
           <p class="mt-2" data-i18n="fh.loading">Loading financial data…</p>
         </div>
-        <div id="fh-indicators-content" class="hidden grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div id="fh-indicators-content" class="hidden flex flex-col gap-6">
           <!-- Fundamentals table -->
           <div>
             <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.fundamentals.title">5-Year Fundamentals</h3>
@@ -1189,7 +1189,7 @@
           <!-- Score groups -->
           <div>
             <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="fh.score_groups.title">Scoring Breakdown</h3>
-            <div id="fh-score-groups" class="space-y-4"></div>
+            <div id="fh-score-groups" class="space-y-6"></div>
           </div>
         </div>
         <!-- LLM Summary area -->
@@ -1235,6 +1235,92 @@
     </div>
   </div>
 
+  <div id="page-supply-chain" class="page-section overflow-x-hidden">
+    <div class="p-8 max-w-7xl mx-auto">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="sc.label">Screener · Supply Chain</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-1" data-i18n="sc.title">Cross-company Supply Chain</h2>
+      <p class="text-[11px] text-on-surface-variant mb-6" data-i18n="sc.subtitle">Earnings Read-through Engine &amp; Supply Chain Causal Graph</p>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center gap-3 mb-6">
+        <input id="sc-ticker-input" type="text" autocomplete="off" spellcheck="false"
+          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-32 focus:outline-none focus:ring-1 focus:ring-primary"
+          data-i18n-placeholder="sc.input.placeholder" placeholder="Ticker, e.g. TSMC">
+        <button id="sc-analyze-btn"
+          class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+          data-i18n="sc.btn.analyze">Analyze</button>
+        <span id="sc-status" class="text-[10px] text-on-surface-variant/60 italic"></span>
+      </div>
+
+      <!-- Loading / Error -->
+      <div id="sc-loading" class="hidden flex items-center gap-2 text-[11px] text-on-surface-variant py-4">
+        <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+        <span data-i18n="sc.loading">Discovering supply chain…</span>
+      </div>
+      <div id="sc-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+        <p class="text-[11px] text-rose-700" id="sc-error-msg"></p>
+      </div>
+
+      <!-- Results -->
+      <div id="sc-results" class="hidden">
+        <!-- Top: Table -->
+        <div class="mb-6 bg-surface-container rounded-xl border border-outline-variant overflow-hidden">
+          <div class="px-5 py-3 border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-bold text-[12px] text-on-surface" data-i18n="sc.table.title">Supply Chain Read-through</h3>
+            <span id="sc-center-badge" class="px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded-full"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-[11px]">
+              <thead>
+                <tr class="bg-surface-container-high text-on-surface-variant uppercase text-[9px] tracking-wider">
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.ticker">Ticker</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.name">Company</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="relation">↕</span></th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="tier">↕</span></th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.direction">Signal</th>
+                  <th class="text-left px-4 py-2 max-w-xs" data-i18n="sc.col.reason">Read-through Reason</th>
+                </tr>
+              </thead>
+              <tbody id="sc-table-body" class="divide-y divide-outline-variant/30"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bottom: Graph + Node Analysis panel side-by-side -->
+        <div class="flex gap-4 flex-wrap lg:flex-nowrap">
+          <!-- SVG Graph -->
+          <div class="flex-1 min-w-0 bg-surface-container rounded-xl border border-outline-variant p-4">
+            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.graph.title">Causal Graph</h3>
+            <p class="text-[10px] text-on-surface-variant/70 mb-3" data-i18n="sc.graph.hint">Click a node to trigger read-through analysis</p>
+            <div id="sc-graph-container" style="width:100%;height:420px;position:relative;overflow:hidden;"></div>
+          </div>
+
+          <!-- Node analysis panel -->
+          <div class="w-full lg:w-80 bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col">
+            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.panel.title">Node Analysis</h3>
+            <div id="sc-panel-placeholder" class="flex-1 flex items-center justify-center text-[10px] text-on-surface-variant/50 text-center px-4">
+              <span data-i18n="sc.panel.hint">Click a node in the graph to see read-through analysis</span>
+            </div>
+            <div id="sc-panel-loading" class="hidden flex-1 flex items-center justify-center gap-2 text-[11px] text-on-surface-variant">
+              <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+              <span data-i18n="sc.panel.loading">Analyzing…</span>
+            </div>
+            <div id="sc-panel-content" class="hidden flex-1 flex-col gap-3 overflow-y-auto">
+              <div class="flex items-center gap-2">
+                <span id="sc-panel-ticker" class="font-bold text-[13px] text-primary"></span>
+                <span id="sc-panel-name" class="text-[10px] text-on-surface-variant"></span>
+                <span id="sc-panel-direction-badge" class="ml-auto px-2 py-0.5 text-[10px] font-bold rounded-full"></span>
+              </div>
+              <p id="sc-panel-summary" class="text-[11px] text-on-surface leading-relaxed"></p>
+              <p id="sc-panel-capex" class="text-[10px] text-on-surface-variant italic border-l-2 border-primary/30 pl-2"></p>
+              <ul id="sc-panel-signals" class="space-y-1 mt-1"></ul>
+              <div id="sc-panel-error" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-700" id="sc-panel-error-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main><!-- end main -->
 
 <!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
@@ -4223,6 +4309,8 @@
       if (!raw) return null;
       const obj = JSON.parse(raw);
       if (!obj || Date.now() - obj.ts > FH_CACHE_TTL_MS) return null;
+      // Invalidate old cache format missing year_scores
+      if (!obj.data || !obj.data.year_scores) return null;
       return obj.data;
     } catch (e) { return null; }
   }
@@ -4294,46 +4382,80 @@
     if (!container) return;
     const ys = yearScores || [];
 
-    const html = Object.entries(groupScores).map(([group, data]) => {
+    const html = Object.entries(groupScores).map(([group, gData]) => {
       const color = _GROUP_COLORS[group] || '#888';
       const label = _t(_GROUP_LABELS_KEY[group], _GROUP_LABELS_FB[group] || group);
-      const pct = data.pct || 0;
+      const indicators = gData.indicators || [];
 
-      const indicators = (data.indicators || []).map(ind => {
-        const indPct = ind.pct || 0;
-        const scoreColor = ind.score > 0 ? '#22c55e' : ind.score < 0 ? '#ef4444' : '#94a3b8';
-        const scoreClass = ind.score > 0 ? 'fh-val-pos' : ind.score < 0 ? 'fh-val-neg' : 'text-on-surface-variant/50';
+      // Build year columns: newest-first (ys[0] = most recent)
+      // If no yearScores, show single "Current" column using groupScores directly
+      const useFallback = ys.length === 0;
+      const cols = useFallback
+        ? [{ year: 'Current', gPct: gData.pct || 0, indScores: Object.fromEntries(indicators.map(i => [i.name, { score: i.score, max: i.max }])) }]
+        : ys.map(y => ({
+            year: y.year,
+            gPct: (y.group_scores && y.group_scores[group]) ? y.group_scores[group].pct : null,
+            indScores: y.indicator_scores || {},
+            groupIndMap: (y.group_scores && y.group_scores[group] && y.group_scores[group].indicators)
+              ? Object.fromEntries(y.group_scores[group].indicators.map(i => [i.name, { score: i.score, max: i.max }]))
+              : {},
+          }));
 
-        // Per-year score squares (newest right = chronological order)
-        let yearDots = '';
-        if (ys.length > 0) {
-          const dots = [...ys].reverse().map(y => {
-            if (!y || !y.indicator_scores) return '<span class="inline-block w-3 h-3 rounded-sm bg-surface-container-high mx-px" title="—"></span>';
-            const sc = y.indicator_scores[ind.name];
-            if (sc == null) return '<span class="inline-block w-3 h-3 rounded-sm bg-surface-container-high mx-px" title="—"></span>';
-            const dotCol = sc > 0 ? 'bg-emerald-400' : sc < 0 ? 'bg-red-400' : 'bg-slate-300';
-            return `<span class="inline-block w-3 h-3 rounded-sm ${dotCol} mx-px" title="${y.year}: ${sc}"></span>`;
-          }).join('');
-          yearDots = `<span class="flex items-center ml-1">${dots}</span>`;
-        }
+      // Header row: indicator col + year labels
+      const thYears = cols.map(c => `<th class="px-3 py-2 text-center font-bold text-[11px] min-w-[72px]" style="color:${color}">${c.year}</th>`).join('');
 
-        return `<div class="fh-ind-row">
-          <span class="fh-ind-name">${ind.name.replace(/_r$/, '').replace(/_/g, ' ')}</span>
-          <div class="fh-ind-track"><div class="fh-ind-fill" style="width:${indPct}%;background:${scoreColor};"></div></div>
-          <span class="fh-ind-score ${scoreClass}">${ind.score}/${ind.max}</span>
-          ${yearDots}
-        </div>`;
+      // Group score row (total %)
+      const tdGroupPcts = cols.map(c => {
+        if (c.gPct == null) return `<td class="px-3 py-2 text-center text-[11px] text-on-surface-variant/40">—</td>`;
+        return `<td class="px-3 py-2 text-center text-[12px] font-bold" style="color:${color}">${c.gPct}%</td>`;
       }).join('');
 
-      return `<div class="p-4 bg-surface-container rounded-xl">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-label text-[10px] uppercase tracking-widest font-bold" style="color:${color}">${label}</span>
-          <span class="text-[11px] font-bold" style="color:${color}">${pct}%</span>
-        </div>
-        <div class="h-1.5 bg-surface-container-high rounded-full mb-3 overflow-hidden">
-          <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%;background:${color}"></div>
-        </div>
-        <div class="space-y-0.5">${indicators}</div>
+      // Indicator rows
+      const tbodyRows = indicators.map(ind => {
+        const tdCells = cols.map(c => {
+          // For multiyear: use per-indicator data from group_scores[group].indicators
+          let sc, mx;
+          if (useFallback) {
+            sc = ind.score; mx = ind.max;
+          } else {
+            const indObj = c.groupIndMap && c.groupIndMap[ind.name];
+            if (indObj != null) { sc = indObj.score; mx = indObj.max; }
+            else {
+              // fallback: use indicator_scores only (no max available)
+              const raw = c.indScores[ind.name];
+              if (raw == null) { sc = null; mx = null; }
+              else { sc = raw; mx = ind.max; }
+            }
+          }
+          if (sc == null) return `<td class="px-3 py-2 text-center text-[11px] text-on-surface-variant/40">—</td>`;
+          const cls = sc > 0 ? 'text-emerald-600 font-semibold' : sc < 0 ? 'text-red-500 font-semibold' : 'text-on-surface-variant/40';
+          const maxStr = mx != null ? `/${mx}` : '';
+          return `<td class="px-3 py-2 text-center text-[11px] ${cls}">${sc}${maxStr}</td>`;
+        }).join('');
+
+        const indDisplay = ind.name.replace(/_r$/, '').replace(/_/g, ' ');
+        return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
+          <td class="px-3 py-2 text-[11px] text-on-surface-variant capitalize whitespace-nowrap">${indDisplay}</td>
+          ${tdCells}
+        </tr>`;
+      }).join('');
+
+      return `<div class="rounded-xl overflow-hidden border border-outline-variant/30">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-surface-container">
+              <th class="px-3 py-2 text-left text-[11px] uppercase tracking-widest font-bold" style="color:${color}">${label}</th>
+              ${thYears}
+            </tr>
+            <tr class="bg-surface-container/60">
+              <td class="px-3 py-2 text-[11px] text-on-surface-variant font-medium">Group Score</td>
+              ${tdGroupPcts}
+            </tr>
+          </thead>
+          <tbody>
+            ${tbodyRows}
+          </tbody>
+        </table>
       </div>`;
     }).join('');
 
@@ -4674,92 +4796,6 @@
 </script>
 
   <!-- ══════════════════════════════ SUPPLY CHAIN PAGE ══════════════════════════════ -->
-  <div id="page-supply-chain" class="page-section overflow-x-hidden">
-    <div class="p-8 max-w-7xl mx-auto">
-      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="sc.label">Screener · Supply Chain</p>
-      <h2 class="font-headline text-2xl font-extrabold text-primary mb-1" data-i18n="sc.title">Cross-company Supply Chain</h2>
-      <p class="text-[11px] text-on-surface-variant mb-6" data-i18n="sc.subtitle">Earnings Read-through Engine &amp; Supply Chain Causal Graph</p>
-
-      <!-- Controls -->
-      <div class="flex flex-wrap items-center gap-3 mb-6">
-        <input id="sc-ticker-input" type="text" autocomplete="off" spellcheck="false"
-          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-32 focus:outline-none focus:ring-1 focus:ring-primary"
-          data-i18n-placeholder="sc.input.placeholder" placeholder="Ticker, e.g. TSMC">
-        <button id="sc-analyze-btn"
-          class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
-          data-i18n="sc.btn.analyze">Analyze</button>
-        <span id="sc-status" class="text-[10px] text-on-surface-variant/60 italic"></span>
-      </div>
-
-      <!-- Loading / Error -->
-      <div id="sc-loading" class="hidden flex items-center gap-2 text-[11px] text-on-surface-variant py-4">
-        <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-        <span data-i18n="sc.loading">Discovering supply chain…</span>
-      </div>
-      <div id="sc-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
-        <p class="text-[11px] text-rose-700" id="sc-error-msg"></p>
-      </div>
-
-      <!-- Results -->
-      <div id="sc-results" class="hidden">
-        <!-- Top: Table -->
-        <div class="mb-6 bg-surface-container rounded-xl border border-outline-variant overflow-hidden">
-          <div class="px-5 py-3 border-b border-outline-variant flex items-center justify-between">
-            <h3 class="font-bold text-[12px] text-on-surface" data-i18n="sc.table.title">Supply Chain Read-through</h3>
-            <span id="sc-center-badge" class="px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded-full"></span>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-[11px]">
-              <thead>
-                <tr class="bg-surface-container-high text-on-surface-variant uppercase text-[9px] tracking-wider">
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.ticker">Ticker</th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.name">Company</th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="relation">↕</span></th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="tier">↕</span></th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.direction">Signal</th>
-                  <th class="text-left px-4 py-2 max-w-xs" data-i18n="sc.col.reason">Read-through Reason</th>
-                </tr>
-              </thead>
-              <tbody id="sc-table-body" class="divide-y divide-outline-variant/30"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Bottom: Graph + Node Analysis panel side-by-side -->
-        <div class="flex gap-4 flex-wrap lg:flex-nowrap">
-          <!-- SVG Graph -->
-          <div class="flex-1 min-w-0 bg-surface-container rounded-xl border border-outline-variant p-4">
-            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.graph.title">Causal Graph</h3>
-            <p class="text-[10px] text-on-surface-variant/70 mb-3" data-i18n="sc.graph.hint">Click a node to trigger read-through analysis</p>
-            <div id="sc-graph-container" style="width:100%;height:420px;position:relative;overflow:hidden;"></div>
-          </div>
-
-          <!-- Node analysis panel -->
-          <div class="w-full lg:w-80 bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col">
-            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.panel.title">Node Analysis</h3>
-            <div id="sc-panel-placeholder" class="flex-1 flex items-center justify-center text-[10px] text-on-surface-variant/50 text-center px-4">
-              <span data-i18n="sc.panel.hint">Click a node in the graph to see read-through analysis</span>
-            </div>
-            <div id="sc-panel-loading" class="hidden flex-1 flex items-center justify-center gap-2 text-[11px] text-on-surface-variant">
-              <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-              <span data-i18n="sc.panel.loading">Analyzing…</span>
-            </div>
-            <div id="sc-panel-content" class="hidden flex-1 flex-col gap-3 overflow-y-auto">
-              <div class="flex items-center gap-2">
-                <span id="sc-panel-ticker" class="font-bold text-[13px] text-primary"></span>
-                <span id="sc-panel-name" class="text-[10px] text-on-surface-variant"></span>
-                <span id="sc-panel-direction-badge" class="ml-auto px-2 py-0.5 text-[10px] font-bold rounded-full"></span>
-              </div>
-              <p id="sc-panel-summary" class="text-[11px] text-on-surface leading-relaxed"></p>
-              <p id="sc-panel-capex" class="text-[10px] text-on-surface-variant italic border-l-2 border-primary/30 pl-2"></p>
-              <ul id="sc-panel-signals" class="space-y-1 mt-1"></ul>
-              <div id="sc-panel-error" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-700" id="sc-panel-error-msg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
 
 <script>
