@@ -36,7 +36,7 @@ from services.documents.analyzer import analyze_transcript as analyze_doc_transc
 from services.backlog.refresh import fetch_backlog_data
 from services.backlog.search import search_ticker as backlog_search_ticker
 from services.financial_health.fetcher import fetch_financial_health
-from services.financial_health.scorer import score_financial_health
+from services.financial_health.scorer import score_financial_health, score_financial_health_multiyear
 from services.financial_health.llm import health_summary as fh_health_summary, drilldown_analysis as fh_drilldown_analysis
 from services.supply_chain.graph import discover_supply_chain as sc_discover
 from services.supply_chain.analyzer import analyze_node as sc_analyze_node
@@ -566,6 +566,7 @@ def financial_health_data() -> Response:
         return jsonify(raw), 502
 
     scoring = score_financial_health(raw["fundamentals"])
+    year_scores = score_financial_health_multiyear(raw["fundamentals"], raw["years"])
 
     payload = {
         "ticker":       raw["ticker"],
@@ -575,6 +576,7 @@ def financial_health_data() -> Response:
         "scores":       scoring["indicator_scores"],
         "group_scores": scoring["group_scores"],
         "weighted_100": scoring["weighted_100"],
+        "year_scores":  year_scores,
         "cached":       False,
     }
     _fh_data_cache[ticker] = {"payload": payload, "raw": raw, "scoring": scoring, "cached_at": _time.time()}

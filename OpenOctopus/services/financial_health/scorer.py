@@ -580,3 +580,38 @@ def score_financial_health(funda: Dict[str, List]) -> Dict[str, Any]:
         "group_scores": group_scores,
         "weighted_100": round(weighted_100, 1),
     }
+
+
+def score_financial_health_multiyear(funda: Dict[str, List], years: List) -> List[Dict]:
+    """Compute Financial Health scores for each year by slicing data series.
+
+    Args:
+        funda: {metric: [val_yr0, val_yr1, ...]} newest-first from fetcher
+        years: [2024, 2023, 2022, ...] newest-first, aligned with funda series
+
+    Returns:
+        List of {year, weighted_100, indicator_scores, group_scores}, newest-first.
+        weighted_100 is None if year has no data.
+    """
+    results = []
+    for i, year in enumerate(years):
+        # Shift each metric's series so that year[i] becomes the "latest"
+        shifted = {k: (v[i:] if isinstance(v, list) else v) for k, v in funda.items()}
+        # Check if there's any meaningful data for this year
+        has_data = any(len(v[i:]) > 0 for v in funda.values() if isinstance(v, list))
+        if not has_data:
+            results.append({
+                "year": year,
+                "weighted_100": None,
+                "indicator_scores": {},
+                "group_scores": {},
+            })
+            continue
+        scoring = score_financial_health(shifted)
+        results.append({
+            "year": year,
+            "weighted_100": scoring["weighted_100"],
+            "indicator_scores": scoring["indicator_scores"],
+            "group_scores": scoring["group_scores"],
+        })
+    return results

@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260508i"></script>
+<script src="/static/i18n.js?v=20260509a"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -1102,6 +1102,7 @@
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
+              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.score">Score</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
@@ -1144,7 +1145,7 @@
       </div>
 
       <!-- Score summary card -->
-      <div id="fh-score-card" class="hidden mb-6 p-5 bg-surface-container rounded-xl border border-outline-variant">
+        <div id="fh-score-card" class="hidden mb-6 p-5 bg-surface-container rounded-xl border border-outline-variant">
         <div class="flex flex-wrap items-center gap-6">
           <div class="text-center">
             <div id="fh-score-big" class="font-headline text-5xl font-extrabold text-primary">—</div>
@@ -1159,6 +1160,11 @@
             <div id="fh-company-name" class="font-semibold text-[12px] text-on-surface"></div>
             <div id="fh-sector-info"></div>
           </div>
+        </div>
+        <!-- Year trend mini chart -->
+        <div id="fh-year-trend" class="hidden mt-4 pt-3 border-t border-outline-variant/30">
+          <div class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2">5-Year Score Trend</div>
+          <div id="fh-year-trend-bars" class="flex items-end gap-2 h-12"></div>
         </div>
       </div>
 
@@ -3862,10 +3868,11 @@
     const loadingCell = '<span class="text-on-surface-variant/40 animate-pulse">⟳</span>';
 
     tbody.innerHTML = sorted.map(item => {
+      const safeId = item.ticker.replace(/[^a-zA-Z0-9]/g, '_');
       if (item._loading) {
         return `<tr class="border-b border-outline-variant/10 opacity-60">
           <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
-          <td colspan="9" class="py-2 text-on-surface-variant text-[9px] italic">${loadingCell} ${I18N ? I18N.t('backlog.refreshing') : 'Refreshing...'}</td>
+          <td colspan="10" class="py-2 text-on-surface-variant text-[9px] italic">${loadingCell} ${I18N ? I18N.t('backlog.refreshing') : 'Refreshing...'}</td>
           <td class="py-2 text-center">
             <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
               <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -3876,7 +3883,7 @@
       if (item.error) {
         return `<tr class="border-b border-outline-variant/20 bg-red-50/40">
           <td class="pr-3 py-2 font-extrabold text-primary">${_esc(item.ticker)}</td>
-          <td colspan="9" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
+          <td colspan="10" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
           <td class="py-2 text-center">
             <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
               <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -3888,6 +3895,7 @@
         <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
         <td class="pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
         <td class="pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
+        <td id="bscore-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.price)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
@@ -3902,6 +3910,11 @@
         </td>
       </tr>`;
     }).join('');
+
+    // Kick off async FH score fetch for all loaded rows
+    sorted.filter(item => !item._loading && !item.error).forEach(item => {
+      _fetchBacklogScore(item.ticker);
+    });
 
     // Bind events after innerHTML
     tbody.querySelectorAll('.backlog-delete-btn').forEach(btn => {
@@ -3924,6 +3937,52 @@
         renderBacklogTable(window._ooBacklogData);
       });
     });
+  }
+
+  // ── Backlog Score async fetch ────────────────────────────────────────────
+  function _fetchBacklogScore(ticker) {
+    const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+    const cell = document.getElementById('bscore-' + safeId);
+    if (!cell) return;
+
+    // Show loading spinner
+    cell.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
+
+    // Check localStorage cache (same key pattern as FH page: oo_fh_{ticker})
+    try {
+      const raw = localStorage.getItem('oo_fh_' + ticker);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.weighted_100 != null) {
+          _updateScoreCell(cell, d);
+          return;
+        }
+      }
+    } catch(e) {}
+
+    // Fetch from API
+    fetch('/api/financial_health/data?ticker=' + encodeURIComponent(ticker))
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (!d || d.error) { cell.textContent = '—'; return; }
+        try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify(d)); } catch(e) {}
+        _updateScoreCell(cell, d);
+      })
+      .catch(function() { cell.textContent = '—'; });
+  }
+
+  function _updateScoreCell(cell, d) {
+    const score = d.weighted_100;
+    if (score == null) { cell.textContent = '—'; return; }
+    const colorCls = score >= 70 ? 'text-emerald-600' : score >= 45 ? 'text-amber-500' : 'text-red-500';
+    const ys = d.year_scores || [];
+    let deltaHtml = '';
+    if (ys.length >= 2 && ys[0] && ys[0].weighted_100 != null && ys[1] && ys[1].weighted_100 != null) {
+      const delta = ys[0].weighted_100 - ys[1].weighted_100;
+      const dCls = delta >= 0 ? 'text-emerald-500' : 'text-red-400';
+      deltaHtml = '<span class="' + dCls + ' text-[8px] ml-0.5">' + (delta >= 0 ? '↑' : '↓') + Math.abs(delta).toFixed(0) + '</span>';
+    }
+    cell.innerHTML = '<span class="' + colorCls + ' font-semibold">' + score.toFixed(0) + '</span>' + deltaHtml;
   }
 
   // Manual add handler
@@ -4230,9 +4289,10 @@
     return fallback;
   }
 
-  function renderScoreGroups(groupScores) {
+  function renderScoreGroups(groupScores, yearScores) {
     const container = document.getElementById('fh-score-groups');
     if (!container) return;
+    const ys = yearScores || [];
 
     const html = Object.entries(groupScores).map(([group, data]) => {
       const color = _GROUP_COLORS[group] || '#888';
@@ -4243,10 +4303,25 @@
         const indPct = ind.pct || 0;
         const scoreColor = ind.score > 0 ? '#22c55e' : ind.score < 0 ? '#ef4444' : '#94a3b8';
         const scoreClass = ind.score > 0 ? 'fh-val-pos' : ind.score < 0 ? 'fh-val-neg' : 'text-on-surface-variant/50';
+
+        // Per-year score squares (newest right = chronological order)
+        let yearDots = '';
+        if (ys.length > 0) {
+          const dots = [...ys].reverse().map(y => {
+            if (!y || !y.indicator_scores) return '<span class="inline-block w-3 h-3 rounded-sm bg-surface-container-high mx-px" title="—"></span>';
+            const sc = y.indicator_scores[ind.name];
+            if (sc == null) return '<span class="inline-block w-3 h-3 rounded-sm bg-surface-container-high mx-px" title="—"></span>';
+            const dotCol = sc > 0 ? 'bg-emerald-400' : sc < 0 ? 'bg-red-400' : 'bg-slate-300';
+            return `<span class="inline-block w-3 h-3 rounded-sm ${dotCol} mx-px" title="${y.year}: ${sc}"></span>`;
+          }).join('');
+          yearDots = `<span class="flex items-center ml-1">${dots}</span>`;
+        }
+
         return `<div class="fh-ind-row">
           <span class="fh-ind-name">${ind.name.replace(/_r$/, '').replace(/_/g, ' ')}</span>
           <div class="fh-ind-track"><div class="fh-ind-fill" style="width:${indPct}%;background:${scoreColor};"></div></div>
           <span class="fh-ind-score ${scoreClass}">${ind.score}/${ind.max}</span>
+          ${yearDots}
         </div>`;
       }).join('');
 
@@ -4295,6 +4370,34 @@
         <div class="fh-group-track"><div class="fh-group-fill" style="width:${pct}%;background:${color}"></div></div>
         <span class="fh-group-pct">${pct}%</span>`;
     });
+
+    // Year trend mini bar chart
+    const ys = data.year_scores || [];
+    const trendWrap = document.getElementById('fh-year-trend');
+    const trendBars = document.getElementById('fh-year-trend-bars');
+    if (trendWrap && trendBars && ys.length > 0) {
+      const validYs = ys.filter(y => y.weighted_100 != null);
+      if (validYs.length > 0) {
+        _showHide('fh-year-trend', true);
+        const maxScore = Math.max(...validYs.map(y => y.weighted_100), 60);
+        const BAR_H = 40; // max bar height px
+        trendBars.innerHTML = [...ys].reverse().map(y => {
+          if (y.weighted_100 == null) return `<div class="flex flex-col items-center gap-0.5">
+            <div class="w-8 text-[8px] text-on-surface-variant/40 text-center">—</div>
+            <div class="text-[8px] text-on-surface-variant/40">${y.year}</div>
+          </div>`;
+          const h = Math.max(4, Math.round((y.weighted_100 / maxScore) * BAR_H));
+          const col = y.weighted_100 >= 70 ? '#22c55e' : y.weighted_100 >= 45 ? '#f59e0b' : '#ef4444';
+          return `<div class="flex flex-col items-center gap-0.5" title="${y.year}: ${y.weighted_100}">
+            <div class="text-[8px] font-semibold" style="color:${col}">${y.weighted_100.toFixed(0)}</div>
+            <div class="w-8 rounded-t transition-all" style="height:${h}px;background:${col};opacity:0.75;"></div>
+            <div class="text-[8px] text-on-surface-variant/60">${y.year}</div>
+          </div>`;
+        }).join('');
+      } else {
+        _showHide('fh-year-trend', false);
+      }
+    }
   }
 
   // ── Main data load ──────────────────────────────────────────────────
@@ -4342,7 +4445,7 @@
 
     renderScoreCard(data);
     renderFundamentalsTable(data.fundamentals || {}, data.years || []);
-    renderScoreGroups(data.group_scores || {});
+    renderScoreGroups(data.group_scores || {}, data.year_scores || []);
   }
 
   // ── LLM Summary ────────────────────────────────────────────────────
@@ -4571,7 +4674,7 @@
 </script>
 
   <!-- ══════════════════════════════ SUPPLY CHAIN PAGE ══════════════════════════════ -->
-  <div id="page-supply-chain" class="page-section">
+  <div id="page-supply-chain" class="page-section overflow-x-hidden">
     <div class="p-8 max-w-7xl mx-auto">
       <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="sc.label">Screener · Supply Chain</p>
       <h2 class="font-headline text-2xl font-extrabold text-primary mb-1" data-i18n="sc.title">Cross-company Supply Chain</h2>
@@ -4611,8 +4714,8 @@
                 <tr class="bg-surface-container-high text-on-surface-variant uppercase text-[9px] tracking-wider">
                   <th class="text-left px-4 py-2" data-i18n="sc.col.ticker">Ticker</th>
                   <th class="text-left px-4 py-2" data-i18n="sc.col.name">Company</th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation</th>
-                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="relation">↕</span></th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier <span class="sc-sort-arrow text-[8px] cursor-pointer select-none" data-sc-sort="tier">↕</span></th>
                   <th class="text-left px-4 py-2" data-i18n="sc.col.direction">Signal</th>
                   <th class="text-left px-4 py-2 max-w-xs" data-i18n="sc.col.reason">Read-through Reason</th>
                 </tr>
@@ -4625,7 +4728,7 @@
         <!-- Bottom: Graph + Node Analysis panel side-by-side -->
         <div class="flex gap-4 flex-wrap lg:flex-nowrap">
           <!-- SVG Graph -->
-          <div class="flex-1 min-w-[340px] bg-surface-container rounded-xl border border-outline-variant p-4">
+          <div class="flex-1 min-w-0 bg-surface-container rounded-xl border border-outline-variant p-4">
             <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.graph.title">Causal Graph</h3>
             <p class="text-[10px] text-on-surface-variant/70 mb-3" data-i18n="sc.graph.hint">Click a node to trigger read-through analysis</p>
             <div id="sc-graph-container" style="width:100%;height:420px;position:relative;overflow:hidden;"></div>
@@ -4671,6 +4774,9 @@
   let _scCurrentCenter = {};
   let _scCurrentNodes  = [];
   let _scCurrentEdges  = [];
+  let _scSortKey       = null;
+  let _scSortDir       = 'asc';
+  let _scSortListenerBound = false;
 
   function _t(key, fallback) {
     return (typeof I18N !== 'undefined' && I18N.t) ? (I18N.t(key) || fallback) : fallback;
@@ -4698,10 +4804,49 @@
   }
 
   // ── Table ──────────────────────────────────────────────────────────────────
+  function _sortedNodes(nodes) {
+    if (!_scSortKey) return nodes;
+    return [...nodes].sort((a, b) => {
+      let av = a[_scSortKey], bv = b[_scSortKey];
+      if (_scSortKey === 'tier') { av = parseInt(av) || 99; bv = parseInt(bv) || 99; }
+      let cmp = 0;
+      if (av == null && bv == null) cmp = 0;
+      else if (av == null) cmp = 1;
+      else if (bv == null) cmp = -1;
+      else if (typeof av === 'string') cmp = av.localeCompare(bv);
+      else cmp = av - bv;
+      return _scSortDir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  function _bindScSortListeners() {
+    if (_scSortListenerBound) return;
+    _scSortListenerBound = true;
+    document.querySelectorAll('[data-sc-sort]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = el.dataset.scSort;
+        if (_scSortKey === key) {
+          _scSortDir = _scSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          _scSortKey = key;
+          _scSortDir = 'asc';
+        }
+        _renderTable({ nodes: _scCurrentNodes });
+        // Update arrows
+        document.querySelectorAll('[data-sc-sort]').forEach(a => {
+          a.textContent = a.dataset.scSort === _scSortKey
+            ? (_scSortDir === 'asc' ? '↑' : '↓')
+            : '↕';
+        });
+      });
+    });
+  }
+
   function _renderTable(data) {
     const tbody = document.getElementById('sc-table-body');
     if (!tbody) return;
-    const nodes = data.nodes || [];
+    const nodes = _sortedNodes(data.nodes || []);
     tbody.innerHTML = nodes.map(n => {
       const direction = _numericDirection(n.direction);
       const badge = _directionBadge(direction);
@@ -4752,9 +4897,12 @@
     });
 
     const NODE_R = 26, CENTER_R = 34;
-    function dirColor(direction) {
-      const d = _numericDirection(direction);
-      return d === 'positive' ? '#10b981' : d === 'negative' ? '#f43f5e' : '#94a3b8';
+    // T3: color by relation + tier (not signal direction)
+    function relTierColor(relation, tier) {
+      const t = parseInt(tier) || 1;
+      if (relation === 'upstream')   return t <= 1 ? '#3b82f6' : '#93c5fd';
+      if (relation === 'downstream') return t <= 1 ? '#10b981' : '#6ee7b7';
+      return '#94a3b8'; // peer or unknown
     }
 
     const edgesSvg = (data.edges || []).map(e => {
@@ -4768,10 +4916,10 @@
     const nodesSvg = nodes.map(n => {
       const pos = positions[n.ticker];
       if (!pos) return '';
-      const col = dirColor(n.direction);
+      const col = relTierColor(n.relation, n.tier);
       const label = n.name.length > 14 ? n.name.slice(0,13) + '…' : n.name;
       return `<g class="sc-graph-node" data-ticker="${n.ticker}" style="cursor:pointer">
-        <circle cx="${pos.x}" cy="${pos.y}" r="${NODE_R}" fill="${col}" fill-opacity="0.15" stroke="${col}" stroke-width="2"/>
+        <circle cx="${pos.x}" cy="${pos.y}" r="${NODE_R}" fill="${col}" fill-opacity="0.18" stroke="${col}" stroke-width="2"/>
         <text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="bold" fill="${col}">${n.ticker}</text>
         <text x="${pos.x}" y="${pos.y+NODE_R+11}" text-anchor="middle" font-size="8" fill="#64748b">${label}</text>
       </g>`;
@@ -4783,7 +4931,8 @@
       <text x="${CX}" y="${CY+CENTER_R+11}" text-anchor="middle" font-size="8" fill="#64748b">${(center.name||'').slice(0,18)}</text>
     </g>`;
 
-    container.innerHTML = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    // T1: use viewBox so SVG scales to container width without overflow
+    container.innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs><marker id="sc-arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
         <path d="M0,0 L8,4 L0,8 Z" fill="#cbd5e1"/></marker></defs>
       ${edgesSvg}${nodesSvg}${centerSvg}</svg>`;
@@ -4883,6 +5032,8 @@
     _show('sc-panel-placeholder'); _hide('sc-panel-content'); _hide('sc-panel-loading'); _hide('sc-panel-error');
     _show('sc-results');
     _setStatus(`${_scCurrentNodes.length} ${_t('sc.status.nodes', 'companies found')}`);
+    // Bind sort listeners once after results are visible
+    setTimeout(_bindScSortListeners, 0);
   }
 
   // ── Init ───────────────────────────────────────────────────────────────────
@@ -4913,6 +5064,10 @@
       _scCurrentTicker = autoTicker.toUpperCase();
       if (input) input.value = _scCurrentTicker;
       _scDiscover(_scCurrentTicker);
+    }
+    // T1: Re-render graph when returning to SC page (container width may have changed)
+    if (_scCurrentNodes.length > 0) {
+      setTimeout(() => _renderGraph({ center: _scCurrentCenter, nodes: _scCurrentNodes, edges: _scCurrentEdges }), 50);
     }
   };
 
