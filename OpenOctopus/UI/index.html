@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260508h"></script>
+<script src="/static/i18n.js?v=20260508i"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -198,6 +198,10 @@
     <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="financial-health">
       <span class="material-symbols-outlined mr-3 text-[18px]">monitor_heart</span>
       <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.financial_health">Financial Health</span>
+    </a>
+    <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="supply-chain">
+      <span class="material-symbols-outlined mr-3 text-[18px]">account_tree</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.supply_chain">Supply Chain</span>
     </a>
   </nav>
 
@@ -1288,6 +1292,7 @@
     if (page === 'documents') loadDocumentLibrary();
     if (page === 'backlog') loadBacklogPage();
     if (page === 'financial-health') loadFinancialHealthPage();
+    if (page === 'supply-chain' && typeof window.loadSupplyChainPage === 'function') window.loadSupplyChainPage();
   }
 
   async function fetchJson(url) {
@@ -4563,6 +4568,355 @@
 
 })();
 
+</script>
+
+  <!-- ══════════════════════════════ SUPPLY CHAIN PAGE ══════════════════════════════ -->
+  <div id="page-supply-chain" class="page-section">
+    <div class="p-8 max-w-7xl mx-auto">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="sc.label">Screener · Supply Chain</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-1" data-i18n="sc.title">Cross-company Supply Chain</h2>
+      <p class="text-[11px] text-on-surface-variant mb-6" data-i18n="sc.subtitle">Earnings Read-through Engine &amp; Supply Chain Causal Graph</p>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center gap-3 mb-6">
+        <input id="sc-ticker-input" type="text" autocomplete="off" spellcheck="false"
+          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-32 focus:outline-none focus:ring-1 focus:ring-primary"
+          data-i18n-placeholder="sc.input.placeholder" placeholder="Ticker, e.g. TSMC">
+        <button id="sc-analyze-btn"
+          class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+          data-i18n="sc.btn.analyze">Analyze</button>
+        <span id="sc-status" class="text-[10px] text-on-surface-variant/60 italic"></span>
+      </div>
+
+      <!-- Loading / Error -->
+      <div id="sc-loading" class="hidden flex items-center gap-2 text-[11px] text-on-surface-variant py-4">
+        <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+        <span data-i18n="sc.loading">Discovering supply chain…</span>
+      </div>
+      <div id="sc-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg">
+        <p class="text-[11px] text-rose-700" id="sc-error-msg"></p>
+      </div>
+
+      <!-- Results -->
+      <div id="sc-results" class="hidden">
+        <!-- Top: Table -->
+        <div class="mb-6 bg-surface-container rounded-xl border border-outline-variant overflow-hidden">
+          <div class="px-5 py-3 border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-bold text-[12px] text-on-surface" data-i18n="sc.table.title">Supply Chain Read-through</h3>
+            <span id="sc-center-badge" class="px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary rounded-full"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-[11px]">
+              <thead>
+                <tr class="bg-surface-container-high text-on-surface-variant uppercase text-[9px] tracking-wider">
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.ticker">Ticker</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.name">Company</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.relation">Relation</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.tier">Tier</th>
+                  <th class="text-left px-4 py-2" data-i18n="sc.col.direction">Signal</th>
+                  <th class="text-left px-4 py-2 max-w-xs" data-i18n="sc.col.reason">Read-through Reason</th>
+                </tr>
+              </thead>
+              <tbody id="sc-table-body" class="divide-y divide-outline-variant/30"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bottom: Graph + Node Analysis panel side-by-side -->
+        <div class="flex gap-4 flex-wrap lg:flex-nowrap">
+          <!-- SVG Graph -->
+          <div class="flex-1 min-w-[340px] bg-surface-container rounded-xl border border-outline-variant p-4">
+            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.graph.title">Causal Graph</h3>
+            <p class="text-[10px] text-on-surface-variant/70 mb-3" data-i18n="sc.graph.hint">Click a node to trigger read-through analysis</p>
+            <div id="sc-graph-container" style="width:100%;height:420px;position:relative;overflow:hidden;"></div>
+          </div>
+
+          <!-- Node analysis panel -->
+          <div class="w-full lg:w-80 bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col">
+            <h3 class="font-bold text-[12px] text-on-surface mb-3" data-i18n="sc.panel.title">Node Analysis</h3>
+            <div id="sc-panel-placeholder" class="flex-1 flex items-center justify-center text-[10px] text-on-surface-variant/50 text-center px-4">
+              <span data-i18n="sc.panel.hint">Click a node in the graph to see read-through analysis</span>
+            </div>
+            <div id="sc-panel-loading" class="hidden flex-1 flex items-center justify-center gap-2 text-[11px] text-on-surface-variant">
+              <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+              <span data-i18n="sc.panel.loading">Analyzing…</span>
+            </div>
+            <div id="sc-panel-content" class="hidden flex-1 flex-col gap-3 overflow-y-auto">
+              <div class="flex items-center gap-2">
+                <span id="sc-panel-ticker" class="font-bold text-[13px] text-primary"></span>
+                <span id="sc-panel-name" class="text-[10px] text-on-surface-variant"></span>
+                <span id="sc-panel-direction-badge" class="ml-auto px-2 py-0.5 text-[10px] font-bold rounded-full"></span>
+              </div>
+              <p id="sc-panel-summary" class="text-[11px] text-on-surface leading-relaxed"></p>
+              <p id="sc-panel-capex" class="text-[10px] text-on-surface-variant italic border-l-2 border-primary/30 pl-2"></p>
+              <ul id="sc-panel-signals" class="space-y-1 mt-1"></ul>
+              <div id="sc-panel-error" class="hidden p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-700" id="sc-panel-error-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+// ══════════════════════ SUPPLY CHAIN IIFE ════════════════════════════════════
+(function () {
+  'use strict';
+
+  const SC_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  const SC_NODE_TTL_MS  = 30 * 60 * 1000;
+
+  let _scCurrentTicker = '';
+  let _scCurrentCenter = {};
+  let _scCurrentNodes  = [];
+  let _scCurrentEdges  = [];
+
+  function _t(key, fallback) {
+    return (typeof I18N !== 'undefined' && I18N.t) ? (I18N.t(key) || fallback) : fallback;
+  }
+  function _lang() {
+    return (typeof I18N !== 'undefined' && I18N.lang) ? I18N.lang : 'en';
+  }
+  function _show(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
+  function _hide(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
+  function _setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+  function _setStatus(msg) { _setText('sc-status', msg); }
+
+  function _directionBadge(direction) {
+    if (direction === 'positive')
+      return { label: '▲ ' + _t('sc.direction.positive', 'Bullish'), cls: 'bg-emerald-100 text-emerald-700' };
+    if (direction === 'negative')
+      return { label: '▼ ' + _t('sc.direction.negative', 'Bearish'), cls: 'bg-rose-100 text-rose-700' };
+    return { label: '— ' + _t('sc.direction.neutral', 'Neutral'), cls: 'bg-slate-100 text-slate-500' };
+  }
+
+  function _numericDirection(dir) {
+    if (dir === 1 || dir === 'positive') return 'positive';
+    if (dir === -1 || dir === 'negative') return 'negative';
+    return 'neutral';
+  }
+
+  // ── Table ──────────────────────────────────────────────────────────────────
+  function _renderTable(data) {
+    const tbody = document.getElementById('sc-table-body');
+    if (!tbody) return;
+    const nodes = data.nodes || [];
+    tbody.innerHTML = nodes.map(n => {
+      const direction = _numericDirection(n.direction);
+      const badge = _directionBadge(direction);
+      const relIcon = n.relation === 'upstream' ? '⬆' : n.relation === 'downstream' ? '⬇' : '↔';
+      const relLabel = _t('sc.rel.' + n.relation, n.relation);
+      return `<tr class="hover:bg-surface-container-high cursor-pointer sc-table-row" data-ticker="${n.ticker}">
+        <td class="px-4 py-2 font-bold text-primary">${n.ticker}</td>
+        <td class="px-4 py-2 text-on-surface">${n.name}</td>
+        <td class="px-4 py-2 text-on-surface-variant">${relIcon} ${relLabel}</td>
+        <td class="px-4 py-2 text-on-surface-variant text-center">${n.tier}</td>
+        <td class="px-4 py-2"><span class="px-2 py-0.5 text-[9px] font-bold rounded-full ${badge.cls}">${badge.label}</span></td>
+        <td class="px-4 py-2 text-on-surface-variant max-w-xs">${n.reason}</td>
+      </tr>`;
+    }).join('');
+    tbody.querySelectorAll('.sc-table-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const node = _scCurrentNodes.find(n => n.ticker === row.dataset.ticker);
+        if (node) _selectNode(node);
+      });
+    });
+  }
+
+  // ── SVG Graph ──────────────────────────────────────────────────────────────
+  function _renderGraph(data) {
+    const container = document.getElementById('sc-graph-container');
+    if (!container) return;
+    const W = container.offsetWidth || 560;
+    const H = 420;
+    const CX = W / 2, CY = H / 2;
+    const center = data.center || {};
+    const nodes  = data.nodes  || [];
+    const upstream   = nodes.filter(n => n.relation === 'upstream');
+    const downstream = nodes.filter(n => n.relation === 'downstream');
+    const peers      = nodes.filter(n => n.relation === 'peer');
+    const positions  = {};
+    positions[center.ticker] = { x: CX, y: CY };
+
+    function layoutCol(list, x, totalH) {
+      const step = totalH / (list.length + 1);
+      list.forEach((n, i) => { positions[n.ticker] = { x, y: step * (i + 1) }; });
+    }
+    layoutCol(upstream,   W * 0.15, H);
+    layoutCol(downstream, W * 0.85, H);
+    peers.forEach((n, i) => {
+      const angle = (Math.PI * (i + 1)) / (peers.length + 1);
+      const r = Math.min(W, H) * 0.28;
+      positions[n.ticker] = { x: CX + r * Math.cos(angle - Math.PI / 2), y: CY - r * Math.sin(angle) * 0.6 };
+    });
+
+    const NODE_R = 26, CENTER_R = 34;
+    function dirColor(direction) {
+      const d = _numericDirection(direction);
+      return d === 'positive' ? '#10b981' : d === 'negative' ? '#f43f5e' : '#94a3b8';
+    }
+
+    const edgesSvg = (data.edges || []).map(e => {
+      const s = positions[e.source], t = positions[e.target];
+      if (!s || !t) return '';
+      const dx = t.x - s.x, dy = t.y - s.y, len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const ox = (dx/len)*NODE_R, oy = (dy/len)*NODE_R;
+      return `<line x1="${s.x+ox}" y1="${s.y+oy}" x2="${t.x-ox}" y2="${t.y-oy}" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#sc-arr)" opacity="0.7"/>`;
+    }).join('');
+
+    const nodesSvg = nodes.map(n => {
+      const pos = positions[n.ticker];
+      if (!pos) return '';
+      const col = dirColor(n.direction);
+      const label = n.name.length > 14 ? n.name.slice(0,13) + '…' : n.name;
+      return `<g class="sc-graph-node" data-ticker="${n.ticker}" style="cursor:pointer">
+        <circle cx="${pos.x}" cy="${pos.y}" r="${NODE_R}" fill="${col}" fill-opacity="0.15" stroke="${col}" stroke-width="2"/>
+        <text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="bold" fill="${col}">${n.ticker}</text>
+        <text x="${pos.x}" y="${pos.y+NODE_R+11}" text-anchor="middle" font-size="8" fill="#64748b">${label}</text>
+      </g>`;
+    }).join('');
+
+    const centerSvg = `<g style="cursor:default">
+      <circle cx="${CX}" cy="${CY}" r="${CENTER_R}" fill="#6366f1" fill-opacity="0.2" stroke="#6366f1" stroke-width="2.5"/>
+      <text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" fill="#6366f1">${center.ticker}</text>
+      <text x="${CX}" y="${CY+CENTER_R+11}" text-anchor="middle" font-size="8" fill="#64748b">${(center.name||'').slice(0,18)}</text>
+    </g>`;
+
+    container.innerHTML = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="sc-arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#cbd5e1"/></marker></defs>
+      ${edgesSvg}${nodesSvg}${centerSvg}</svg>`;
+
+    container.querySelectorAll('.sc-graph-node').forEach(g => {
+      g.addEventListener('click', () => {
+        const node = _scCurrentNodes.find(n => n.ticker === g.dataset.ticker);
+        if (node) _selectNode(node);
+      });
+    });
+  }
+
+  // ── Node analysis ──────────────────────────────────────────────────────────
+  function _selectNode(node) {
+    _hide('sc-panel-placeholder');
+    _hide('sc-panel-content');
+    _hide('sc-panel-error');
+    _show('sc-panel-loading');
+
+    const lang = _lang();
+    const cacheKey = `oo_sc_node_${_scCurrentTicker}_${node.ticker}_${lang}`;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj.ts < SC_NODE_TTL_MS) { _hide('sc-panel-loading'); _renderNodePanel(node, obj.data); return; }
+      }
+    } catch(e) {}
+
+    fetch('/api/supply_chain/analyze_node', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ center_ticker: _scCurrentTicker, center_name: _scCurrentCenter.name || _scCurrentTicker, node_ticker: node.ticker, node_name: node.name, relation: node.relation, lang }),
+    }).then(async res => {
+      let data; try { data = await res.json(); } catch(_) { data = {}; }
+      _hide('sc-panel-loading');
+      if (!res.ok || data.error) {
+        const errEl = document.getElementById('sc-panel-error');
+        if (errEl) { errEl.textContent = data.error || `Error ${res.status}`; errEl.classList.remove('hidden'); }
+        return;
+      }
+      try { localStorage.setItem(cacheKey, JSON.stringify({ts: Date.now(), data})); } catch(e) {}
+      _renderNodePanel(node, data);
+    }).catch(e => {
+      _hide('sc-panel-loading');
+      const errEl = document.getElementById('sc-panel-error');
+      if (errEl) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+    });
+  }
+
+  function _renderNodePanel(node, data) {
+    _setText('sc-panel-ticker', node.ticker);
+    _setText('sc-panel-name', node.name);
+    _setText('sc-panel-summary', data.summary || '');
+    const capexEl = document.getElementById('sc-panel-capex');
+    if (capexEl) { capexEl.textContent = data.capex_signal || ''; capexEl.classList.toggle('hidden', !data.capex_signal); }
+    const badge = _directionBadge(data.impact_direction || 'neutral');
+    const badgeEl = document.getElementById('sc-panel-direction-badge');
+    if (badgeEl) { badgeEl.textContent = badge.label; badgeEl.className = `ml-auto px-2 py-0.5 text-[10px] font-bold rounded-full ${badge.cls}`; }
+    const signals = document.getElementById('sc-panel-signals');
+    if (signals) signals.innerHTML = (data.signals||[]).map(s => `<li class="text-[10px] text-on-surface-variant flex gap-1"><span class="text-primary">•</span><span>${s}</span></li>`).join('');
+    const el = document.getElementById('sc-panel-content');
+    if (el) { el.classList.remove('hidden'); el.style.display = 'flex'; el.style.flexDirection = 'column'; }
+  }
+
+  // ── Discover ───────────────────────────────────────────────────────────────
+  async function _scDiscover(ticker) {
+    const lang = _lang();
+    const cacheKey = `oo_sc_discover_${ticker}_${lang}`;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) { const obj = JSON.parse(raw); if (Date.now() - obj.ts < SC_CACHE_TTL_MS) { _onDiscoverResult(obj.data); return; } }
+    } catch(e) {}
+
+    _show('sc-loading'); _hide('sc-error'); _hide('sc-results'); _setStatus('');
+    try {
+      const res = await fetch('/api/supply_chain/discover', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ticker, lang}) });
+      let data; try { data = await res.json(); } catch(_) { data = {}; }
+      _hide('sc-loading');
+      if (!res.ok || (data.error && !(data.nodes && data.nodes.length))) {
+        _setText('sc-error-msg', data.error || `Server error ${res.status}`); _show('sc-error'); return;
+      }
+      try { localStorage.setItem(cacheKey, JSON.stringify({ts: Date.now(), data})); } catch(e) {}
+      _onDiscoverResult(data);
+    } catch(e) {
+      _hide('sc-loading'); _setText('sc-error-msg', e.message); _show('sc-error');
+    }
+  }
+
+  function _onDiscoverResult(data) {
+    _scCurrentCenter = data.center || { ticker: _scCurrentTicker, name: _scCurrentTicker };
+    _scCurrentNodes  = data.nodes  || [];
+    _scCurrentEdges  = data.edges  || [];
+    const badgeEl = document.getElementById('sc-center-badge');
+    if (badgeEl) badgeEl.textContent = `${_scCurrentCenter.ticker} · ${_scCurrentCenter.name}`;
+    _renderTable(data);
+    _renderGraph(data);
+    _show('sc-panel-placeholder'); _hide('sc-panel-content'); _hide('sc-panel-loading'); _hide('sc-panel-error');
+    _show('sc-results');
+    _setStatus(`${_scCurrentNodes.length} ${_t('sc.status.nodes', 'companies found')}`);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.loadSupplyChainPage = function(autoTicker) {
+    const btn = document.getElementById('sc-analyze-btn');
+    if (btn && !btn._scWired) {
+      btn._scWired = true;
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('sc-ticker-input');
+        const ticker = ((input && input.value) || '').trim().toUpperCase();
+        if (!ticker) return;
+        _scCurrentTicker = ticker;
+        _scDiscover(ticker);
+      });
+    }
+    const input = document.getElementById('sc-ticker-input');
+    if (input && !input._scWired) {
+      input._scWired = true;
+      input.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const ticker = input.value.trim().toUpperCase();
+        if (!ticker) return;
+        _scCurrentTicker = ticker;
+        _scDiscover(ticker);
+      });
+    }
+    if (autoTicker) {
+      _scCurrentTicker = autoTicker.toUpperCase();
+      if (input) input.value = _scCurrentTicker;
+      _scDiscover(_scCurrentTicker);
+    }
+  };
+
+})();
 </script>
 </body>
 </html>

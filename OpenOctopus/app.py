@@ -38,6 +38,8 @@ from services.backlog.search import search_ticker as backlog_search_ticker
 from services.financial_health.fetcher import fetch_financial_health
 from services.financial_health.scorer import score_financial_health
 from services.financial_health.llm import health_summary as fh_health_summary, drilldown_analysis as fh_drilldown_analysis
+from services.supply_chain.graph import discover_supply_chain as sc_discover
+from services.supply_chain.analyzer import analyze_node as sc_analyze_node
 from services.market.overview import build_market_overview
 from services.market.commodities import build_market_commodities
 from services.market.sentiment import build_market_sentiment
@@ -633,6 +635,96 @@ def financial_health_drilldown() -> Response:
         pass
 
     result = fh_drilldown_analysis(ticker, raw["fundamentals"], raw["years"], transcript_excerpt, lang)
+    return jsonify(result), 200
+
+
+
+# ── Supply Chain routes ────────────────────────────────────────────────────────
+
+_SC_DISCOVER_CACHE: dict = {}
+_SC_DISCOVER_TTL = 21600   # 6 hours — supply chain structure rarely changes
+_SC_ANALYZE_CACHE: dict = {}
+_SC_ANALYZE_TTL  = 1800    # 30 minutes
+
+
+@app.route("/api/supply_chain/discover", methods=["POST"])
+def supply_chain_discover() -> Response:
+    """LLM-powered supply chain discovery for a ticker."""
+    body   = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    lang   = (body.get("lang") or "en").strip().lower()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    cache_key = f"{ticker}:{lang}"
+    entry = _SC_DISCOVER_CACHE.get(cache_key)
+    if entry and (_time.time() - entry["cached_at"]) < _SC_DISCOVER_TTL:
+        return jsonify({**entry["data"], "cached": True}), 200
+
+    data = sc_discover(ticker, lang)
+    if data.get("error") and not data.get("nodes"):
+        return jsonify(data), 502
+
+    _SC_DISCOVER_CACHE[cache_key] = {"data": data, "cached_at": _time.time()}
+    return jsonify({**data, "cached": False}), 200
+
+
+@app.route("/api/supply_chain/analyze_node", methods=["POST"])
+def supply_chain_analyze_node() -> Response:
+    """LLM read-through analysis for a specific supply chain node."""
+    body          = request.get_json(silent=True) or {}
+    center_ticker = (body.get("center_ticker") or "").strip().upper()
+    center_name   = (body.get("center_name") or center_ticker).strip()
+    node_ticker   = (body.get("node_ticker") or "").strip().upper()
+    node_name     = (body.get("node_name") or node_ticker).strip()
+    relation      = (body.get("relation") or "peer").strip().lower()
+    lang          = (body.get("lang") or "en").strip().lower()
+    if not center_ticker or not node_ticker:
+        return jsonify({"error": "center_ticker and node_ticker are required"}), 400
+
+    cache_key = f"{center_ticker}:{node_ticker}:{lang}"
+    entry = _SC_ANALYZE_CACHE.get(cache_key)
+    if entry and (_time.time() - entry["cached_at"]) < _SC_ANALYZE_TTL:
+        return jsonify({**entry["data"], "cached": True}), 200
+
+    # Optional: pull transcript excerpt for the center company
+    transcript_excerpt = None
+    try:
+        from data_sources.transcripts.hf_cache import get_cached_transcript
+        tc = get_cached_transcript(center_ticker)
+        if "error" not in tc:
+            transcript_excerpt = tc.get("content_excerpt") or tc.get("content")
+            if transcript_excerpt:
+                transcript_excerpt = transcript_excerpt[:4000]
+    except Exception:
+        pass
+
+    # Optional: pull financial summary from FH cache
+    financial_summary = None
+    fh_entry = _fh_data_cache.get(center_ticker)
+    if fh_entry and fh_entry.get("raw"):
+        raw_fh = fh_entry["raw"]
+        funda  = raw_fh.get("fundamentals", {})
+        years  = raw_fh.get("years", [])
+        score  = fh_entry.get("scoring", {}).get("weighted_100")
+        lines  = [f"Health Score: {score}/100"] if score else []
+        for metric in ("revenueGrowth", "grossProfitMargin", "returnOnEquity", "freeCashFlowGrowth", "DebtToEquity"):
+            vals = funda.get(metric)
+            if vals:
+                try:
+                    v = float(vals[0])
+                    yr = years[0] if years else ""
+                    lines.append(f"  {metric} ({yr}): {v*100:.1f}%" if abs(v) < 50 else f"  {metric} ({yr}): {v:.2f}")
+                except Exception:
+                    pass
+        financial_summary = "\n".join(lines) if lines else None
+
+    result = sc_analyze_node(
+        center_ticker, center_name, node_ticker, node_name, relation,
+        transcript_excerpt, financial_summary, lang
+    )
+    if not result.get("error"):
+        _SC_ANALYZE_CACHE[cache_key] = {"data": result, "cached_at": _time.time()}
     return jsonify(result), 200
 
 
