@@ -229,6 +229,14 @@ const I18N = (() => {
       'doc.lib.empty':                'No cached documents found.',
       'doc.lib.no_summary':           'No summary available.',
       'doc.lib.char_count':           'chars',
+      'doc.lib.analyze':              'Analyze',
+      'doc.lib.analyzing':            'Analyzing transcript...',
+      'doc.lib.positive_signals':     'Positive Signals',
+      'doc.lib.negative_signals':     'Negative Signals',
+      'doc.lib.no_positive':          'No positive signals detected',
+      'doc.lib.no_negative':          'No negative signals detected',
+      'doc.lib.analyze_error':        'Analysis failed. ',
+      'doc.lib.retry':                'Retry',
       'doc.lib.count':                '{n} documents',
 
       // Loading states
@@ -587,6 +595,14 @@ const I18N = (() => {
       'doc.lib.empty':                'Keine gespeicherten Dokumente gefunden.',
       'doc.lib.no_summary':           'Keine Zusammenfassung verfügbar.',
       'doc.lib.char_count':           'Zeichen',
+      'doc.lib.analyze':              'Analysieren',
+      'doc.lib.analyzing':            'Analysiere Transkript...',
+      'doc.lib.positive_signals':     'Positive Signale',
+      'doc.lib.negative_signals':     'Negative Signale',
+      'doc.lib.no_positive':          'Keine positiven Signale erkannt',
+      'doc.lib.no_negative':          'Keine negativen Signale erkannt',
+      'doc.lib.analyze_error':        'Analyse fehlgeschlagen. ',
+      'doc.lib.retry':                'Wiederholen',
       'doc.lib.count':                '{n} Dokumente',
 
       // Loading states
@@ -947,6 +963,14 @@ const I18N = (() => {
       'doc.lib.empty':                '未找到已快取文件。',
       'doc.lib.no_summary':           '無可用摘要。',
       'doc.lib.char_count':           '字',
+      'doc.lib.analyze':              '分析',
+      'doc.lib.analyzing':            '分析中...',
+      'doc.lib.positive_signals':     '正面信號',
+      'doc.lib.negative_signals':     '負面信號',
+      'doc.lib.no_positive':          '未發現正面信號',
+      'doc.lib.no_negative':          '未發現負面信號',
+      'doc.lib.analyze_error':        '分析失敗。',
+      'doc.lib.retry':                '重試',
       'doc.lib.count':                '{n} 份文件',
 
       // Loading states

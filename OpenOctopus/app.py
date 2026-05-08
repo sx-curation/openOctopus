@@ -32,6 +32,7 @@ from services.dashboard.management import build_management_snapshot
 from services.dashboard.summary import build_dashboard_summary
 from services.documents.recent_filings import build_recent_filings
 from services.documents.library import build_document_library
+from services.documents.analyzer import analyze_transcript as analyze_doc_transcript
 from services.backlog.refresh import fetch_backlog_data
 from services.backlog.search import search_ticker as backlog_search_ticker
 from services.market.overview import build_market_overview
@@ -240,6 +241,25 @@ def documents_recent_filings() -> Response:
 def documents_library() -> Response:
     """Return all locally cached transcript entries for the Document Library tab."""
     return jsonify(build_document_library())
+
+
+@app.route("/api/documents/analyze", methods=["POST"])
+def documents_analyze() -> Response:
+    """Analyze a transcript with LLM and return positive/negative signals."""
+    body = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    lang = (body.get("lang") or "en").strip().lower()
+    if lang not in ("en", "de", "zh"):
+        lang = "en"
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+    try:
+        year = int(body["year"]) if body.get("year") is not None else None
+        quarter = int(body["quarter"]) if body.get("quarter") is not None else None
+    except (ValueError, TypeError):
+        return jsonify({"error": "year and quarter must be integers"}), 400
+    result = analyze_doc_transcript(ticker, year, quarter, lang)
+    return jsonify(result)
 
 
 # ── Backlog ─────────────────────────────────────────────────────────────────
