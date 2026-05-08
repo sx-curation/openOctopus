@@ -3602,6 +3602,9 @@
     }
     items.push({ ticker: t, market: market || 'manual', added_by: source || 'manual', added_at: _todayStr() });
     _saveBacklogItems(items);
+    // Invalidate cache so next visit to Backlog page fetches fresh data
+    window._ooBacklogData = null;
+    _backlogLastRefresh = 0;
     return true;
   }
   function _removeFromBacklog(ticker) {
@@ -3614,27 +3617,32 @@
     const statusEl = document.getElementById('backlog-status');
     const items = _getBacklogItems();
     if (!items.length) {
-      window._ooBacklogData = [];
+      window._ooBacklogData = null;   // reset cache so next add triggers fresh fetch
+      _backlogLastRefresh = 0;
       renderBacklogTable([]);
       return;
     }
     const tickers = items.map(x => x.ticker);
     const now = Date.now();
-    if (!forceRefresh && window._ooBacklogData && (now - _backlogLastRefresh) < 30000) {
-      renderBacklogTable(window._ooBacklogData);
-      return;
+
+    // Cache hit: only reuse if same ticker set AND within cooldown window
+    if (!forceRefresh && window._ooBacklogData && window._ooBacklogData.length && (now - _backlogLastRefresh) < 30000) {
+      const cachedTickers = new Set(window._ooBacklogData.map(d => d.ticker));
+      const sameSet = tickers.length === cachedTickers.size && tickers.every(t => cachedTickers.has(t));
+      if (sameSet) {
+        renderBacklogTable(window._ooBacklogData);
+        return;
+      }
     }
 
     // Phase 1: immediately render placeholder rows from localStorage (no prices yet)
-    if (!window._ooBacklogData) {
-      const placeholders = items.map(x => ({
-        ticker: x.ticker, name: '⟳', sector: '⟳',
-        price: null, vs_52w_low: null, w52_chg_pct: null,
-        w52_high: null, w52_low: null, ma10: null, ma50: null,
-        error: null, _loading: true,
-      }));
-      renderBacklogTable(placeholders);
-    }
+    const placeholders = items.map(x => ({
+      ticker: x.ticker, name: '⟳', sector: '⟳',
+      price: null, vs_52w_low: null, w52_chg_pct: null,
+      w52_high: null, w52_low: null, ma10: null, ma50: null,
+      error: null, _loading: true,
+    }));
+    renderBacklogTable(placeholders);
 
     // Phase 2: fetch live data and update
     if (statusEl) statusEl.textContent = I18N ? I18N.t('backlog.refreshing') : 'Refreshing...';
