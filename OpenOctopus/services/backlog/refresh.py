@@ -13,19 +13,11 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
-def _make_yf_session():
-    """Return a requests.Session for yfinance to avoid curl_cffi TLS issues on macOS."""
-    import requests
-    s = requests.Session()
-    s.headers.update({"User-Agent": "Mozilla/5.0"})
-    return s
-
-
 def _fetch_one(ticker: str) -> dict:
     """Fetch live data for a single ticker. Returns a dict; sets 'error' on failure.
 
-    Retries once with a fresh requests.Session on SSL/connection errors to work
-    around intermittent curl_cffi TLS failures on macOS.
+    Retries once on transient errors (SSL, connection reset, etc.).
+    yfinance manages its own curl_cffi session internally.
     """
     import yfinance as yf  # lazy import to keep module load fast
 
@@ -36,8 +28,7 @@ def _fetch_one(ticker: str) -> dict:
         if attempt > 0:
             time.sleep(1.5)
         try:
-            session = _make_yf_session()
-            yticker = yf.Ticker(t, session=session)
+            yticker = yf.Ticker(t)
             info = yticker.info or {}
 
             # Price fallback chain: regularMarketPrice → currentPrice → previousClose

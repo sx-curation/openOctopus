@@ -72,14 +72,11 @@ def fetch_financial_health(ticker: str) -> Dict[str, Any]:
         }
     """
     import yfinance as yf
-    import requests as _requests
     import pandas as pd
 
     t = ticker.upper().strip()
     try:
-        session = _requests.Session()
-        session.headers.update({"User-Agent": "Mozilla/5.0"})
-        stock = yf.Ticker(t, session=session)
+        stock = yf.Ticker(t)
 
         # ── pull raw statements ───────────────────────────────────────────
         income = stock.financials          # columns = dates (newest first)
