@@ -172,6 +172,9 @@ def _download_ticker(ticker: str) -> dict[str, Any]:
     with out_path.open("w", encoding="utf-8") as fh:
         for row in rows:
             symbol, year, quarter, date, content, structured_content, company_name = row
+            # Skip records older than 5 years
+            if year is not None and int(year) < datetime.now().year - 5:
+                continue
             record = {
                 "symbol": str(symbol) if symbol is not None else ticker,
                 "year": int(year) if year is not None else None,

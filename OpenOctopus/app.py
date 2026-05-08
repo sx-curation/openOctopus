@@ -32,6 +32,8 @@ from services.dashboard.management import build_management_snapshot
 from services.dashboard.summary import build_dashboard_summary
 from services.documents.recent_filings import build_recent_filings
 from services.documents.library import build_document_library
+from services.backlog.refresh import fetch_backlog_data
+from services.backlog.search import search_ticker as backlog_search_ticker
 from services.market.overview import build_market_overview
 from services.market.commodities import build_market_commodities
 from services.market.sentiment import build_market_sentiment
@@ -240,7 +242,29 @@ def documents_library() -> Response:
     return jsonify(build_document_library())
 
 
-# ── Investment Analysis ─────────────────────────────────────────────────────
+# ── Backlog ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/backlog/refresh", methods=["POST"])
+def backlog_refresh() -> Response:
+    """Fetch live yfinance data for a list of backlog tickers."""
+    body = request.get_json(silent=True) or {}
+    tickers = body.get("tickers") or []
+    # Validate: must be a list of non-empty strings, each ≤ 20 chars
+    if not isinstance(tickers, list):
+        return jsonify({"error": "tickers must be a list"}), 400
+    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:50]
+    if not tickers:
+        return jsonify({"items": []})
+    return jsonify({"items": fetch_backlog_data(tickers)})
+
+
+@app.route("/api/backlog/search")
+def backlog_search() -> Response:
+    """Search for tickers by symbol or company name."""
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"results": []})
+    return jsonify({"results": backlog_search_ticker(q)})
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze() -> Response:

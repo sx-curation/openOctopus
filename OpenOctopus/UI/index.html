@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<script src="/static/i18n.js?v=20260508c"></script>
+<script src="/static/i18n.js?v=20260508e"></script>
 <script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
@@ -164,6 +164,10 @@
     <a class="nav-link flex items-center px-6 py-3 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="screener">
       <span class="material-symbols-outlined mr-3">trending_up</span>
       <span class="font-label text-[11px] uppercase tracking-widest" data-i18n="nav.screener">Filter Upward Ticker</span>
+    </a>
+    <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="backlog">
+      <span class="material-symbols-outlined mr-3 text-[18px]">bookmark_add</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.backlog">Backlog</span>
     </a>
   </nav>
 
@@ -1026,6 +1030,64 @@
     </div>
   </div>
 
+  <!-- ─────────────── BACKLOG PAGE ─────────────── -->
+  <div id="page-backlog" class="page-section">
+    <div class="p-8 max-w-full">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-2" data-i18n="backlog.label">Screener Backlog &amp; Manual Picks</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-5" data-i18n="backlog.title">Watchlist Backlog</h2>
+
+      <!-- Controls bar -->
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <!-- Manual add input + search dropdown -->
+        <div class="relative">
+          <input id="backlog-add-input" type="text" autocomplete="off" spellcheck="false"
+            class="h-8 px-3 rounded border border-outline-variant bg-surface-container text-[11px] text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary w-52"
+            data-i18n-placeholder="backlog.add.placeholder" placeholder="Ticker or company name...">
+          <div id="backlog-search-dropdown"
+            class="hidden absolute left-0 top-full mt-1 w-72 bg-surface-container-low border border-outline-variant rounded-lg shadow-lg z-50 overflow-hidden text-[10px]">
+          </div>
+        </div>
+        <button id="backlog-add-btn"
+          class="h-8 px-4 rounded bg-primary text-white text-[10px] font-bold uppercase tracking-widest hover:bg-primary/90 active:scale-95 transition-transform"
+          data-i18n="backlog.add.button">Add</button>
+        <button id="backlog-refresh-btn"
+          class="h-8 px-4 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors"
+          data-i18n="backlog.refresh">Refresh All</button>
+        <button id="backlog-clear-btn"
+          class="h-8 px-4 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors"
+          data-i18n="backlog.clear">Clear All</button>
+        <span id="backlog-count-badge" class="text-[10px] text-on-surface-variant/70 ml-1"></span>
+        <span id="backlog-status" class="text-[10px] text-on-surface-variant/60 ml-1 italic"></span>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table id="backlog-table" class="w-full text-[10px] border-collapse">
+          <thead>
+            <tr class="text-left text-[9px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
+              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma50" data-i18n="backlog.col.ma50">MA50 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="py-2 w-8"></th>
+            </tr>
+          </thead>
+          <tbody id="backlog-tbody"></tbody>
+        </table>
+      </div>
+      <div id="backlog-empty-state" class="hidden mt-8 text-center text-on-surface-variant/50 text-[11px] py-12">
+        <span class="material-symbols-outlined block text-4xl mb-2">bookmarks</span>
+        <span data-i18n="backlog.empty">Backlog is empty. Send tickers from Screener or add manually.</span>
+      </div>
+    </div>
+  </div>
+
 </main><!-- end main -->
 
 <!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
@@ -1087,6 +1149,7 @@
     const target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
     if (page === 'documents') loadDocumentLibrary();
+    if (page === 'backlog') loadBacklogPage();
   }
 
   async function fetchJson(url) {
@@ -2128,6 +2191,7 @@
     const sourceLabel = I18N ? I18N.t('doc.lib.source') : 'Source';
     const summaryLabel = I18N ? I18N.t('doc.lib.summary') : 'Summary';
     const filedLabel = I18N ? I18N.t('doc.lib.filed') : 'Filed';
+    const charLabel = I18N ? I18N.t('doc.lib.char_count') : 'chars';
 
     listEl.innerHTML = items.map((item, idx) => `
       <div class="doc-card bg-surface-container-lowest rounded-lg ambient-shadow overflow-hidden" data-doc-idx="${idx}">
@@ -2136,6 +2200,7 @@
           <span class="text-[9px] px-2 py-0.5 rounded font-bold bg-surface-container-high text-on-surface-variant shrink-0">${_esc(item.doc_type)}</span>
           <span class="text-[10px] text-on-surface-variant shrink-0">${_esc(item.period)}</span>
           <span class="text-[9px] text-on-surface-variant/60 shrink-0">${item.filed_date ? `${filedLabel} ${_esc(item.filed_date)}` : ''}</span>
+          ${item.char_count ? `<span class="text-[8px] px-1.5 py-0.5 rounded font-mono bg-surface-container text-on-surface-variant/70 shrink-0">${item.char_count.toLocaleString()} ${charLabel}</span>` : ''}
           <span class="material-symbols-outlined text-[16px] text-on-surface-variant ml-auto doc-chevron transition-transform duration-200">chevron_right</span>
         </div>
         <div class="doc-card-detail hidden px-4 pb-3 pt-1 border-t border-outline-variant/20">
@@ -2193,6 +2258,7 @@
     if (c.sentiment) renderMarketSentiment(c.sentiment);
     renderDocuments(c.documents);
     if (window._ooDocLibCache) renderDocumentLibrary(window._ooDocLibCache);
+    if (window._ooBacklogData) renderBacklogTable(window._ooBacklogData);
   };
 
   async function loadDashboardData(ticker) {
@@ -3342,6 +3408,254 @@
   };
 
   // ─── Send to Analysis (localStorage preload) ───────────────────────────────────
+  // ─── Backlog Feature ──────────────────────────────────────────────────────
+  const OO_BACKLOG_KEY = 'oo_backlog';
+  let _backlogLastRefresh = 0;
+  let _backlogSortKey = 'ticker';
+  let _backlogSortDir = 'asc';
+  let _backlogSearchTimer = null;
+
+  function _getBacklogItems() {
+    try { return JSON.parse(localStorage.getItem(OO_BACKLOG_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function _saveBacklogItems(items) {
+    try { localStorage.setItem(OO_BACKLOG_KEY, JSON.stringify(items)); }
+    catch(e) { /* storage quota */ }
+  }
+  function _addToBacklog(ticker, market, source) {
+    const t = (ticker || '').toString().trim().toUpperCase();
+    if (!t) return false;
+    const items = _getBacklogItems();
+    if (items.find(x => x.ticker === t)) {
+      _showGenericToast((I18N ? I18N.tf('backlog.duplicate', {ticker: t}) : `${t} is already in backlog.`));
+      return false;
+    }
+    items.push({ ticker: t, market: market || 'manual', added_by: source || 'manual', added_at: _todayStr() });
+    _saveBacklogItems(items);
+    return true;
+  }
+  function _removeFromBacklog(ticker) {
+    const t = (ticker || '').toString().trim().toUpperCase();
+    _saveBacklogItems(_getBacklogItems().filter(x => x.ticker !== t));
+  }
+  function _clearBacklog() { _saveBacklogItems([]); }
+
+  async function loadBacklogPage(forceRefresh) {
+    const statusEl = document.getElementById('backlog-status');
+    const items = _getBacklogItems();
+    if (!items.length) {
+      window._ooBacklogData = [];
+      renderBacklogTable([]);
+      return;
+    }
+    const tickers = items.map(x => x.ticker);
+    const now = Date.now();
+    if (!forceRefresh && window._ooBacklogData && (now - _backlogLastRefresh) < 30000) {
+      renderBacklogTable(window._ooBacklogData);
+      return;
+    }
+    if (statusEl) statusEl.textContent = I18N ? I18N.t('backlog.refreshing') : 'Refreshing...';
+    try {
+      const res = await fetch('/api/backlog/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers }),
+      });
+      const data = await res.json();
+      window._ooBacklogData = data.items || [];
+      _backlogLastRefresh = Date.now();
+      renderBacklogTable(window._ooBacklogData);
+    } catch(e) {
+      if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+    }
+    if (statusEl) statusEl.textContent = '';
+  }
+
+  function renderBacklogTable(items) {
+    const tbody = document.getElementById('backlog-tbody');
+    const emptyEl = document.getElementById('backlog-empty-state');
+    const tableEl = document.getElementById('backlog-table');
+    const countEl = document.getElementById('backlog-count-badge');
+    if (!tbody) return;
+
+    const ls = _getBacklogItems();
+    if (countEl) countEl.textContent = ls.length
+      ? (I18N ? I18N.tf('backlog.count', {n: ls.length}) : `${ls.length} tickers`)
+      : '';
+
+    if (!items || !items.length) {
+      if (tableEl) tableEl.classList.add('hidden');
+      if (emptyEl) emptyEl.classList.remove('hidden');
+      return;
+    }
+    if (tableEl) tableEl.classList.remove('hidden');
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    // Sort
+    const sorted = [...items].sort((a, b) => {
+      const av = a[_backlogSortKey];
+      const bv = b[_backlogSortKey];
+      let cmp = 0;
+      if (av == null && bv == null) cmp = 0;
+      else if (av == null) cmp = 1;
+      else if (bv == null) cmp = -1;
+      else if (typeof av === 'string') cmp = av.localeCompare(bv);
+      else cmp = av - bv;
+      return _backlogSortDir === 'asc' ? cmp : -cmp;
+    });
+
+    // Update sort arrows in TH
+    document.querySelectorAll('.backlog-sortable').forEach(th => {
+      const arrow = th.querySelector('.backlog-sort-arrow');
+      if (!arrow) return;
+      if (th.dataset.sortkey === _backlogSortKey) {
+        arrow.textContent = _backlogSortDir === 'asc' ? '↑' : '↓';
+      } else {
+        arrow.textContent = '↕';
+      }
+    });
+
+    const fmt = v => (v == null ? '—' : v.toLocaleString(undefined, {maximumFractionDigits: 2}));
+    const fmtPct = v => {
+      if (v == null) return '—';
+      const cls = v >= 0 ? 'text-green-600' : 'text-red-500';
+      return `<span class="${cls}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+    };
+
+    tbody.innerHTML = sorted.map(item => {
+      if (item.error) {
+        return `<tr class="border-b border-outline-variant/20 bg-red-50/40">
+          <td class="pr-3 py-2 font-extrabold text-primary">${_esc(item.ticker)}</td>
+          <td colspan="9" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
+          <td class="py-2 text-center">
+            <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
+              <span class="material-symbols-outlined text-[14px]">delete</span>
+            </button>
+          </td>
+        </tr>`;
+      }
+      return `<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
+        <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
+        <td class="pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
+        <td class="pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.price)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_high)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_low)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.ma10)}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.ma50)}</td>
+        <td class="py-2 text-center">
+          <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
+            <span class="material-symbols-outlined text-[14px]">delete</span>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Bind events after innerHTML
+    tbody.querySelectorAll('.backlog-delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const t = btn.dataset.ticker;
+        _removeFromBacklog(t);
+        window._ooBacklogData = (window._ooBacklogData || []).filter(x => x.ticker !== t);
+        renderBacklogTable(window._ooBacklogData);
+      });
+    });
+    document.querySelectorAll('.backlog-sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortkey;
+        if (_backlogSortKey === key) {
+          _backlogSortDir = _backlogSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          _backlogSortKey = key;
+          _backlogSortDir = 'asc';
+        }
+        renderBacklogTable(window._ooBacklogData);
+      });
+    });
+  }
+
+  // Manual add handler
+  function _handleBacklogAdd(tickerVal) {
+    const t = (tickerVal || document.getElementById('backlog-add-input')?.value || '').trim().toUpperCase();
+    if (!t) return;
+    const added = _addToBacklog(t, 'manual', 'manual');
+    const inp = document.getElementById('backlog-add-input');
+    if (inp) inp.value = '';
+    _hideBacklogDropdown();
+    if (added) {
+      _backlogLastRefresh = 0; // force refresh
+      loadBacklogPage(true);
+    }
+  }
+
+  function _hideBacklogDropdown() {
+    const dd = document.getElementById('backlog-search-dropdown');
+    if (dd) dd.classList.add('hidden');
+  }
+
+  // Bind backlog controls after DOM ready
+  (function _initBacklogControls() {
+    const addBtn = document.getElementById('backlog-add-btn');
+    const addInp = document.getElementById('backlog-add-input');
+    const refreshBtn = document.getElementById('backlog-refresh-btn');
+    const clearBtn = document.getElementById('backlog-clear-btn');
+
+    if (addBtn) addBtn.addEventListener('click', () => _handleBacklogAdd());
+    if (addInp) {
+      addInp.addEventListener('keydown', e => { if (e.key === 'Enter') _handleBacklogAdd(); });
+      addInp.addEventListener('input', () => {
+        clearTimeout(_backlogSearchTimer);
+        const q = addInp.value.trim();
+        if (q.length < 1) { _hideBacklogDropdown(); return; }
+        _backlogSearchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch('/api/backlog/search?q=' + encodeURIComponent(q));
+            const data = await res.json();
+            const dd = document.getElementById('backlog-search-dropdown');
+            if (!dd) return;
+            const results = data.results || [];
+            if (!results.length) { dd.classList.add('hidden'); return; }
+            dd.innerHTML = results.map(r =>
+              `<div class="backlog-search-item px-3 py-2 cursor-pointer hover:bg-surface-container-high text-on-surface" data-symbol="${_esc(r.symbol)}">
+                <span class="font-bold text-primary">${_esc(r.symbol)}</span>
+                <span class="ml-2 text-on-surface-variant">${_esc(r.name || '')}</span>
+                ${r.exchange ? `<span class="ml-1 text-[8px] text-on-surface-variant/60">${_esc(r.exchange)}</span>` : ''}
+              </div>`
+            ).join('');
+            dd.classList.remove('hidden');
+            // Use mousedown (fires before blur) to prevent dropdown disappearing
+            dd.querySelectorAll('.backlog-search-item').forEach(item => {
+              item.addEventListener('mousedown', e => {
+                e.preventDefault(); // prevent blur
+                const sym = item.dataset.symbol;
+                if (addInp) addInp.value = sym;
+                _handleBacklogAdd(sym);
+              });
+            });
+          } catch(e) { _hideBacklogDropdown(); }
+        }, 300);
+      });
+      addInp.addEventListener('blur', () => {
+        setTimeout(_hideBacklogDropdown, 150); // delay so mousedown fires first
+      });
+    }
+    if (refreshBtn) refreshBtn.addEventListener('click', () => {
+      _backlogLastRefresh = 0;
+      loadBacklogPage(true);
+    });
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+      const msg = I18N ? I18N.t('backlog.clear') : 'Clear all backlog items?';
+      if (!confirm(msg + '\n\n' + (I18N ? I18N.t('backlog.empty') : 'This cannot be undone.'))) return;
+      _clearBacklog();
+      window._ooBacklogData = [];
+      renderBacklogTable([]);
+      _showGenericToast(I18N ? I18N.t('backlog.cleared') : 'Backlog cleared.');
+    });
+  })();
+
   window._sendToAnalysis = function () {
     const st   = _mktState[_currentMarket];
     const data = st.lastData;
@@ -3349,6 +3663,12 @@
 
     const selected = data.passing.filter(r => st.selectedTickers.has(r.ticker));
     if (selected.length === 0) return;
+
+    // Add selected tickers to Backlog
+    let addedCount = 0;
+    selected.forEach(r => {
+      if (_addToBacklog(r.ticker, _currentMarket, 'screener')) addedCount++;
+    });
 
     const payload = selected.map(r => ({
       ticker:   r.ticker,
@@ -3367,7 +3687,7 @@
       localStorage.setItem('oo_screener_selected', JSON.stringify(payload));
     } catch(e) { /* quota */ }
 
-    _showGenericToast(_t('screener.saved_analysis', selected.length));
+    _showGenericToast(_t('screener.saved_analysis', addedCount || selected.length));
   };
 
   // ─── Nav hook: clear poll when leaving screener page ──────────────────────────
