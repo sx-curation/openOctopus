@@ -730,6 +730,13 @@ def supply_chain_analyze_node() -> Response:
     return jsonify(result), 200
 
 
+@app.route("/api/llm/status")
+def llm_status() -> Response:
+    """Return current LLM provider status — useful for health monitoring and debugging."""
+    from agent.llm_client import get_provider_status
+    return jsonify(get_provider_status()), 200
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n  OpenOctopus running -> http://localhost:{port}\n")

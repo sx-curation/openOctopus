@@ -17,8 +17,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from openai import AzureOpenAI, OpenAI, APITimeoutError
+from openai import APITimeoutError
 
+from agent.llm_client import get_llm_client
 from config import settings
 from agent.policy_monitoring.digest import generate_digest as _render_digest
 from agent.policy_monitoring.rules import classify_impact as _classify
@@ -104,23 +105,6 @@ MAX_ITERATIONS = 10
 
 
 # ---------------------------------------------------------------------------
-# Build LLM client (mirrors agent/loop.py — same .env, same backend)
-# ---------------------------------------------------------------------------
-
-def _build_llm_client():
-    if settings.AZURE_OPENAI_ENDPOINT:
-        return AzureOpenAI(
-            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            api_key=settings.AZURE_OPENAI_API_KEY,
-            api_version=settings.AZURE_OPENAI_API_VERSION,
-        )
-    return OpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        base_url=settings.BASE_URL or None,
-    )
-
-
-# ---------------------------------------------------------------------------
 # Agent class
 # ---------------------------------------------------------------------------
 
@@ -135,7 +119,7 @@ class PolicyMonitoringAgent:
     SOURCE_ALL = ["EUR_LEX", "FEDERAL_REGISTER", "SEC"]
 
     def __init__(self):
-        self._llm = _build_llm_client()
+        self._llm = get_llm_client()
         self._http = PolicyHttpClient(
             user_agent=settings.POLICY_USER_AGENT,
             timeout=settings.POLICY_HTTP_TIMEOUT,

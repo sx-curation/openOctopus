@@ -15,8 +15,8 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from agent.policy_monitoring import PolicyMonitoringAgent  # noqa: E402
+from agent.llm_client import get_llm_client  # noqa: E402
 from config import settings  # noqa: E402
-from openai import AzureOpenAI, OpenAI  # noqa: E402
 
 _CACHE: dict[str, Any] = {"ts": None, "events": []}
 _CACHE_TTL_SECONDS = 300
@@ -27,19 +27,6 @@ def _wants_ai(query: dict[str, list[str]]) -> bool:
     return raw in {"on", "1", "true", "yes"}
 
 
-def _build_llm_client():
-    if settings.AZURE_OPENAI_ENDPOINT and settings.AZURE_OPENAI_API_KEY:
-        return AzureOpenAI(
-            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            api_key=settings.AZURE_OPENAI_API_KEY,
-            api_version=settings.AZURE_OPENAI_API_VERSION,
-        )
-    if settings.OPENAI_API_KEY:
-        return OpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            base_url=settings.BASE_URL or None,
-        )
-    return None
 
 
 def _extract_text_payload(content: Any) -> str:
@@ -82,8 +69,9 @@ def _ai_rewrite_items(kind: str, items: list[dict[str, Any]], enabled: bool) -> 
     if not enabled:
         return items, {"mode": "deterministic", "ai_used": False}
 
-    client = _build_llm_client()
-    if client is None:
+    try:
+        client = get_llm_client()
+    except Exception:
         return items, {"mode": "ai", "ai_used": False, "warning": "LLM client is not configured."}
 
     if kind == "policy":

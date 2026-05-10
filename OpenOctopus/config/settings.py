@@ -17,6 +17,19 @@ API_TIMEOUT: int = int(os.getenv("API_TIMEOUT", "180"))
 AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
 AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
+
+# LLM Provider Fallback settings
+# LLM_PROVIDER: auto | azure | openai | ollama | free-claude
+#   auto = try Azure → OpenAI → Ollama based on available env vars
+LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "auto")
+OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2")
+FREE_CLAUDE_PROXY_URL: str = os.getenv("FREE_CLAUDE_PROXY_URL", "http://localhost:8082")
+# NOTE: parse bool from string — os.getenv returns str, not bool
+LLM_FALLBACK_ENABLED: bool = os.getenv("LLM_FALLBACK_ENABLED", "true").lower() in ("true", "1", "yes")
+LLM_CIRCUIT_BREAKER_THRESHOLD: int = int(os.getenv("LLM_CIRCUIT_BREAKER_THRESHOLD", "3"))
+LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = int(os.getenv("LLM_CIRCUIT_BREAKER_RESET_SECONDS", "600"))
+
 MAX_AGENT_ITERATIONS: int = 15
 TRANSCRIPT_MAX_CHARS: int = 16000
 CACHE_TTL_SECONDS: int = 300  # 5 minutes
