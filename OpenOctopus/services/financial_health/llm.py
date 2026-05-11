@@ -134,17 +134,30 @@ def _build_metrics_block(funda: Dict[str, List], years: List[int]) -> str:
 
 
 def _parse_llm_json(raw: str) -> Optional[Dict]:
+    """Extract and parse the first JSON object from a raw LLM response.
+
+    Handles: plain JSON, markdown code fences, prose before/after JSON.
+    """
+    import re
     raw = raw.strip()
-    if raw.startswith("```"):
-        parts = raw.split("```")
-        raw = parts[1] if len(parts) > 1 else raw
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
     try:
         return json.loads(raw)
     except Exception:
-        return None
+        pass
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    if fence:
+        try:
+            return json.loads(fence.group(1))
+        except Exception:
+            pass
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(raw[start:end + 1])
+        except Exception:
+            pass
+    return None
 
 
 # ── health_summary ─────────────────────────────────────────────────────────

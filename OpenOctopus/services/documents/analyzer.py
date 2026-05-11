@@ -111,23 +111,27 @@ def analyze_transcript(
             "error": str(e),
         }
 
-    # Parse LLM response as JSON
+    # Parse LLM response as JSON — handles prose/fences from local models
+    import re as _re
     raw = raw.strip()
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
+    parsed = None
+    for _attempt in [
+        lambda r: json.loads(r),
+        lambda r: json.loads(_re.search(r"```(?:json)?\s*(\{.*?\})\s*```", r, _re.DOTALL).group(1)),
+        lambda r: json.loads(r[r.find("{"):r.rfind("}") + 1]) if r.find("{") != -1 else (_ for _ in ()).throw(ValueError()),
+    ]:
+        try:
+            parsed = _attempt(raw)
+            break
+        except Exception:
+            continue
 
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError as e:
-        logger.warning("doc analyzer: JSON parse failed for %s %s: %s | raw: %r", t, period, e, raw[:200])
+    if parsed is None:
+        logger.warning("doc analyzer: JSON parse failed for %s %s | raw: %r", t, period, raw[:200])
         return {
             "ticker": t, "period": period,
             "positive_signals": [], "negative_signals": [],
-            "error": f"LLM returned invalid JSON: {e}",
+            "error": "LLM returned invalid JSON",
         }
 
     return {

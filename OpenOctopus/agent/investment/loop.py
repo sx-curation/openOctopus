@@ -30,7 +30,7 @@ def run_analysis(user_query: str) -> str:
                 model=settings.MODEL,
                 tools=TOOL_DEFINITIONS,
                 messages=messages,
-                max_tokens=8096,
+                max_tokens=settings.MAX_LOOP_TOKENS,
                 timeout=settings.API_TIMEOUT,
             )
         except APITimeoutError:

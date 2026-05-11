@@ -55,6 +55,12 @@ from services.tw.market.overview import build_market_overview as tw_build_market
 
 app = Flask(__name__, static_folder="UI", static_url_path="/static")
 
+# Eagerly initialize LLM client at startup so provider detection runs with
+# the correct env (avoids stale singleton from a previous process image).
+from agent.llm_client import get_llm_client as _init_llm  # noqa: E402
+_init_llm()
+del _init_llm
+
 UI_DIR = Path(__file__).parent / "UI"
 _policy_agent = PolicyMonitoringAgent()
 
@@ -290,6 +296,16 @@ def backlog_search() -> Response:
     if not q:
         return jsonify({"results": []})
     return jsonify({"results": backlog_search_ticker(q)})
+
+@app.route("/api/backlog/valuation/<ticker>")
+def backlog_valuation(ticker: str) -> Response:
+    """Compute predicted valuation prices for a ticker using yfinance TTM PE and EPS."""
+    from services.backlog.valuation import fetch_valuation
+    t = ticker.strip().upper()
+    if not t or len(t) > 20:
+        return jsonify({"error": "invalid ticker"}), 400
+    return jsonify(fetch_valuation(t))
+
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze() -> Response:

@@ -35,20 +35,48 @@ class LLMProvider(Enum):
 # Individual provider factories
 # ---------------------------------------------------------------------------
 
+def _azure_endpoint_from_base_url(base_url: str) -> str:
+    """Extract the root Azure endpoint from a BASE_URL like
+    'https://foo.openai.azure.com/openai/v1' → 'https://foo.openai.azure.com'.
+    """
+    from urllib.parse import urlparse
+    parsed = urlparse(base_url)
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
 def build_azure_client() -> AzureOpenAI:
     """Build an Azure OpenAI client.
 
+    Supports two configuration styles:
+      1. Explicit: AZURE_OPENAI_ENDPOINT + AZURE_OPENAI_API_KEY
+      2. Implicit: BASE_URL (Azure URL) + OPENAI_API_KEY (used as the Azure key)
+
     Raises:
-        EnvironmentError: if AZURE_OPENAI_API_KEY is not set.
+        EnvironmentError: if neither endpoint nor a recognisable Azure BASE_URL
+                          is available, or if no API key can be found.
     """
-    if not settings.AZURE_OPENAI_API_KEY:
+    # Resolve endpoint
+    endpoint = settings.AZURE_OPENAI_ENDPOINT
+    if not endpoint and settings.BASE_URL and "openai.azure.com" in settings.BASE_URL:
+        endpoint = _azure_endpoint_from_base_url(settings.BASE_URL)
+
+    if not endpoint:
         raise EnvironmentError(
-            "AZURE_OPENAI_ENDPOINT is set but AZURE_OPENAI_API_KEY is missing. "
-            "Add it to .env."
+            "Azure provider selected but no endpoint found. "
+            "Set AZURE_OPENAI_ENDPOINT or use an Azure BASE_URL."
         )
+
+    # Resolve API key — prefer explicit Azure key, fall back to OPENAI_API_KEY
+    api_key = settings.AZURE_OPENAI_API_KEY or settings.OPENAI_API_KEY
+    if not api_key:
+        raise EnvironmentError(
+            "Azure provider selected but no API key found. "
+            "Set AZURE_OPENAI_API_KEY (or OPENAI_API_KEY) in .env."
+        )
+
     return AzureOpenAI(
-        azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-        api_key=settings.AZURE_OPENAI_API_KEY,
+        azure_endpoint=endpoint,
+        api_key=api_key,
         api_version=settings.AZURE_OPENAI_API_VERSION,
     )
 
@@ -124,6 +152,8 @@ def detect_primary_provider() -> LLMProvider:
 
     # Auto-detect based on available credentials
     if settings.AZURE_OPENAI_ENDPOINT:
+        return LLMProvider.AZURE
+    if settings.BASE_URL and "openai.azure.com" in settings.BASE_URL:
         return LLMProvider.AZURE
     if settings.OPENAI_API_KEY:
         return LLMProvider.OPENAI

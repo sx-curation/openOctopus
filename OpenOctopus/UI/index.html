@@ -1072,11 +1072,13 @@
 
       <!-- Controls bar -->
       <div class="flex flex-wrap items-center gap-3 mb-4">
-        <!-- Manual add input + search dropdown -->
+        <!-- Unified search + add input -->
         <div class="relative">
-          <input id="backlog-add-input" type="text" autocomplete="off" spellcheck="false"
-            class="h-8 px-3 rounded border border-outline-variant bg-surface-container text-[11px] text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary w-52"
-            data-i18n-placeholder="backlog.add.placeholder" placeholder="Ticker or company name...">
+          <input id="backlog-unified-search" type="text" autocomplete="off" spellcheck="false"
+            class="h-8 px-3 pr-7 rounded border border-outline-variant bg-surface-container text-[11px] text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary w-56"
+            placeholder="Search or add ticker…">
+          <button id="backlog-unified-clear"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface text-[13px] leading-none hidden">×</button>
           <div id="backlog-search-dropdown"
             class="hidden absolute left-0 top-full mt-1 w-72 bg-surface-container-low border border-outline-variant rounded-lg shadow-lg z-50 overflow-hidden text-[10px]">
           </div>
@@ -1090,6 +1092,9 @@
         <button id="backlog-clear-btn"
           class="h-8 px-4 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors"
           data-i18n="backlog.clear">Clear All</button>
+        <button id="backlog-calc-fh-btn"
+          class="h-8 px-4 rounded bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-transform"
+          data-i18n="backlog.calc_fh">Calculate FH</button>
         <span id="backlog-count-badge" class="text-[10px] text-on-surface-variant/70 ml-1"></span>
         <span id="backlog-status" class="text-[10px] text-on-surface-variant/60 ml-1 italic"></span>
       </div>
@@ -1099,11 +1104,17 @@
         <table id="backlog-table" class="w-full text-[10px] border-collapse">
           <thead>
             <tr class="text-left text-[9px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
+              <th class="pr-2 py-2 w-6"><input type="checkbox" id="backlog-select-all" class="cursor-pointer accent-primary" title="Select all"></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
-              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score</th>
+              <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.tags">Tags</th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_score" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Estimated price × 0.8 (bear case, 20% discount from TTM PE × EPS)">e×0.8</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Estimated price × 1.2 (bull case, 20% premium from TTM PE × EPS)">e×1.2</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Intrinsic value: e_price × (1 + growth + min_return) / (1 + MOS), where growth=10%, min_return=6%, MOS=25%">e_cal</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Average anchor: avg(e_cal, e×0.8)">avg</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
@@ -3897,18 +3908,58 @@
       _showGenericToast((I18N ? I18N.tf('backlog.duplicate', {ticker: t}) : `${t} is already in backlog.`));
       return false;
     }
-    items.push({ ticker: t, market: market || 'manual', added_by: source || 'manual', added_at: _todayStr() });
+    items.push({ ticker: t, market: market || 'manual', added_by: source || 'manual', added_at: _todayStr(), tags: [], fh_score: null, fh_fetched_at: null });
     _saveBacklogItems(items);
     // Invalidate cache so next visit to Backlog page fetches fresh data
     window._ooBacklogData = null;
     _backlogLastRefresh = 0;
     return true;
   }
+  function _migrateBacklogItems() {
+    // Idempotent: adds missing fields to existing items without touching other data
+    const items = _getBacklogItems();
+    let changed = false;
+    items.forEach(x => {
+      if (!Array.isArray(x.tags)) { x.tags = []; changed = true; }
+      if (!('fh_score' in x)) { x.fh_score = null; changed = true; }
+      if (!('fh_fetched_at' in x)) { x.fh_fetched_at = null; changed = true; }
+    });
+    if (changed) _saveBacklogItems(items);
+  }
+  _migrateBacklogItems();
   function _removeFromBacklog(ticker) {
     const t = (ticker || '').toString().trim().toUpperCase();
     _saveBacklogItems(_getBacklogItems().filter(x => x.ticker !== t));
   }
   function _clearBacklog() { _saveBacklogItems([]); }
+
+  // Merge tags + fh_score from localStorage into API-enriched items (by ticker)
+  function _mergeBacklogMeta(apiItems) {
+    const ls = _getBacklogItems();
+    const lsMap = {};
+    ls.forEach(x => { lsMap[x.ticker] = x; });
+    return (apiItems || []).map(item => {
+      const saved = lsMap[item.ticker] || {};
+      // Read valuation from localStorage cache
+      let valuation = null;
+      try {
+        const raw = localStorage.getItem('oo_bval_' + item.ticker);
+        if (raw) valuation = JSON.parse(raw);
+      } catch(e) {}
+      return Object.assign({}, item, {
+        tags: Array.isArray(saved.tags) ? saved.tags : [],
+        fh_score: saved.fh_score != null ? saved.fh_score : null,
+        fh_fetched_at: saved.fh_fetched_at || null,
+        valuation,
+      });
+    });
+  }
+
+  function _saveBacklogItemField(ticker, field, value) {
+    const items = _getBacklogItems();
+    const item = items.find(x => x.ticker === ticker);
+    if (item) { item[field] = value; _saveBacklogItems(items); }
+  }
 
   async function loadBacklogPage(forceRefresh) {
     const statusEl = document.getElementById('backlog-status');
@@ -3928,17 +3979,18 @@
       const sameSet = tickers.length === cachedTickers.size && tickers.every(t => cachedTickers.has(t));
       if (sameSet) {
         renderBacklogTable(window._ooBacklogData);
+        _refreshTagFilter();
         return;
       }
     }
 
     // Phase 1: immediately render placeholder rows from localStorage (no prices yet)
-    const placeholders = items.map(x => ({
+    const placeholders = _mergeBacklogMeta(items.map(x => ({
       ticker: x.ticker, name: '⟳', sector: '⟳',
       price: null, vs_52w_low: null, w52_chg_pct: null,
       w52_high: null, w52_low: null, ma10: null, ma50: null,
       error: null, _loading: true,
-    }));
+    })));
     renderBacklogTable(placeholders);
 
     // Phase 2: fetch live data and update
@@ -3950,9 +4002,10 @@
         body: JSON.stringify({ tickers }),
       });
       const data = await res.json();
-      window._ooBacklogData = data.items || [];
+      window._ooBacklogData = _mergeBacklogMeta(data.items || []);
       _backlogLastRefresh = Date.now();
       renderBacklogTable(window._ooBacklogData);
+      _refreshTagFilter();
     } catch(e) {
       if (statusEl) statusEl.textContent = 'Error: ' + e.message;
     }
@@ -3979,8 +4032,16 @@
     if (tableEl) tableEl.classList.remove('hidden');
     if (emptyEl) emptyEl.classList.add('hidden');
 
+    // Apply search filter (ticker / name / tags)
+    const q = (document.getElementById('backlog-unified-search')?.value || '').toLowerCase().trim();
+    const filteredItems = q ? items.filter(x =>
+      x.ticker.toLowerCase().includes(q) ||
+      (x.name || '').toLowerCase().includes(q) ||
+      (x.tags || []).some(t => t.toLowerCase().includes(q))
+    ) : items;
+
     // Sort
-    const sorted = [...items].sort((a, b) => {
+    const sorted = [...filteredItems].sort((a, b) => {
       const av = a[_backlogSortKey];
       const bv = b[_backlogSortKey];
       let cmp = 0;
@@ -4015,8 +4076,9 @@
       const safeId = item.ticker.replace(/[^a-zA-Z0-9]/g, '_');
       if (item._loading) {
         return `<tr class="border-b border-outline-variant/10 opacity-60">
+          <td class="pr-2 py-2"></td>
           <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
-          <td colspan="10" class="py-2 text-on-surface-variant text-[9px] italic">${loadingCell} ${I18N ? I18N.t('backlog.refreshing') : 'Refreshing...'}</td>
+          <td colspan="16" class="py-2 text-on-surface-variant text-[9px] italic">${loadingCell} ${I18N ? I18N.t('backlog.refreshing') : 'Refreshing...'}</td>
           <td class="py-2 text-center">
             <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
               <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -4026,8 +4088,9 @@
       }
       if (item.error) {
         return `<tr class="border-b border-outline-variant/20 bg-red-50/40">
+          <td class="pr-2 py-2"></td>
           <td class="pr-3 py-2 font-extrabold text-primary">${_esc(item.ticker)}</td>
-          <td colspan="10" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
+          <td colspan="16" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
           <td class="py-2 text-center">
             <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
               <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -4035,12 +4098,22 @@
           </td>
         </tr>`;
       }
+      const tagPills = (item.tags || []).map(tag =>
+        `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] bg-primary/10 text-primary font-medium whitespace-nowrap">${_esc(tag)}</span>`
+      ).join(' ');
+      const tagsDisplay = tagPills || `<span class="text-on-surface-variant/30 text-[9px] select-none">+</span>`;
       return `<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
-        <td class="pr-3 py-2 font-extrabold text-primary whitespace-nowrap">${_esc(item.ticker)}</td>
+        <td class="pr-2 py-2"><input type="checkbox" class="backlog-row-check cursor-pointer accent-primary" data-ticker="${_esc(item.ticker)}"></td>
+        <td class="pr-3 py-2 whitespace-nowrap"><span class="font-extrabold text-primary cursor-pointer hover:underline" data-fhnav="${_esc(item.ticker)}">${_esc(item.ticker)}</span></td>
         <td class="pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
         <td class="pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
+        <td id="btags-${safeId}" data-ticker="${_esc(item.ticker)}" class="btags-cell pr-3 py-2 cursor-pointer max-w-[160px]">${tagsDisplay}</td>
         <td id="bscore-${safeId}" data-ticker="${_esc(item.ticker)}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.price)}</td>
+        <td id="bval-08-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
+        <td id="bval-12-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
+        <td id="bval-cal-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
+        <td id="bval-avg-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_high)}</td>
@@ -4055,9 +4128,10 @@
       </tr>`;
     }).join('');
 
-    // Kick off async FH score fetch for all loaded rows
+    // Kick off async FH score fetch and valuation fetch for all loaded rows (uses cache)
     sorted.filter(item => !item._loading && !item.error).forEach(item => {
       _fetchBacklogScore(item.ticker);
+      _fetchBacklogValuation(item.ticker);
     });
 
     // Bind events after innerHTML
@@ -4066,31 +4140,45 @@
         const t = btn.dataset.ticker;
         _removeFromBacklog(t);
         window._ooBacklogData = (window._ooBacklogData || []).filter(x => x.ticker !== t);
+        _refreshTagFilter();
         renderBacklogTable(window._ooBacklogData);
       });
     });
-    document.querySelectorAll('.backlog-sortable').forEach(th => {
-      th.addEventListener('click', () => {
-        const key = th.dataset.sortkey;
-        if (_backlogSortKey === key) {
-          _backlogSortDir = _backlogSortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-          _backlogSortKey = key;
-          _backlogSortDir = 'asc';
-        }
-        renderBacklogTable(window._ooBacklogData);
+
+    // Ticker text → FH page navigation
+    tbody.querySelectorAll('[data-fhnav]').forEach(el => {
+      el.addEventListener('click', () => {
+        const t = el.dataset.fhnav;
+        if (t && typeof window.showPage === 'function') window.showPage('financial-health', t);
       });
     });
+
+    // Tag cell → open pill editor
+    tbody.querySelectorAll('.btags-cell').forEach(cell => {
+      cell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        _openTagPopover(cell.dataset.ticker, cell);
+      });
+    });
+
+    // Select-all checkbox
+    const selectAll = document.getElementById('backlog-select-all');
+    if (selectAll) {
+      selectAll.checked = false;
+      selectAll.addEventListener('change', () => {
+        tbody.querySelectorAll('.backlog-row-check').forEach(cb => { cb.checked = selectAll.checked; });
+      });
+    }
   }
 
   // ── Backlog Score async fetch ────────────────────────────────────────────
   function _fetchBacklogScore(ticker) {
     const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
-    const cell = document.getElementById('bscore-' + safeId);
-    if (!cell) return;
+    const cellNow = document.getElementById('bscore-' + safeId);
+    if (!cellNow) return;
 
-    // Show loading spinner
-    cell.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
+    // Show loading spinner immediately
+    cellNow.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
 
     // Check localStorage cache (same key pattern as FH page: oo_fh_{ticker})
     try {
@@ -4098,21 +4186,37 @@
       if (raw) {
         const d = JSON.parse(raw);
         if (d && d.weighted_100 != null) {
-          _updateScoreCell(cell, d);
+          // Re-query: table may have been re-rendered since cellNow was captured
+          const liveCell = document.getElementById('bscore-' + safeId);
+          if (liveCell) _updateScoreCell(liveCell, d);
           return;
         }
       }
     } catch(e) {}
 
-    // Fetch from API
+    // Fetch from API — re-query cell inside callbacks to handle any re-renders
     fetch('/api/financial_health/data?ticker=' + encodeURIComponent(ticker))
       .then(function(r) { return r.ok ? r.json() : null; })
       .then(function(d) {
-        if (!d || d.error) { cell.textContent = '—'; return; }
+        const liveCell = document.getElementById('bscore-' + safeId);
+        if (!d || d.error) { if (liveCell) liveCell.textContent = '—'; return; }
         try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify(d)); } catch(e) {}
-        _updateScoreCell(cell, d);
+        // Persist fh_score to backlog item for sorting
+        if (d.weighted_100 != null) {
+          const now = new Date().toISOString();
+          _saveBacklogItemField(ticker, 'fh_score', d.weighted_100);
+          _saveBacklogItemField(ticker, 'fh_fetched_at', now);
+          if (window._ooBacklogData) {
+            const item = window._ooBacklogData.find(x => x.ticker === ticker);
+            if (item) { item.fh_score = d.weighted_100; item.fh_fetched_at = now; }
+          }
+        }
+        if (liveCell) _updateScoreCell(liveCell, d);
       })
-      .catch(function() { cell.textContent = '—'; });
+      .catch(function() {
+        const liveCell = document.getElementById('bscore-' + safeId);
+        if (liveCell) liveCell.textContent = '—';
+      });
   }
 
   function _updateScoreCell(cell, d) {
@@ -4147,13 +4251,228 @@
     }
   }
 
+  // ── Tag Filter (no-op: replaced by search input) ────────────────────────
+  function _refreshTagFilter() {}
+
+  // ── Backlog Valuation async fetch ────────────────────────────────────────
+  function _fetchBacklogValuation(ticker) {
+    const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+    const CACHE_KEY = 'oo_bval_' + ticker;
+    const CACHE_TTL_H = 24;
+
+    function _applyValuation(d) {
+      if (!d) return;
+      // Update window._ooBacklogData item
+      if (window._ooBacklogData) {
+        const item = window._ooBacklogData.find(x => x.ticker === ticker);
+        if (item) item.valuation = d;
+      }
+      // Get current price from data for delta calculation
+      const currentPrice = window._ooBacklogData
+        ? (window._ooBacklogData.find(x => x.ticker === ticker) || {}).price
+        : null;
+
+      function _valCell(elId, val) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (val == null) { el.innerHTML = '<span class="text-on-surface-variant/30">—</span>'; return; }
+        const delta = currentPrice ? ((val - currentPrice) / currentPrice * 100) : null;
+        const deltaHtml = delta != null
+          ? `<br><span class="text-[9px] ${delta >= 0 ? 'text-green-600' : 'text-red-500'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span>`
+          : '';
+        el.innerHTML = `$${val.toFixed(2)}${deltaHtml}`;
+      }
+
+      _valCell('bval-08-' + safeId, d.e_price_08);
+      _valCell('bval-12-' + safeId, d.e_price_12);
+      _valCell('bval-cal-' + safeId, d.e_price_cal);
+      _valCell('bval-avg-' + safeId, d.a_price);
+    }
+
+    // Check cache first
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        const ageH = (Date.now() - new Date(cached.fetched_at).getTime()) / 3600000;
+        if (ageH < CACHE_TTL_H && (cached.e_price_08 != null || cached.error)) {
+          _applyValuation(cached);
+          return;
+        }
+      }
+    } catch(e) {}
+
+    // Fetch from API
+    fetch('/api/backlog/valuation/' + encodeURIComponent(ticker))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d) return;
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch(e) {}
+        _applyValuation(d);
+      })
+      .catch(() => {});
+  }
+
+  // ── Tag Pill Editor Popover ─────────────────────────────────────────────
+  (function _initTagPopover() {
+    const pop = document.createElement('div');
+    pop.id = 'backlog-tag-popover';
+    pop.className = 'hidden fixed z-[200] bg-surface-container border border-outline-variant rounded-lg shadow-xl p-2 min-w-[200px] max-w-[300px]';
+    pop.innerHTML = `<div id="btp-chips" class="flex flex-wrap gap-1 mb-1.5"></div>
+      <input id="btp-input" type="text" autocomplete="off" spellcheck="false"
+        placeholder="Add tag, press Enter…"
+        class="w-full h-7 px-2 text-[10px] bg-surface border border-outline-variant rounded focus:outline-none focus:border-primary">`;
+    document.body.appendChild(pop);
+
+    let _btpTicker = null;
+
+    function _renderChips(tags) {
+      const chips = document.getElementById('btp-chips');
+      if (!chips) return;
+      chips.innerHTML = tags.map((tag, i) =>
+        `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] bg-primary/10 text-primary font-medium">
+          ${_esc(tag)}
+          <button class="btp-remove ml-0.5 text-primary/60 hover:text-red-500 leading-none" data-idx="${i}" title="Remove">✕</button>
+        </span>`
+      ).join('');
+      chips.querySelectorAll('.btp-remove').forEach(btn => {
+        btn.addEventListener('mousedown', e => {
+          e.preventDefault(); // prevent input blur before action
+          const idx = parseInt(btn.dataset.idx);
+          const items = _getBacklogItems();
+          const item = items.find(x => x.ticker === _btpTicker);
+          if (item) {
+            item.tags.splice(idx, 1);
+            _saveBacklogItems(items);
+            _renderChips(item.tags);
+            _syncTagsToData(_btpTicker, item.tags);
+            _refreshTagFilter();
+          }
+        });
+      });
+    }
+
+    function _syncTagsToData(ticker, tags) {
+      // Sync to _ooBacklogData in memory so render reflects changes immediately
+      if (window._ooBacklogData) {
+        const item = window._ooBacklogData.find(x => x.ticker === ticker);
+        if (item) {
+          item.tags = tags;
+          // Re-render only this ticker's tag cell
+          const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+          const cell = document.getElementById('btags-' + safeId);
+          if (cell) {
+            const pills = tags.map(t => `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] bg-primary/10 text-primary font-medium whitespace-nowrap">${_esc(t)}</span>`).join(' ');
+            cell.innerHTML = pills || `<span class="text-on-surface-variant/30 text-[9px] select-none">+</span>`;
+          }
+        }
+      }
+    }
+
+    const inp = document.getElementById('btp-input');
+    if (inp) {
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const val = inp.value.replace(/,/g, '').trim();
+          if (!val || !_btpTicker) return;
+          const items = _getBacklogItems();
+          const item = items.find(x => x.ticker === _btpTicker);
+          if (item && !item.tags.includes(val)) {
+            item.tags.push(val);
+            _saveBacklogItems(items);
+            _renderChips(item.tags);
+            _syncTagsToData(_btpTicker, item.tags);
+            _refreshTagFilter();
+          }
+          inp.value = '';
+        } else if (e.key === 'Escape') {
+          _closeTagPopover();
+        }
+      });
+    }
+
+    document.addEventListener('mousedown', e => {
+      if (!pop.classList.contains('hidden') && !pop.contains(e.target)) {
+        _closeTagPopover();
+      }
+    });
+
+    window._openTagPopover = function(ticker, anchorEl) {
+      _btpTicker = ticker;
+      const items = _getBacklogItems();
+      const item = items.find(x => x.ticker === ticker) || { tags: [] };
+      _renderChips(item.tags || []);
+      const inpEl = document.getElementById('btp-input');
+      if (inpEl) inpEl.value = '';
+
+      // Position near anchor
+      pop.classList.remove('hidden');
+      const rect = anchorEl.getBoundingClientRect();
+      const scrollY = window.scrollY || 0;
+      const scrollX = window.scrollX || 0;
+      let top = rect.bottom + scrollY + 4;
+      let left = rect.left + scrollX;
+      // Keep within viewport
+      if (left + 300 > window.innerWidth) left = Math.max(0, window.innerWidth - 310 + scrollX);
+      pop.style.top = top + 'px';
+      pop.style.left = left + 'px';
+      if (inpEl) setTimeout(() => inpEl.focus(), 50);
+    };
+
+    function _closeTagPopover() {
+      pop.classList.add('hidden');
+      _btpTicker = null;
+    }
+    window._closeTagPopover = _closeTagPopover;
+  })();
+
+  // ── Forced FH fetch for selected tickers ────────────────────────────────
+  async function _fetchAndSaveBacklogFH(ticker) {
+    const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+    // Show spinner immediately on the current cell
+    const cellBefore = document.getElementById('bscore-' + safeId);
+    if (cellBefore) {
+      cellBefore._scoreClickWired = false;
+      cellBefore.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
+    }
+    try {
+      const res = await fetch('/api/financial_health/data?ticker=' + encodeURIComponent(ticker));
+      const d = res.ok ? await res.json() : null;
+      if (!d || d.error || d.weighted_100 == null) throw new Error(d?.error || 'no score');
+      // Persist to backlog item
+      const now = new Date().toISOString();
+      _saveBacklogItemField(ticker, 'fh_score', d.weighted_100);
+      _saveBacklogItemField(ticker, 'fh_fetched_at', now);
+      if (window._ooBacklogData) {
+        const item = window._ooBacklogData.find(x => x.ticker === ticker);
+        if (item) { item.fh_score = d.weighted_100; item.fh_fetched_at = now; }
+      }
+      try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify(d)); } catch(e) {}
+      // Re-query cell after await — table may have been re-rendered
+      const liveCell = document.getElementById('bscore-' + safeId);
+      if (liveCell) {
+        liveCell._scoreClickWired = false;
+        _updateScoreCell(liveCell, d);
+      }
+    } catch(e) {
+      // Re-query cell after await
+      const liveCell = document.getElementById('bscore-' + safeId);
+      if (liveCell) {
+        liveCell.innerHTML = '<span class="text-red-400 text-[9px] cursor-default" title="Fetch failed">—</span>';
+      }
+    }
+  }
+
   // Manual add handler
   function _handleBacklogAdd(tickerVal) {
-    const t = (tickerVal || document.getElementById('backlog-add-input')?.value || '').trim().toUpperCase();
+    const t = (tickerVal || document.getElementById('backlog-unified-search')?.value || '').trim().toUpperCase();
     if (!t) return;
     const added = _addToBacklog(t, 'manual', 'manual');
-    const inp = document.getElementById('backlog-add-input');
+    const inp = document.getElementById('backlog-unified-search');
     if (inp) inp.value = '';
+    const clr = document.getElementById('backlog-unified-clear');
+    if (clr) clr.classList.add('hidden');
     _hideBacklogDropdown();
     if (added) {
       _backlogLastRefresh = 0; // force refresh
@@ -4166,19 +4485,54 @@
     if (dd) dd.classList.add('hidden');
   }
 
+  // ── Refresh Selected Tickers ─────────────────────────────────────────────
+  async function _refreshSelectedTickers(tickers) {
+    const statusEl = document.getElementById('backlog-status');
+    const refreshBtn = document.getElementById('backlog-refresh-btn');
+    if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.classList.add('opacity-50'); }
+    if (statusEl) statusEl.textContent = I18N ? I18N.tf('backlog.fh_progress', {i: 0, n: tickers.length}) : `Refreshing ${tickers.length} ticker(s)…`;
+    try {
+      const res = await fetch('/api/backlog/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers })
+      });
+      const data = res.ok ? await res.json() : null;
+      if (data && data.items) {
+        const returnedMap = Object.fromEntries(data.items.map(r => [r.ticker, r]));
+        window._ooBacklogData = _mergeBacklogMeta(
+          (window._ooBacklogData || []).map(existing => returnedMap[existing.ticker] || existing)
+        );
+        renderBacklogTable(window._ooBacklogData);
+      }
+    } catch(e) { /* silent */ }
+    if (statusEl) statusEl.textContent = '';
+    if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.classList.remove('opacity-50'); }
+    // Uncheck all
+    document.querySelectorAll('.backlog-row-check').forEach(cb => { cb.checked = false; });
+    const sa = document.getElementById('backlog-select-all');
+    if (sa) sa.checked = false;
+  }
+
   // Bind backlog controls after DOM ready
   (function _initBacklogControls() {
     const addBtn = document.getElementById('backlog-add-btn');
-    const addInp = document.getElementById('backlog-add-input');
+    const unifiedInp = document.getElementById('backlog-unified-search');
+    const unifiedClear = document.getElementById('backlog-unified-clear');
     const refreshBtn = document.getElementById('backlog-refresh-btn');
     const clearBtn = document.getElementById('backlog-clear-btn');
 
     if (addBtn) addBtn.addEventListener('click', () => _handleBacklogAdd());
-    if (addInp) {
-      addInp.addEventListener('keydown', e => { if (e.key === 'Enter') _handleBacklogAdd(); });
-      addInp.addEventListener('input', () => {
+    if (unifiedInp) {
+      unifiedInp.addEventListener('keydown', e => { if (e.key === 'Enter') _handleBacklogAdd(); });
+      unifiedInp.addEventListener('input', () => {
+        // Toggle clear button
+        if (unifiedClear) unifiedClear.classList.toggle('hidden', !unifiedInp.value);
+        // Real-time table filter
+        renderBacklogTable(window._ooBacklogData || []);
+        // Debounced autocomplete suggestions
         clearTimeout(_backlogSearchTimer);
-        const q = addInp.value.trim();
+        const q = unifiedInp.value.trim();
         if (q.length < 1) { _hideBacklogDropdown(); return; }
         _backlogSearchTimer = setTimeout(async () => {
           try {
@@ -4201,20 +4555,34 @@
               item.addEventListener('mousedown', e => {
                 e.preventDefault(); // prevent blur
                 const sym = item.dataset.symbol;
-                if (addInp) addInp.value = sym;
+                if (unifiedInp) unifiedInp.value = sym;
                 _handleBacklogAdd(sym);
               });
             });
           } catch(e) { _hideBacklogDropdown(); }
         }, 300);
       });
-      addInp.addEventListener('blur', () => {
+      unifiedInp.addEventListener('blur', () => {
         setTimeout(_hideBacklogDropdown, 150); // delay so mousedown fires first
       });
     }
+    if (unifiedClear) {
+      unifiedClear.addEventListener('click', () => {
+        if (unifiedInp) unifiedInp.value = '';
+        unifiedClear.classList.add('hidden');
+        _hideBacklogDropdown();
+        renderBacklogTable(window._ooBacklogData || []);
+      });
+    }
     if (refreshBtn) refreshBtn.addEventListener('click', () => {
-      _backlogLastRefresh = 0;
-      loadBacklogPage(true);
+      const checked = [...document.querySelectorAll('.backlog-row-check:checked')];
+      const tickers = checked.map(cb => cb.dataset.ticker).filter(Boolean);
+      if (tickers.length > 0) {
+        _refreshSelectedTickers(tickers);
+      } else {
+        _backlogLastRefresh = 0;
+        loadBacklogPage(true);
+      }
     });
     if (clearBtn) clearBtn.addEventListener('click', () => {
       const msg = I18N ? I18N.t('backlog.clear') : 'Clear all backlog items?';
@@ -4223,6 +4591,51 @@
       window._ooBacklogData = [];
       renderBacklogTable([]);
       _showGenericToast(I18N ? I18N.t('backlog.cleared') : 'Backlog cleared.');
+    });
+
+    // Calculate FH for selected tickers (sequential)
+    const calcFhBtn = document.getElementById('backlog-calc-fh-btn');
+    if (calcFhBtn) {
+      calcFhBtn.addEventListener('click', async () => {
+        const checked = [...document.querySelectorAll('.backlog-row-check:checked')];
+        const tickers = checked.map(cb => cb.dataset.ticker).filter(Boolean);
+        if (!tickers.length) {
+          _showGenericToast(I18N ? I18N.t('backlog.fh_select_first') : 'Select at least one ticker.');
+          return;
+        }
+        const statusEl = document.getElementById('backlog-status');
+        calcFhBtn.disabled = true;
+        calcFhBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        for (let i = 0; i < tickers.length; i++) {
+          const progressMsg = I18N
+            ? I18N.tf('backlog.fh_progress', {i: i + 1, n: tickers.length})
+            : `Fetching ${i + 1}/${tickers.length}…`;
+          if (statusEl) statusEl.textContent = progressMsg;
+          await _fetchAndSaveBacklogFH(tickers[i]);
+        }
+        if (statusEl) statusEl.textContent = '';
+        calcFhBtn.disabled = false;
+        calcFhBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        _showGenericToast(I18N ? I18N.t('backlog.fh_done') : 'FH scores updated.');
+        // Uncheck all
+        document.querySelectorAll('.backlog-row-check').forEach(cb => { cb.checked = false; });
+        const sa = document.getElementById('backlog-select-all');
+        if (sa) sa.checked = false;
+      });
+    }
+
+    // Sort listeners — bind once here instead of inside renderBacklogTable
+    document.querySelectorAll('.backlog-sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortkey;
+        if (_backlogSortKey === key) {
+          _backlogSortDir = _backlogSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          _backlogSortKey = key;
+          _backlogSortDir = 'asc';
+        }
+        renderBacklogTable(window._ooBacklogData);
+      });
     });
   })();
 

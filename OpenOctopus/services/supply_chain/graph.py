@@ -80,17 +80,37 @@ _DISCOVER_PROMPTS = {
 
 
 def _parse_json(raw: str) -> Optional[Dict]:
+    """Extract and parse the first JSON object from a raw LLM response.
+
+    Handles: plain JSON, markdown code fences, prose before/after JSON.
+    """
+    import re
     raw = raw.strip()
-    if raw.startswith("```"):
-        parts = raw.split("```")
-        raw = parts[1] if len(parts) > 1 else raw
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.strip()
+
+    # 1. Try direct parse first (already clean JSON)
     try:
         return json.loads(raw)
     except Exception:
-        return None
+        pass
+
+    # 2. Extract from markdown code fence (```json ... ``` or ``` ... ```)
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    if fence:
+        try:
+            return json.loads(fence.group(1))
+        except Exception:
+            pass
+
+    # 3. Find first { and last } — handles prose before/after JSON
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(raw[start:end + 1])
+        except Exception:
+            pass
+
+    return None
 
 
 def discover_supply_chain(
@@ -118,7 +138,10 @@ def discover_supply_chain(
         client = get_llm_client()
         response = client.chat.completions.create(
             model=settings.MODEL,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": "You are a supply chain analyst. You must respond with ONLY valid JSON, no explanatory text before or after. No markdown code fences. Output only the raw JSON object."},
+                {"role": "user", "content": prompt},
+            ],
             temperature=0.3,
             max_tokens=1800,
         )
