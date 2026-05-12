@@ -143,6 +143,34 @@
     position: absolute;
     top: 0; right: 0;
   }
+  /* ── Chips Tooltip ── */
+  .chips-tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(94,99,115,0.35);
+    font-size: 9px; line-height: 1; color: rgba(94,99,115,0.55);
+    background: transparent; cursor: help;
+    margin-left: 3px; flex-shrink: 0; vertical-align: middle;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .chips-tip:hover { color: #6366f1; border-color: #6366f1; }
+  #chips-tip-popup {
+    position: fixed; z-index: 9999;
+    width: max-content; max-width: 320px; min-width: 180px;
+    background: #1e293b; color: #f8fafc;
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 10px; line-height: 1.65;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    display: none; pointer-events: none;
+  }
+  #chips-tip-popup strong { color: #e2e8f0; font-weight: 700; }
+  #chips-tip-popup code {
+    font-family: 'Courier New', monospace;
+    background: rgba(255,255,255,0.12); color: #a5f3fc;
+    padding: 1px 5px; border-radius: 3px; font-size: 9.5px;
+  }
+  #chips-tip-popup .tip-section { margin-top: 5px; }
+  #chips-tip-popup .tip-thresh { color: #94a3b8; }
 </style>
 </head>
 <body class="bg-surface font-body text-on-surface flex min-h-screen">
@@ -1414,7 +1442,7 @@
           <div id="chips-signal-rvol" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
             <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">bar_chart</span>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.rvol">Volume (RVOL)</p>
+              <p class="flex items-center text-[10px] uppercase tracking-widest text-on-surface-variant"><span data-i18n="chips.signal.rvol">Volume (RVOL)</span><button class="chips-tip" data-tip="chips.tip.rvol">ⓘ</button></p>
               <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
               <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.rvol.sub">vs 20-day avg</p>
             </div>
@@ -1424,7 +1452,7 @@
           <div id="chips-signal-short" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
             <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">trending_down</span>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.short">Short Pressure</p>
+              <p class="flex items-center text-[10px] uppercase tracking-widest text-on-surface-variant"><span data-i18n="chips.signal.short">Short Pressure</span><button class="chips-tip" data-tip="chips.tip.dtc">ⓘ</button></p>
               <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
               <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.short.sub">days to cover</p>
             </div>
@@ -1434,7 +1462,7 @@
           <div id="chips-signal-pcr" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
             <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">swap_vert</span>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.pcr">Options Sentiment</p>
+              <p class="flex items-center text-[10px] uppercase tracking-widest text-on-surface-variant"><span data-i18n="chips.signal.pcr">Options Sentiment</span><button class="chips-tip" data-tip="chips.tip.pcr">ⓘ</button></p>
               <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
               <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.pcr.sub">PCR by OI</p>
             </div>
@@ -1444,7 +1472,7 @@
           <div id="chips-signal-inst" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
             <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">account_balance</span>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.inst">Institutional Flow</p>
+              <p class="flex items-center text-[10px] uppercase tracking-widest text-on-surface-variant"><span data-i18n="chips.signal.inst">Institutional Flow</span><button class="chips-tip" data-tip="chips.tip.inst">ⓘ</button></p>
               <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
               <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.inst.sub">QoQ net change</p>
             </div>
@@ -1454,7 +1482,7 @@
           <div id="chips-signal-insider" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
             <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">person_search</span>
             <div class="flex-1 min-w-0">
-              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.insider">Insider Signal</p>
+              <p class="flex items-center text-[10px] uppercase tracking-widest text-on-surface-variant"><span data-i18n="chips.signal.insider">Insider Signal</span><button class="chips-tip" data-tip="chips.tip.insider">ⓘ</button></p>
               <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
               <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.insider.sub">30-day net buy/sell</p>
             </div>
@@ -1474,7 +1502,7 @@
             <div class="px-4 pb-4">
               <div class="flex gap-3 mb-3">
                 <div class="flex-1 bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.rvol.label">Relative Volume</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.rvol.label">Relative Volume</span><button class="chips-tip" data-tip="chips.tip.rvol">ⓘ</button></p>
                   <p id="chips-rvol-value" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                   <div class="mt-2 h-1.5 bg-outline-variant rounded-full overflow-hidden">
                     <div id="chips-rvol-bar" class="h-full bg-primary rounded-full transition-all" style="width:0%"></div>
@@ -1482,7 +1510,7 @@
                   <p id="chips-rvol-sub" class="text-[10px] text-on-surface-variant mt-1">—</p>
                 </div>
                 <div class="flex-1 bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.vwap.label">VWAP Estimate</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.vwap.label">VWAP Estimate</span><button class="chips-tip" data-tip="chips.tip.vwap">ⓘ</button></p>
                   <p id="chips-vwap-value" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                   <p id="chips-vwap-delta" class="text-[11px] mt-1 text-on-surface-variant">—</p>
                   <p class="text-[9px] text-on-surface-variant/50 mt-2" data-i18n="chips.vwap.note">Approx based on 20-day HLCV</p>
@@ -1513,21 +1541,21 @@
             <div class="px-4 pb-4">
               <div class="grid grid-cols-3 gap-3 mb-3">
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.dtc.label">Days to Cover</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.dtc.label">Days to Cover</span><button class="chips-tip" data-tip="chips.tip.dtc">ⓘ</button></p>
                   <p id="chips-dtc" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                 </div>
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.spof.label">Short % Float</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.spof.label">Short % Float</span><button class="chips-tip" data-tip="chips.tip.spof">ⓘ</button></p>
                   <p id="chips-spof" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                 </div>
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.simom.label">MoM Change</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.simom.label">MoM Change</span><button class="chips-tip" data-tip="chips.tip.simom">ⓘ</button></p>
                   <p id="chips-si-mom" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                 </div>
               </div>
               <div class="bg-surface rounded-lg p-3 mb-3">
                 <div class="flex justify-between mb-1">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider" data-i18n="chips.floatutil.label">Float Utilization</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider"><span data-i18n="chips.floatutil.label">Float Utilization</span><button class="chips-tip" data-tip="chips.tip.floatutil">ⓘ</button></p>
                   <p id="chips-float-util-pct" class="text-[10px] font-mono text-on-surface">—</p>
                 </div>
                 <div class="h-1.5 bg-outline-variant rounded-full overflow-hidden">
@@ -1552,16 +1580,16 @@
             <div class="px-4 pb-4">
               <div class="grid grid-cols-3 gap-3 mb-3">
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.pcroi.label">PCR by OI</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.pcroi.label">PCR by OI</span><button class="chips-tip" data-tip="chips.tip.pcr">ⓘ</button></p>
                   <p id="chips-pcr-oi" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                   <p class="text-[9px] text-on-surface-variant/50 mt-1">&gt;1.2 bearish · &lt;0.7 bullish</p>
                 </div>
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.pcrvol.label">PCR by Volume</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.pcrvol.label">PCR by Volume</span><button class="chips-tip" data-tip="chips.tip.pcrvol">ⓘ</button></p>
                   <p id="chips-pcr-vol" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                 </div>
                 <div class="bg-surface rounded-lg p-3">
-                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.maxpain.label">Max Pain</p>
+                  <p class="flex items-center text-[10px] text-on-surface-variant uppercase tracking-wider mb-1"><span data-i18n="chips.maxpain.label">Max Pain</span><button class="chips-tip" data-tip="chips.tip.maxpain">ⓘ</button></p>
                   <p id="chips-max-pain" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
                 </div>
               </div>
@@ -1599,7 +1627,7 @@
               <!-- 13F Table -->
               <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant" data-i18n="chips.inst.title">13F Institutional Holders</p>
+                  <p class="flex items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"><span data-i18n="chips.inst.title">13F Institutional Holders</span><button class="chips-tip" data-tip="chips.tip.inst">ⓘ</button></p>
                   <p id="chips-inst-source" class="text-[9px] text-on-surface-variant/50"></p>
                 </div>
                 <div class="overflow-x-auto">
@@ -1618,13 +1646,13 @@
               </div>
               <!-- Form 4 Insider -->
               <div class="mb-4">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2" data-i18n="chips.insider.title">Insider Transactions (6 months)</p>
+                <p class="flex items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2"><span data-i18n="chips.insider.title">Insider Transactions (6 months)</span><button class="chips-tip" data-tip="chips.tip.insider">ⓘ</button></p>
                 <div id="chips-insider-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto"></div>
               </div>
               <!-- ETF Holders -->
               <div>
                 <div class="flex items-center justify-between mb-2">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant" data-i18n="chips.etf.title">Top ETF Holders</p>
+                  <p class="flex items-center text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"><span data-i18n="chips.etf.title">Top ETF Holders</span><button class="chips-tip" data-tip="chips.tip.etf">ⓘ</button></p>
                   <p id="chips-etf-source" class="text-[9px] text-on-surface-variant/50"></p>
                 </div>
                 <div id="chips-etf-list" class="flex flex-wrap gap-2"></div>
@@ -6435,7 +6463,43 @@
     if (btn) btn.addEventListener('click', () => window.loadChipsPage(input?.value));
   };
 
+  // ── Tooltip engine ──
+  (function () {
+    const popup = document.getElementById('chips-tip-popup');
+    const page  = document.getElementById('page-chips');
+    if (!popup || !page) return;
+
+    page.addEventListener('mouseover', function (e) {
+      const btn = e.target.closest('.chips-tip');
+      if (!btn) return;
+      popup.innerHTML = (typeof I18N !== 'undefined' && I18N.t(btn.dataset.tip)) || btn.dataset.tip || '';
+      // measure size before final placement
+      popup.style.visibility = 'hidden';
+      popup.style.display = 'block';
+      const rect = btn.getBoundingClientRect();
+      const pw = popup.offsetWidth;
+      const ph = popup.offsetHeight;
+      let left = rect.left;
+      let top  = rect.bottom + 6;
+      if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+      if (left < 8) left = 8;
+      if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
+      popup.style.left = left + 'px';
+      popup.style.top  = top  + 'px';
+      popup.style.visibility = 'visible';
+    });
+
+    page.addEventListener('mouseleave', function () {
+      popup.style.display = 'none';
+    });
+
+    page.addEventListener('click', function () {
+      popup.style.display = 'none';
+    });
+  })();
+
 })();
 </script>
+<div id="chips-tip-popup"></div>
 </body>
 </html>
