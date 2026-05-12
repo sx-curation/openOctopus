@@ -753,6 +753,54 @@ def llm_status() -> Response:
     return jsonify(get_provider_status()), 200
 
 
+# ── Chip Analysis ──────────────────────────────────────────────────────────────
+
+@app.route("/api/chips/summary/<ticker>")
+def chips_summary(ticker: str) -> Response:
+    """Level 1 fast data: volume (RVOL/VWAP) + short interest."""
+    from services.chips.volume import fetch_volume_data
+    from services.chips.short_interest import fetch_short_interest
+
+    vol = fetch_volume_data(ticker)
+    short = fetch_short_interest(ticker)
+    return jsonify({"ticker": ticker.upper(), "volume": vol, "short": short}), 200
+
+
+@app.route("/api/chips/options/<ticker>")
+def chips_options(ticker: str) -> Response:
+    """Level 2 options flow: PCR, Max Pain, OI distribution."""
+    from services.chips.options_flow import fetch_options_flow
+
+    return jsonify(fetch_options_flow(ticker)), 200
+
+
+@app.route("/api/chips/institutional/<ticker>")
+def chips_institutional(ticker: str) -> Response:
+    """Level 2-3 institutional data: 13F holders, Form 4 insider trades, ETF holders."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from services.chips.institutional import fetch_institutional
+    from services.chips.insider import fetch_insider
+    from services.chips.etf_flow import fetch_etf_holders
+
+    results = {}
+    tasks = {
+        "institutional": (fetch_institutional, ticker),
+        "insider": (fetch_insider, ticker),
+        "etf": (fetch_etf_holders, ticker),
+    }
+
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        future_map = {ex.submit(fn, t): key for key, (fn, t) in tasks.items()}
+        for future in as_completed(future_map, timeout=15):
+            key = future_map[future]
+            try:
+                results[key] = future.result()
+            except Exception as e:
+                results[key] = {"error": str(e)}
+
+    return jsonify({"ticker": ticker.upper(), **results}), 200
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n  OpenOctopus running -> http://localhost:{port}\n")

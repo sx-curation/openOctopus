@@ -203,6 +203,10 @@
       <span class="material-symbols-outlined mr-3 text-[18px]">account_tree</span>
       <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.supply_chain">Supply Chain</span>
     </a>
+    <a class="nav-link flex items-center pl-10 pr-6 py-2 text-slate-500 hover:bg-surface-container-high rounded-r-lg cursor-pointer" data-page="chips">
+      <span class="material-symbols-outlined mr-3 text-[18px]">candlestick_chart</span>
+      <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.chips">Chip Analysis</span>
+    </a>
   </nav>
 
   <!-- Bottom links -->
@@ -1379,6 +1383,260 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════ CHIPS ANALYSIS PAGE ═══ -->
+  <div id="page-chips" class="page-section overflow-x-hidden">
+    <div class="p-6 max-w-7xl mx-auto h-full flex flex-col">
+      <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="chips.label">Screener · Chip Analysis</p>
+      <h2 class="font-headline text-2xl font-extrabold text-primary mb-1" data-i18n="chips.title">筹码面分析</h2>
+      <p class="text-[11px] text-on-surface-variant mb-4" data-i18n="chips.subtitle">Volume · Short Interest · Options Flow · Institutional Holdings</p>
+
+      <!-- Top Controls -->
+      <div class="flex flex-wrap items-center gap-3 mb-5">
+        <input id="chips-ticker-input" type="text" autocomplete="off" spellcheck="false"
+          class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-28 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
+          placeholder="Ticker" maxlength="10">
+        <button id="chips-analyze-btn"
+          class="h-8 px-4 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors"
+          data-i18n="chips.btn.analyze">Analyze</button>
+        <span id="chips-status" class="text-[11px] text-on-surface-variant"></span>
+        <span id="chips-cache-ts" class="ml-auto text-[10px] text-on-surface-variant/50 hidden"></span>
+      </div>
+
+      <!-- Main 2-column Layout -->
+      <div class="flex gap-5 min-h-0" style="flex:1 1 0;min-height:400px">
+
+        <!-- LEFT PANEL: Signal Dashboard (35%) -->
+        <div class="w-[35%] min-w-[180px] flex flex-col gap-3 overflow-y-auto pr-1">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signals.title">Signal Dashboard</p>
+
+          <!-- RVOL Signal Card -->
+          <div id="chips-signal-rvol" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">bar_chart</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.rvol">Volume (RVOL)</p>
+              <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
+              <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.rvol.sub">vs 20-day avg</p>
+            </div>
+          </div>
+
+          <!-- Short Signal Card -->
+          <div id="chips-signal-short" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">trending_down</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.short">Short Pressure</p>
+              <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
+              <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.short.sub">days to cover</p>
+            </div>
+          </div>
+
+          <!-- PCR Signal Card -->
+          <div id="chips-signal-pcr" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">swap_vert</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.pcr">Options Sentiment</p>
+              <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
+              <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.pcr.sub">PCR by OI</p>
+            </div>
+          </div>
+
+          <!-- Institutional Signal Card -->
+          <div id="chips-signal-inst" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">account_balance</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.inst">Institutional Flow</p>
+              <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
+              <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.inst.sub">QoQ net change</p>
+            </div>
+          </div>
+
+          <!-- Insider Signal Card -->
+          <div id="chips-signal-insider" class="border-l-4 border-outline-variant bg-surface-container rounded-lg p-3 flex gap-3 items-start transition-all">
+            <span class="material-symbols-outlined text-[20px] text-on-surface-variant/50 mt-0.5 shrink-0">person_search</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="chips.signal.insider">Insider Signal</p>
+              <p class="chips-signal-value text-xl font-extrabold text-on-surface font-mono">—</p>
+              <p class="chips-signal-sub text-[10px] text-on-surface-variant/70" data-i18n="chips.signal.insider.sub">30-day net buy/sell</p>
+            </div>
+          </div>
+        </div><!-- /left panel -->
+
+        <!-- RIGHT PANEL: Detail Sections (65%) -->
+        <div class="flex-1 overflow-y-auto flex flex-col gap-4 pb-4">
+
+          <!-- Section 1: Volume -->
+          <details class="bg-surface-container rounded-xl overflow-hidden" open>
+            <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+              <span class="material-symbols-outlined text-[16px] text-primary">bar_chart</span>
+              <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="chips.sec1.title">Volume &amp; VWAP</span>
+              <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+            </summary>
+            <div class="px-4 pb-4">
+              <div class="flex gap-3 mb-3">
+                <div class="flex-1 bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.rvol.label">Relative Volume</p>
+                  <p id="chips-rvol-value" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <div class="mt-2 h-1.5 bg-outline-variant rounded-full overflow-hidden">
+                    <div id="chips-rvol-bar" class="h-full bg-primary rounded-full transition-all" style="width:0%"></div>
+                  </div>
+                  <p id="chips-rvol-sub" class="text-[10px] text-on-surface-variant mt-1">—</p>
+                </div>
+                <div class="flex-1 bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.vwap.label">VWAP Estimate</p>
+                  <p id="chips-vwap-value" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <p id="chips-vwap-delta" class="text-[11px] mt-1 text-on-surface-variant">—</p>
+                  <p class="text-[9px] text-on-surface-variant/50 mt-2" data-i18n="chips.vwap.note">Approx based on 20-day HLCV</p>
+                </div>
+              </div>
+              <div class="bg-surface rounded-lg p-3">
+                <p class="text-[10px] text-on-surface-variant mb-2" data-i18n="chips.volchart.label">20-Day Volume History</p>
+                <div class="overflow-x-auto">
+                  <svg id="chips-vol-svg" height="72" class="block w-full min-w-[360px]">
+                    <text x="50%" y="50%" text-anchor="middle" fill="#94a3b8" font-size="10" dominant-baseline="middle">Run analysis to load chart</text>
+                  </svg>
+                </div>
+              </div>
+              <div class="mt-3 flex items-start gap-2 bg-surface rounded-lg px-3 py-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant/40 mt-0.5">info</span>
+                <p class="text-[10px] text-on-surface-variant/60" data-i18n="chips.darkpool.note">Dark Pool % — 数据源不支持（需要 FINRA TRF 实时 Feed）</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 2: Short Interest -->
+          <details class="bg-surface-container rounded-xl overflow-hidden" open>
+            <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+              <span class="material-symbols-outlined text-[16px] text-primary">trending_down</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec2.title">Short Interest &amp; Float</span>
+              <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+            </summary>
+            <div class="px-4 pb-4">
+              <div class="grid grid-cols-3 gap-3 mb-3">
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.dtc.label">Days to Cover</p>
+                  <p id="chips-dtc" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                </div>
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.spof.label">Short % Float</p>
+                  <p id="chips-spof" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                </div>
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.simom.label">MoM Change</p>
+                  <p id="chips-si-mom" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                </div>
+              </div>
+              <div class="bg-surface rounded-lg p-3 mb-3">
+                <div class="flex justify-between mb-1">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider" data-i18n="chips.floatutil.label">Float Utilization</p>
+                  <p id="chips-float-util-pct" class="text-[10px] font-mono text-on-surface">—</p>
+                </div>
+                <div class="h-1.5 bg-outline-variant rounded-full overflow-hidden">
+                  <div id="chips-float-util-bar" class="h-full bg-primary rounded-full transition-all" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="flex items-start gap-2 bg-surface rounded-lg px-3 py-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant/40 mt-0.5">info</span>
+                <p class="text-[10px] text-on-surface-variant/60" data-i18n="chips.borrowrate.note">Borrow Rate — 数据源不支持（需要 Prime Brokerage 数据）</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 3: Options Sentiment -->
+          <details class="bg-surface-container rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+              <span class="material-symbols-outlined text-[16px] text-primary">swap_vert</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec3.title">Options Sentiment</span>
+              <span id="chips-options-loading" class="ml-2 text-[10px] text-on-surface-variant/50 hidden">loading…</span>
+              <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+            </summary>
+            <div class="px-4 pb-4">
+              <div class="grid grid-cols-3 gap-3 mb-3">
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.pcroi.label">PCR by OI</p>
+                  <p id="chips-pcr-oi" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <p class="text-[9px] text-on-surface-variant/50 mt-1">&gt;1.2 bearish · &lt;0.7 bullish</p>
+                </div>
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.pcrvol.label">PCR by Volume</p>
+                  <p id="chips-pcr-vol" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                </div>
+                <div class="bg-surface rounded-lg p-3">
+                  <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="chips.maxpain.label">Max Pain</p>
+                  <p id="chips-max-pain" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                </div>
+              </div>
+              <div class="bg-surface rounded-lg p-3 mb-3">
+                <p class="text-[10px] text-on-surface-variant mb-2" data-i18n="chips.oichart.label">OI Distribution (Call / Put by Strike)</p>
+                <div class="overflow-x-auto">
+                  <svg id="chips-oi-svg" height="100" class="block w-full min-w-[360px]">
+                    <text x="50%" y="50%" text-anchor="middle" fill="#94a3b8" font-size="10" dominant-baseline="middle">Options data loads after analysis</text>
+                  </svg>
+                </div>
+                <div class="flex gap-4 mt-2">
+                  <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="inline-block w-3 h-2 rounded-sm bg-emerald-500/70"></span><span data-i18n="chips.calls">Calls</span></span>
+                  <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="inline-block w-3 h-2 rounded-sm bg-red-400/70"></span><span data-i18n="chips.puts">Puts</span></span>
+                  <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="inline-block w-0.5 h-3 bg-primary/80 align-middle"></span><span data-i18n="chips.current.price">Current</span></span>
+                  <span class="flex items-center gap-1 text-[10px] text-on-surface-variant"><span class="inline-block w-0.5 h-3 border-l-2 border-dashed border-amber-500 align-middle"></span><span data-i18n="chips.maxpain.label">Max Pain</span></span>
+                </div>
+              </div>
+              <div id="chips-options-error" class="hidden bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-[10px] text-amber-700"></div>
+              <div class="flex items-start gap-2 bg-surface rounded-lg px-3 py-2">
+                <span class="material-symbols-outlined text-[14px] text-on-surface-variant/40 mt-0.5">info</span>
+                <p class="text-[10px] text-on-surface-variant/60" data-i18n="chips.moc.note">MOC Imbalance — 数据源不支持（需要 NYSE 交易所实时 Feed）</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Section 4: Institutional Holdings -->
+          <details class="bg-surface-container rounded-xl overflow-hidden">
+            <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+              <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec4.title">Institutional Holdings</span>
+              <span id="chips-inst-loading" class="ml-2 text-[10px] text-on-surface-variant/50 hidden">loading…</span>
+              <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+            </summary>
+            <div class="px-4 pb-4">
+              <!-- 13F Table -->
+              <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant" data-i18n="chips.inst.title">13F Institutional Holders</p>
+                  <p id="chips-inst-source" class="text-[9px] text-on-surface-variant/50"></p>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-[10px]">
+                    <thead>
+                      <tr class="text-on-surface-variant/60 border-b border-outline-variant">
+                        <th class="text-left pb-1 pr-2 font-medium" data-i18n="chips.inst.col.holder">Institution</th>
+                        <th class="text-right pb-1 pr-2 font-medium" data-i18n="chips.inst.col.shares">Shares</th>
+                        <th class="text-right pb-1 pr-2 font-medium" data-i18n="chips.inst.col.change">QoQ Δ</th>
+                        <th class="text-right pb-1 font-medium" data-i18n="chips.inst.col.date">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody id="chips-inst-table"></tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- Form 4 Insider -->
+              <div class="mb-4">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2" data-i18n="chips.insider.title">Insider Transactions (6 months)</p>
+                <div id="chips-insider-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto"></div>
+              </div>
+              <!-- ETF Holders -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant" data-i18n="chips.etf.title">Top ETF Holders</p>
+                  <p id="chips-etf-source" class="text-[9px] text-on-surface-variant/50"></p>
+                </div>
+                <div id="chips-etf-list" class="flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+          </details>
+
+        </div><!-- /right panel -->
+      </div><!-- /2-col layout -->
+    </div>
+  </div><!-- /page-chips -->
+
 </main><!-- end main -->
 
 <!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
@@ -1443,6 +1701,7 @@
     if (page === 'backlog') loadBacklogPage();
     if (page === 'financial-health') loadFinancialHealthPage(autoTicker || null);
     if (page === 'supply-chain' && typeof window.loadSupplyChainPage === 'function') window.loadSupplyChainPage();
+    if (page === 'chips' && typeof window._initChipsControls === 'function') window._initChipsControls();
   }
 
   async function fetchJson(url) {
@@ -5668,6 +5927,512 @@
     if (_scCurrentNodes.length > 0) {
       setTimeout(() => _renderGraph({ center: _scCurrentCenter, nodes: _scCurrentNodes, edges: _scCurrentEdges }), 50);
     }
+  };
+
+})();
+
+// ═══════════════════════════════════════════════ CHIPS ANALYSIS JS ══════════
+(function () {
+  'use strict';
+
+  const CACHE_KEY_PREFIX = 'oo_chips_';
+  const CACHE_TTL_H = 4;
+  let _chipsInited = false;
+  let _chipsTicker = '';
+
+  // ── Signal color helpers ──
+  const SIG_COLORS = {
+    high:    'border-red-500',
+    medium:  'border-amber-400',
+    low:     'border-emerald-500',
+    buy:     'border-emerald-500',
+    sell:    'border-red-500',
+    neutral: 'border-outline-variant',
+    no_data: 'border-outline-variant',
+  };
+  const SIG_BORDER_BASE = ['border-outline-variant','border-red-500','border-amber-400','border-emerald-500'];
+
+  function _setSignalCard(id, signal, valueTxt, subTxt) {
+    const card = document.getElementById(id);
+    if (!card) return;
+    SIG_BORDER_BASE.forEach(c => card.classList.remove(c));
+    card.classList.add(SIG_COLORS[signal] || 'border-outline-variant');
+    const valEl = card.querySelector('.chips-signal-value');
+    const subEl = card.querySelector('.chips-signal-sub');
+    if (valEl) valEl.textContent = valueTxt ?? '—';
+    if (subEl && subTxt) subEl.textContent = subTxt;
+  }
+
+  // ── Formatters ──
+  function _fmtVol(n) {
+    if (n == null) return '—';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+    return String(n);
+  }
+  function _fmtMoney(v) {
+    if (v == null) return '—';
+    const av = Math.abs(v);
+    const s = v < 0 ? '-' : '';
+    if (av >= 1e9) return s + '$' + (av / 1e9).toFixed(1) + 'B';
+    if (av >= 1e6) return s + '$' + (av / 1e6).toFixed(1) + 'M';
+    if (av >= 1e3) return s + '$' + (av / 1e3).toFixed(0) + 'K';
+    return s + '$' + av.toFixed(0);
+  }
+  function _fmtPct(v, decimals = 1) {
+    if (v == null) return '—';
+    const s = v >= 0 ? '+' : '';
+    return s + v.toFixed(decimals) + '%';
+  }
+
+  // ── Status text ──
+  function _setStatus(msg) {
+    const el = document.getElementById('chips-status');
+    if (el) el.textContent = msg;
+  }
+
+  // ── Cache helpers ──
+  function _getCached(ticker) {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY_PREFIX + ticker);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      const age = (Date.now() - new Date(d._fetched_at).getTime()) / 3600000;
+      return age < CACHE_TTL_H ? d : null;
+    } catch (e) { return null; }
+  }
+  function _setCache(ticker, data) {
+    try {
+      localStorage.setItem(CACHE_KEY_PREFIX + ticker, JSON.stringify({
+        ...data, _fetched_at: new Date().toISOString()
+      }));
+    } catch (e) {}
+  }
+
+  // ── Main load function ──
+  window.loadChipsPage = async function (ticker) {
+    ticker = (ticker || document.getElementById('chips-ticker-input')?.value || '').trim().toUpperCase();
+    if (!ticker) { _setStatus('Please enter a ticker'); return; }
+    _chipsTicker = ticker;
+
+    const tsEl = document.getElementById('chips-cache-ts');
+    if (tsEl) tsEl.classList.add('hidden');
+
+    // Check cache first
+    const cached = _getCached(ticker);
+    if (cached) {
+      _renderAll(cached);
+      if (tsEl) {
+        tsEl.textContent = 'Cached ' + (cached._fetched_at || '').slice(0,16);
+        tsEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    // Phase 1: fetch summary (volume + short)
+    _setStatus('Loading volume & short data…');
+    let summaryData = null;
+    try {
+      const res = await fetch('/api/chips/summary/' + encodeURIComponent(ticker));
+      summaryData = await res.json();
+      _renderVolumeSection(summaryData.volume || {});
+      _renderShortSection(summaryData.short || {});
+      _renderChipsSignals(summaryData, null, null);
+    } catch (e) {
+      _setStatus('Error loading summary: ' + e.message);
+      return;
+    }
+
+    // Phase 2: parallel fetch options + institutional
+    document.getElementById('chips-options-loading')?.classList.remove('hidden');
+    document.getElementById('chips-inst-loading')?.classList.remove('hidden');
+    _setStatus('Loading options & institutional data…');
+
+    const [optResult, instResult] = await Promise.allSettled([
+      fetch('/api/chips/options/' + encodeURIComponent(ticker)).then(r => r.json()),
+      fetch('/api/chips/institutional/' + encodeURIComponent(ticker)).then(r => r.json()),
+    ]);
+
+    document.getElementById('chips-options-loading')?.classList.add('hidden');
+    document.getElementById('chips-inst-loading')?.classList.add('hidden');
+
+    const optData = optResult.status === 'fulfilled' ? optResult.value : null;
+    const instData = instResult.status === 'fulfilled' ? instResult.value : null;
+
+    if (optData) _renderOptionsSection(optData);
+    if (instData) _renderInstitutionalSection(instData);
+    _renderChipsSignals(summaryData, optData, instData);
+
+    _setStatus('');
+
+    // Cache all data
+    _setCache(ticker, { summary: summaryData, options: optData, institutional: instData });
+    if (tsEl) {
+      tsEl.textContent = 'Updated ' + new Date().toISOString().slice(0,16);
+      tsEl.classList.remove('hidden');
+    }
+  };
+
+  function _renderAll(cached) {
+    const { summary, options, institutional } = cached;
+    if (summary) {
+      _renderVolumeSection(summary.volume || {});
+      _renderShortSection(summary.short || {});
+    }
+    if (options) _renderOptionsSection(options);
+    if (institutional) _renderInstitutionalSection(institutional);
+    _renderChipsSignals(summary, options, institutional);
+    _setStatus('');
+  }
+
+  // ── 4-4: Render signal cards ──
+  function _renderChipsSignals(summary, optData, instData) {
+    const vol = summary?.volume || {};
+    const short = summary?.short || {};
+
+    // RVOL
+    _setSignalCard('chips-signal-rvol',
+      vol.rvol_signal || 'no_data',
+      vol.rvol != null ? vol.rvol.toFixed(2) + 'x' : '—',
+      vol.today_volume ? (_fmtVol(vol.today_volume) + ' today') : 'vs 20-day avg'
+    );
+
+    // Short
+    const dtc = short.days_to_cover;
+    _setSignalCard('chips-signal-short',
+      short.short_signal || 'no_data',
+      dtc != null ? dtc.toFixed(1) + 'd' : '—',
+      short.short_pct_float != null ? (short.short_pct_float * 100).toFixed(1) + '% float' : 'days to cover'
+    );
+
+    // PCR
+    if (optData) {
+      const pcr = optData.pcr_oi;
+      const pcrSig = pcr == null ? 'no_data' : pcr > 1.2 ? 'high' : pcr < 0.7 ? 'medium' : 'low';
+      _setSignalCard('chips-signal-pcr', pcrSig,
+        pcr != null ? pcr.toFixed(2) : '—',
+        pcr != null ? (pcr > 1.2 ? 'Bearish pressure' : pcr < 0.7 ? 'Bullish / overbought' : 'Neutral') : 'PCR by OI'
+      );
+    }
+
+    // Institutional
+    if (instData?.institutional) {
+      const sig = instData.institutional.net_signal || 'no_data';
+      const cnt = instData.institutional.holders?.length || 0;
+      _setSignalCard('chips-signal-inst', sig,
+        sig === 'buy' ? '↑ Net Buy' : sig === 'sell' ? '↓ Net Sell' : '—',
+        cnt + ' institutions (' + (instData.institutional.data_source || '—') + ')'
+      );
+    }
+
+    // Insider
+    if (instData?.insider) {
+      const sig = instData.insider.insider_signal || 'neutral';
+      const net = instData.insider.net_30d_value || 0;
+      _setSignalCard('chips-signal-insider', sig,
+        sig === 'buy' ? '↑ ' + _fmtMoney(net) : sig === 'sell' ? '↓ ' + _fmtMoney(Math.abs(net)) : 'Neutral',
+        '30-day net insider'
+      );
+    }
+  }
+
+  // ── 4-5: Volume section ──
+  function _renderVolumeSection(vol) {
+    if (!vol || vol.error) return;
+
+    const rvol = vol.rvol;
+    document.getElementById('chips-rvol-value').textContent = rvol != null ? rvol.toFixed(2) + 'x' : '—';
+
+    const barEl = document.getElementById('chips-rvol-bar');
+    if (barEl && rvol != null) {
+      const pct = Math.min(rvol / 3 * 100, 100);
+      barEl.style.width = pct + '%';
+      barEl.className = barEl.className.replace(/bg-\w+-\d+/, '');
+      barEl.classList.add(rvol >= 2 ? 'bg-red-500' : rvol >= 1 ? 'bg-primary' : 'bg-emerald-500');
+    }
+
+    const subEl = document.getElementById('chips-rvol-sub');
+    if (subEl) {
+      subEl.textContent = vol.today_volume && vol.avg_20d_volume
+        ? _fmtVol(vol.today_volume) + ' / ' + _fmtVol(vol.avg_20d_volume) + ' avg'
+        + (vol.is_partial_day ? ' (intraday)' : '')
+        : '—';
+    }
+
+    const vwapEl = document.getElementById('chips-vwap-value');
+    if (vwapEl) vwapEl.textContent = vol.vwap_est != null ? '$' + vol.vwap_est.toFixed(2) : '—';
+
+    const vwapDelta = document.getElementById('chips-vwap-delta');
+    if (vwapDelta && vol.price_vs_vwap_pct != null) {
+      const pos = vol.price_vs_vwap_pct >= 0;
+      vwapDelta.textContent = _fmtPct(vol.price_vs_vwap_pct) + ' vs VWAP';
+      vwapDelta.className = vwapDelta.className.replace(/text-\w+-\d+/, '');
+      vwapDelta.classList.add(pos ? 'text-emerald-600' : 'text-red-500');
+    }
+
+    // Draw volume bar chart (inline SVG)
+    _drawVolChart(vol.volume_history || []);
+  }
+
+  function _drawVolChart(history) {
+    const svg = document.getElementById('chips-vol-svg');
+    if (!svg || !history.length) return;
+
+    const W = 560, H = 72, padL = 4, padR = 4, padT = 4, padB = 18;
+    const chartH = H - padT - padB;
+    const vols = history.map(d => d.volume);
+    const maxVol = Math.max(...vols.filter(v => v > 0), 1);
+    const n = history.length;
+    const barW = Math.max(2, Math.floor((W - padL - padR) / n) - 1);
+    const step = (W - padL - padR) / n;
+
+    let bars = '';
+    let xLabels = '';
+
+    history.forEach((d, i) => {
+      const x = padL + i * step;
+      const h = Math.max(2, (d.volume / maxVol) * chartH);
+      const y = padT + chartH - h;
+      const isToday = !!d.is_today;
+      const fill = isToday ? '#6366f1' : '#cbd5e1';
+      bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" fill="${fill}" rx="1"><title>${d.date}: ${_fmtVol(d.volume)}</title></rect>`;
+
+      // Avg volume line (dotted, single horizontal line across)
+      if (i === 0 && d.avg_volume) {
+        const avgH = Math.max(1, (d.avg_volume / maxVol) * chartH);
+        const avgY = (padT + chartH - avgH).toFixed(1);
+        bars += `<line x1="${padL}" y1="${avgY}" x2="${W - padR}" y2="${avgY}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>`;
+      }
+    });
+
+    // X-axis: show first and last date
+    if (history.length > 0) {
+      xLabels += `<text x="${padL}" y="${H - 2}" font-size="8" fill="#94a3b8">${history[0].date.slice(5)}</text>`;
+      xLabels += `<text x="${W - padR}" y="${H - 2}" font-size="8" fill="#94a3b8" text-anchor="end">${history[history.length - 1].date.slice(5)}</text>`;
+    }
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = bars + xLabels;
+  }
+
+  // ── 4-6: Short interest section ──
+  function _renderShortSection(short) {
+    if (!short) return;
+
+    const dtcEl = document.getElementById('chips-dtc');
+    if (dtcEl) dtcEl.textContent = short.days_to_cover != null ? short.days_to_cover.toFixed(1) : '—';
+
+    const spofEl = document.getElementById('chips-spof');
+    if (spofEl) spofEl.textContent = short.short_pct_float != null
+      ? (short.short_pct_float * 100).toFixed(1) + '%' : '—';
+
+    const momEl = document.getElementById('chips-si-mom');
+    if (momEl) {
+      if (short.mom_change_pct != null) {
+        const pos = short.mom_change_pct >= 0;
+        momEl.textContent = _fmtPct(short.mom_change_pct) + (pos ? ' ↑' : ' ↓');
+        momEl.className = momEl.className.replace(/text-\w+-\d+/, '');
+        momEl.classList.add(pos ? 'text-red-500' : 'text-emerald-600'); // rising short = bearish
+      } else {
+        momEl.textContent = '—';
+      }
+    }
+
+    const fuPct = document.getElementById('chips-float-util-pct');
+    const fuBar = document.getElementById('chips-float-util-bar');
+    if (short.float_utilization != null) {
+      const pct = short.float_utilization * 100;
+      if (fuPct) fuPct.textContent = pct.toFixed(1) + '%';
+      if (fuBar) {
+        fuBar.style.width = Math.min(pct, 100) + '%';
+        fuBar.className = fuBar.className.replace(/bg-\w+-\d+/, '');
+        fuBar.classList.add(pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-amber-400' : 'bg-primary');
+      }
+    }
+  }
+
+  // ── 4-7: Options section ──
+  function _renderOptionsSection(opt) {
+    if (!opt) return;
+
+    if (opt.error) {
+      const errEl = document.getElementById('chips-options-error');
+      if (errEl) {
+        errEl.textContent = opt.error;
+        errEl.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const pcrOiEl = document.getElementById('chips-pcr-oi');
+    if (pcrOiEl) {
+      pcrOiEl.textContent = opt.pcr_oi != null ? opt.pcr_oi.toFixed(2) : '—';
+      pcrOiEl.className = pcrOiEl.className.replace(/text-\w+-\d+/, '');
+      if (opt.pcr_oi != null) pcrOiEl.classList.add(opt.pcr_oi > 1.2 ? 'text-red-500' : opt.pcr_oi < 0.7 ? 'text-amber-500' : 'text-on-surface');
+    }
+
+    const pcrVolEl = document.getElementById('chips-pcr-vol');
+    if (pcrVolEl) pcrVolEl.textContent = opt.pcr_volume != null ? opt.pcr_volume.toFixed(2) : '—';
+
+    const mpEl = document.getElementById('chips-max-pain');
+    if (mpEl) mpEl.textContent = opt.max_pain != null ? '$' + opt.max_pain.toFixed(2) : '—';
+
+    _drawOiChart(opt.oi_by_strike || [], opt.current_price, opt.max_pain);
+  }
+
+  function _drawOiChart(oiData, currentPrice, maxPain) {
+    const svg = document.getElementById('chips-oi-svg');
+    if (!svg || !oiData.length) return;
+
+    const n = oiData.length;
+    const barW = 5;
+    const gap = 1;
+    const pairW = barW * 2 + gap + 2;
+    const W = Math.max(560, n * pairW + 40);
+    const H = 100;
+    const padL = 8, padR = 8, padT = 6, padB = 20;
+    const chartH = H - padT - padB;
+
+    const maxOI = Math.max(...oiData.map(d => Math.max(d.call_oi || 0, d.put_oi || 0)), 1);
+
+    let bars = '';
+    let xLabels = '';
+    const strikes = oiData.map(d => d.strike);
+
+    oiData.forEach((d, i) => {
+      const x = padL + i * pairW;
+      const callH = Math.max(1, (d.call_oi / maxOI) * chartH);
+      const putH = Math.max(1, (d.put_oi / maxOI) * chartH);
+      bars += `<rect x="${x}" y="${(padT + chartH - callH).toFixed(1)}" width="${barW}" height="${callH.toFixed(1)}" fill="#10b981" opacity="0.7"><title>Strike ${d.strike}: Calls ${_fmtVol(d.call_oi)}</title></rect>`;
+      bars += `<rect x="${x + barW + gap}" y="${(padT + chartH - putH).toFixed(1)}" width="${barW}" height="${putH.toFixed(1)}" fill="#f87171" opacity="0.7"><title>Strike ${d.strike}: Puts ${_fmtVol(d.put_oi)}</title></rect>`;
+    });
+
+    // X-axis labels every ~10 strikes
+    const labelStep = Math.max(1, Math.floor(n / 6));
+    oiData.forEach((d, i) => {
+      if (i % labelStep === 0 || i === n - 1) {
+        const x = padL + i * pairW + barW;
+        xLabels += `<text x="${x}" y="${H - 4}" font-size="7" fill="#94a3b8" text-anchor="middle">$${d.strike}</text>`;
+      }
+    });
+
+    // Current price line
+    if (currentPrice && strikes.length) {
+      const idx = strikes.reduce((best, s, i) => Math.abs(s - currentPrice) < Math.abs(strikes[best] - currentPrice) ? i : best, 0);
+      const cx = (padL + idx * pairW + barW).toFixed(0);
+      bars += `<line x1="${cx}" y1="${padT}" x2="${cx}" y2="${padT + chartH}" stroke="#6366f1" stroke-width="1.5" opacity="0.8"/>`;
+    }
+
+    // Max pain line (dashed amber)
+    if (maxPain && strikes.length) {
+      const idx = strikes.reduce((best, s, i) => Math.abs(s - maxPain) < Math.abs(strikes[best] - maxPain) ? i : best, 0);
+      const mx = (padL + idx * pairW + barW).toFixed(0);
+      bars += `<line x1="${mx}" y1="${padT}" x2="${mx}" y2="${padT + chartH}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.8"/>`;
+    }
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', W);
+    svg.innerHTML = bars + xLabels;
+  }
+
+  // ── 4-8: Institutional section ──
+  function _renderInstitutionalSection(data) {
+    const inst = data?.institutional || {};
+    const insider = data?.insider || {};
+    const etf = data?.etf || {};
+
+    // 13F table
+    const instSrc = document.getElementById('chips-inst-source');
+    if (instSrc) {
+      const src = inst.data_source === 'fmp' ? 'FMP (delayed ~45 days)' : inst.data_source === 'yfinance' ? 'yfinance (' + (inst.fallback_reason || 'fallback') + ')' : '';
+      instSrc.textContent = src;
+    }
+    const tbody = document.getElementById('chips-inst-table');
+    if (tbody) {
+      if (inst.error && !inst.holders?.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-2 text-on-surface-variant/50 text-center">${inst.error}</td></tr>`;
+      } else {
+        tbody.innerHTML = (inst.holders || []).map((h, i) => {
+          const chgTxt = h.change != null ? (h.change > 0 ? `<span class="text-emerald-600">+${_fmtVol(h.change)}</span>` : `<span class="text-red-500">${_fmtVol(h.change)}</span>`) : '<span class="text-on-surface-variant/30">—</span>';
+          return `<tr class="${i === 0 ? 'font-bold' : ''} border-b border-outline-variant/30">
+            <td class="py-1 pr-2 truncate max-w-[140px]" title="${h.holder}">${h.holder}</td>
+            <td class="py-1 pr-2 text-right font-mono">${_fmtVol(h.shares)}</td>
+            <td class="py-1 pr-2 text-right">${chgTxt}</td>
+            <td class="py-1 text-right text-on-surface-variant/60">${h.date_reported?.slice(0,10) || '—'}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    // Insider list
+    const insiderList = document.getElementById('chips-insider-list');
+    if (insiderList) {
+      if (insider.error && !insider.transactions?.length) {
+        insiderList.innerHTML = `<p class="text-[10px] text-on-surface-variant/50">${insider.error}</p>`;
+      } else {
+        insiderList.innerHTML = (insider.transactions || []).map(tx => {
+          const isBuy = tx.transaction_type === 'buy';
+          const dotColor = isBuy ? 'bg-emerald-500' : tx.transaction_type === 'sell' ? 'bg-red-400' : 'bg-outline-variant';
+          return `<div class="flex items-start gap-2">
+            <span class="w-2 h-2 rounded-full ${dotColor} mt-1 shrink-0"></span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-[10px] ${isBuy ? 'text-emerald-600' : 'text-red-500'}">${isBuy ? 'BUY' : tx.transaction_type === 'sell' ? 'SELL' : tx.transaction_type.toUpperCase()}</span>
+                <span class="text-[10px] text-on-surface truncate">${tx.reporter}</span>
+                <span class="text-[9px] text-on-surface-variant/50">${tx.position || ''}</span>
+              </div>
+              <div class="text-[9px] text-on-surface-variant/60">${tx.date} · ${_fmtMoney(tx.value)} · ${_fmtVol(tx.shares)} shares @ $${tx.price}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // ETF holders
+    const etfList = document.getElementById('chips-etf-list');
+    if (etfList) {
+      const etfSrc = document.getElementById('chips-etf-source');
+      if (etf.error) {
+        if (etfSrc) etfSrc.textContent = etf.error;
+        etfList.innerHTML = '';
+      } else {
+        if (etfSrc) etfSrc.textContent = 'FMP';
+        etfList.innerHTML = (etf.etfs || []).map(e =>
+          `<span class="inline-flex items-center gap-1 bg-surface border border-outline-variant rounded-full px-2 py-0.5 text-[10px]">
+            <span class="font-medium">${e.name}</span>
+            <span class="text-on-surface-variant/60">${(e.weight_pct * 100).toFixed(2)}%</span>
+          </span>`
+        ).join('');
+      }
+    }
+  }
+
+  // ── 4-2: Init controls (called once when navigating to chips page) ──
+  window._initChipsControls = function () {
+    if (_chipsInited) {
+      // If ticker already loaded, just re-render from cache
+      if (_chipsTicker) window.loadChipsPage(_chipsTicker);
+      return;
+    }
+    _chipsInited = true;
+
+    const input = document.getElementById('chips-ticker-input');
+    const btn = document.getElementById('chips-analyze-btn');
+
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') window.loadChipsPage(input.value);
+      });
+      // Auto-uppercase as user types
+      input.addEventListener('input', () => {
+        const pos = input.selectionStart;
+        input.value = input.value.toUpperCase();
+        input.setSelectionRange(pos, pos);
+      });
+    }
+
+    if (btn) btn.addEventListener('click', () => window.loadChipsPage(input?.value));
   };
 
 })();
