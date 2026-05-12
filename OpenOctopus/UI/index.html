@@ -1519,7 +1519,7 @@
               <div class="bg-surface rounded-lg p-3">
                 <p class="text-[10px] text-on-surface-variant mb-2" data-i18n="chips.volchart.label">20-Day Volume History</p>
                 <div class="overflow-x-auto">
-                  <svg id="chips-vol-svg" height="72" class="block w-full min-w-[360px]">
+                  <svg id="chips-vol-svg" height="96" class="block w-full min-w-[360px]">
                     <text x="50%" y="50%" text-anchor="middle" fill="#94a3b8" font-size="10" dominant-baseline="middle">Run analysis to load chart</text>
                   </svg>
                 </div>
@@ -1666,6 +1666,9 @@
   </div><!-- /page-chips -->
 
 </main><!-- end main -->
+
+<!-- chips tooltip popup — must be before <script> so getElementById finds it at IIFE init -->
+<div id="chips-tip-popup"></div>
 
 <!-- ────────────── SCREENER RATE-LIMIT TOAST ────────────── -->
 <div id="screener-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[200] hidden px-5 py-3 rounded-lg shadow-lg text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 flex items-center gap-2 min-w-72 max-w-lg transition-opacity">
@@ -6200,39 +6203,77 @@
     }
 
     // Draw volume bar chart (inline SVG)
-    _drawVolChart(vol.volume_history || []);
+    _drawVolChart(vol.volume_history || [], vol.avg_20d_volume || 0);
   }
 
-  function _drawVolChart(history) {
+  function _drawVolChart(history, avgVol) {
     const svg = document.getElementById('chips-vol-svg');
     if (!svg || !history.length) return;
 
-    const W = 560, H = 72, padL = 4, padR = 4, padT = 4, padB = 18;
-    const chartH = H - padT - padB;
+    // Layout constants
+    const W = 560, H = 96;
+    const padL = 4, padR = 56, padT = 28, padB = 14;
+    const chartH = H - padT - padB;  // 54px
+
     const vols = history.map(d => d.volume);
     const maxVol = Math.max(...vols.filter(v => v > 0), 1);
     const n = history.length;
-    const barW = Math.max(2, Math.floor((W - padL - padR) / n) - 1);
     const step = (W - padL - padR) / n;
+    const barW = Math.max(2, step - 1.5);
 
-    let bars = '';
-    let xLabels = '';
+    // Find max and min volume indices (non-zero)
+    const nonZeroVols = vols.filter(v => v > 0);
+    const maxV = Math.max(...nonZeroVols);
+    const minV = Math.min(...nonZeroVols);
+    const maxIdx = vols.indexOf(maxV);
+    const minIdx = vols.lastIndexOf(minV);  // last occurrence if tie
+
+    let bars = '', labels = '', xLabels = '';
 
     history.forEach((d, i) => {
       const x = padL + i * step;
+      const cx = x + barW / 2;  // center x of bar
       const h = Math.max(2, (d.volume / maxVol) * chartH);
-      const y = padT + chartH - h;
+      const barY = padT + chartH - h;
       const isToday = !!d.is_today;
-      const fill = isToday ? '#6366f1' : '#cbd5e1';
-      bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" fill="${fill}" rx="1"><title>${d.date}: ${_fmtVol(d.volume)}</title></rect>`;
+      const isMax = (i === maxIdx);
+      const isMin = (i === minIdx && maxIdx !== minIdx);
 
-      // Avg volume line (dotted, single horizontal line across)
-      if (i === 0 && d.avg_volume) {
-        const avgH = Math.max(1, (d.avg_volume / maxVol) * chartH);
-        const avgY = (padT + chartH - avgH).toFixed(1);
-        bars += `<line x1="${padL}" y1="${avgY}" x2="${W - padR}" y2="${avgY}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>`;
+      // Bar color
+      const fill = isToday ? '#6366f1' : isMax ? '#f59e0b' : isMin ? '#f87171' : '#cbd5e1';
+      bars += `<rect x="${x.toFixed(1)}" y="${barY.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}" rx="1"><title>${d.date}: ${_fmtVol(d.volume)}</title></rect>`;
+
+      // Delta % label above bar
+      if (avgVol > 0 && d.volume > 0) {
+        const deltaPct = ((d.volume - avgVol) / avgVol * 100);
+        const sign = deltaPct >= 0 ? '+' : '';
+        const deltaStr = sign + deltaPct.toFixed(0) + '%';
+        const deltaColor = deltaPct >= 0 ? '#10b981' : '#f87171';
+        const deltaY = (barY - 4).toFixed(1);
+        labels += `<text x="${cx.toFixed(1)}" y="${deltaY}" font-size="6.5" fill="${deltaColor}" text-anchor="middle" font-family="monospace">${deltaStr}</text>`;
+
+        // For max/min bars: additionally show actual volume value one line above delta
+        if (isMax || isMin) {
+          const valColor = isMax ? '#f59e0b' : '#f87171';
+          const valY = (barY - 13).toFixed(1);
+          labels += `<text x="${cx.toFixed(1)}" y="${valY}" font-size="6.5" fill="${valColor}" text-anchor="middle" font-weight="bold">${_fmtVol(d.volume)}</text>`;
+        }
+      } else if (isMax || isMin) {
+        // No avg data — still show volume value for max/min
+        const valColor = isMax ? '#f59e0b' : '#f87171';
+        const valY = (barY - 4).toFixed(1);
+        labels += `<text x="${cx.toFixed(1)}" y="${valY}" font-size="6.5" fill="${valColor}" text-anchor="middle" font-weight="bold">${_fmtVol(d.volume)}</text>`;
       }
     });
+
+    // Average volume dashed line + value label
+    if (avgVol > 0) {
+      const avgH = Math.max(1, (avgVol / maxVol) * chartH);
+      const avgY = (padT + chartH - avgH).toFixed(1);
+      bars += `<line x1="${padL}" y1="${avgY}" x2="${(W - padR).toFixed(1)}" y2="${avgY}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" opacity="0.7"/>`;
+      labels += `<text x="${W - padR + 4}" y="${(parseFloat(avgY) + 3).toFixed(1)}" font-size="7.5" fill="#94a3b8">${_fmtVol(avgVol)}</text>`;
+      labels += `<text x="${W - padR + 4}" y="${(parseFloat(avgY) + 11).toFixed(1)}" font-size="6" fill="#94a3b8">avg</text>`;
+    }
 
     // X-axis: show first and last date
     if (history.length > 0) {
@@ -6241,7 +6282,8 @@
     }
 
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.innerHTML = bars + xLabels;
+    svg.setAttribute('height', '96');
+    svg.innerHTML = bars + labels + xLabels;
   }
 
   // ── 4-6: Short interest section ──
@@ -6500,6 +6542,5 @@
 
 })();
 </script>
-<div id="chips-tip-popup"></div>
 </body>
 </html>

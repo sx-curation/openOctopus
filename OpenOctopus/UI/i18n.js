@@ -29,11 +29,11 @@ const I18N = (() => {
       'nav.backlog':      'Backlog',
       'nav.financial_health': 'Financial Health',
       'nav.supply_chain': 'Supply Chain',
-      'nav.chips': 'Chip Analysis',
+      'nav.chips': 'Volume Analysis',
 
       // Chip Analysis (EN)
       'chips.label':             'Screener · Chip Analysis',
-      'chips.title':             'Chip Analysis 筹码面',
+      'chips.title':             'Volume Analysis',
       'chips.subtitle':          'Volume · Short Interest · Options Flow · Institutional Holdings',
       'chips.btn.analyze':       'Analyze',
       'chips.signals.title':     'Signal Dashboard',
