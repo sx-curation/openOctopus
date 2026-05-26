@@ -4932,6 +4932,8 @@
   function _handleBacklogAdd(tickerVal) {
     const t = (tickerVal || document.getElementById('backlog-unified-search')?.value || '').trim().toUpperCase();
     if (!t) return;
+    // Capture before _addToBacklog nulls _ooBacklogData
+    const existingData = window._ooBacklogData ? [...window._ooBacklogData] : null;
     const added = _addToBacklog(t, 'manual', 'manual');
     const inp = document.getElementById('backlog-unified-search');
     if (inp) inp.value = '';
@@ -4946,8 +4948,7 @@
         w52_high: null, w52_low: null, ma10: null, ma50: null,
         error: null, _loading: true,
       };
-      if (!window._ooBacklogData) window._ooBacklogData = [];
-      window._ooBacklogData = _mergeBacklogMeta([...window._ooBacklogData, placeholder]);
+      window._ooBacklogData = _mergeBacklogMeta([...(existingData || []), placeholder]);
       renderBacklogTable(window._ooBacklogData);
 
       fetch('/api/backlog/refresh', {
