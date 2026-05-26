@@ -36,6 +36,21 @@ def _r(v) -> float | None:
         return None
 
 
+_EPS_KEYS = ("Diluted EPS", "Basic EPS", "EPS", "Diluted Eps", "Basic Eps")
+
+
+def _find_eps_key(income) -> str | None:
+    """Return the first EPS row name found in the income DataFrame index."""
+    for key in _EPS_KEYS:
+        if key in income.index:
+            return key
+    logger.warning(
+        "valuation: no EPS row found in financials; available rows: %s",
+        list(income.index),
+    )
+    return None
+
+
 def _fetch_5yr_pe_range(stock) -> tuple[float | None, float | None]:
     """Return (pe_min, pe_max) from up to 5 annual year-end PE values."""
     try:
@@ -44,10 +59,15 @@ def _fetch_5yr_pe_range(stock) -> tuple[float | None, float | None]:
         hist = stock.history(period="5y", interval="1mo")
         if income is None or income.empty or hist.empty:
             return None, None
+
+        eps_key = _find_eps_key(income)
+        if eps_key is None:
+            return None, None
+
         pe_list = []
         for col in list(income.columns)[:5]:
             try:
-                eps_row = float(income.loc["Diluted EPS", col])
+                eps_row = float(income.loc[eps_key, col])
             except Exception:
                 continue
             if eps_row <= 0:
@@ -63,7 +83,7 @@ def _fetch_5yr_pe_range(stock) -> tuple[float | None, float | None]:
             pe = price / eps_row
             if 0 < pe < 500:
                 pe_list.append(pe)
-        if len(pe_list) >= 3:
+        if len(pe_list) >= 2:
             return round(min(pe_list), 1), round(max(pe_list), 1)
     except Exception as exc:
         logger.warning("valuation: pe range failed: %s", exc)
