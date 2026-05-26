@@ -283,7 +283,7 @@ def backlog_refresh() -> Response:
     # Validate: must be a list of non-empty strings, each ≤ 20 chars
     if not isinstance(tickers, list):
         return jsonify({"error": "tickers must be a list"}), 400
-    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:50]
+    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:100]
     if not tickers:
         return jsonify({"items": []})
     return jsonify({"items": fetch_backlog_data(tickers)})
@@ -565,6 +565,16 @@ def _fh_cache_get(ticker: str):
     return None
 
 
+@app.route("/api/financial_health/transcript/<ticker>")
+def fh_transcript(ticker: str) -> Response:
+    """Fetch latest earnings transcript for a ticker (FMP → HF cache → EDGAR)."""
+    from tools.earnings_transcript import EarningsTranscriptTool
+    t = ticker.strip().upper()
+    if not t:
+        return jsonify({"error": "ticker_required"}), 400
+    return jsonify(EarningsTranscriptTool().execute({"ticker": t}))
+
+
 @app.route("/api/financial_health/data")
 def financial_health_data() -> Response:
     """Fetch + score financial health data for a ticker."""
@@ -592,7 +602,8 @@ def financial_health_data() -> Response:
         "scores":       scoring["indicator_scores"],
         "group_scores": scoring["group_scores"],
         "weighted_100": scoring["weighted_100"],
-        "year_scores":  year_scores,
+        "year_scores":  year_scores[:5],
+        "data_source":  raw.get("data_source", "yfinance"),
         "cached":       False,
     }
     _fh_data_cache[ticker] = {"payload": payload, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
@@ -655,6 +666,152 @@ def financial_health_drilldown() -> Response:
     result = fh_drilldown_analysis(ticker, raw["fundamentals"], raw["years"], transcript_excerpt, lang)
     return jsonify(result), 200
 
+
+# ── Competitor Comparison routes ──────────────────────────────────────────────
+
+_peers_cache: dict = {}
+_PEERS_CACHE_TTL = 300  # 5 minutes
+
+
+@app.route("/api/fh/peers/<path:ticker>")
+def fh_peers(ticker: str) -> Response:
+    """Return up to 5 peer tickers for a given stock with 5-minute in-memory cache."""
+    from services.financial_health.competitor import get_peers
+    t = ticker.strip().upper()
+    if not t:
+        return jsonify({"error": "ticker required"}), 400
+
+    entry = _peers_cache.get(t)
+    if entry and (_time.time() - entry["cached_at"]) < _PEERS_CACHE_TTL:
+        return jsonify(entry["data"]), 200
+
+    data = get_peers(t)
+    _peers_cache[t] = {"data": data, "cached_at": _time.time()}
+    return jsonify(data), 200
+
+
+@app.route("/api/fh/competitor_compare", methods=["POST"])
+def fh_competitor_compare() -> Response:
+    """Compare main company against up to 4 competitors across multiple dimensions."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from services.financial_health.competitor import (
+        get_company_profile,
+        get_price_history,
+        get_analyst_ratings,
+        get_competitor_fh_scores,
+        get_linkedin_jobs,
+        get_llm_business_diff,
+    )
+
+    body = request.get_json(silent=True) or {}
+    ticker = (body.get("ticker") or "").strip().upper()
+    competitors_raw = body.get("competitors") or []
+
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+    if not isinstance(competitors_raw, list) or not competitors_raw:
+        return jsonify({"error": "competitors must be a non-empty list"}), 400
+
+    # Validate and clean competitor tickers
+    competitors = []
+    for c in competitors_raw:
+        c = str(c).strip().upper()
+        if c and c != ticker and c not in competitors and not c.isdigit():
+            competitors.append(c)
+    competitors = competitors[:4]
+
+    if not competitors:
+        return jsonify({"error": "no valid competitor tickers provided"}), 400
+
+    all_tickers = [ticker] + competitors
+
+    # Parallel fetch: profile, price_history, analyst_ratings, fh_scores
+    profiles_result = {}
+    price_result = {}
+    analyst_result = {}
+    fh_result = {}
+    linkedin_result = {}
+
+    def _fetch_profiles():
+        return get_company_profile(all_tickers)
+
+    def _fetch_prices():
+        return get_price_history(all_tickers, period="1y")
+
+    def _fetch_analysts():
+        return get_analyst_ratings(all_tickers)
+
+    def _fetch_fh():
+        return get_competitor_fh_scores(all_tickers, _fh_data_cache)
+
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        f_profiles  = ex.submit(_fetch_profiles)
+        f_prices    = ex.submit(_fetch_prices)
+        f_analysts  = ex.submit(_fetch_analysts)
+        f_fh        = ex.submit(_fetch_fh)
+
+        try:
+            for f in as_completed([f_profiles, f_prices, f_analysts, f_fh], timeout=60):
+                pass  # wait for all; individual result() calls below handle per-future errors
+        except TimeoutError:
+            pass  # some futures didn't finish in 60s; result(timeout=1) below will surface errors
+
+    try:
+        profiles_result = f_profiles.result(timeout=1)
+    except Exception as e:
+        logger.warning("Profiles fetch failed: %s", e)
+
+    try:
+        price_result = f_prices.result(timeout=1)
+    except Exception as e:
+        logger.warning("Price history fetch failed: %s", e)
+
+    try:
+        analyst_result = f_analysts.result(timeout=1)
+    except Exception as e:
+        logger.warning("Analyst ratings fetch failed: %s", e)
+
+    try:
+        fh_result = f_fh.result(timeout=1)
+    except Exception as e:
+        logger.warning("FH scores fetch failed: %s", e)
+
+    # LinkedIn (best-effort, serial — fragile scraping)
+    company_names = {t: (profiles_result.get(t) or {}).get("companyName") or t for t in all_tickers}
+    try:
+        linkedin_result = get_linkedin_jobs(all_tickers, company_names)
+    except Exception as e:
+        logger.warning("LinkedIn jobs failed: %s", e)
+        linkedin_result = {t: {"count": None, "source": "unavailable"} for t in all_tickers}
+
+    # LLM business diff (depends on profiles)
+    business_diff = {"summary": None, "key_diffs": [], "ai_generated": True}
+    try:
+        business_diff = get_llm_business_diff(ticker, competitors, profiles_result)
+    except Exception as e:
+        logger.warning("LLM business diff failed: %s", e)
+
+    # Assemble response
+    def _company_data(t: str) -> dict:
+        return {
+            "ticker":    t,
+            "profile":   profiles_result.get(t) or {},
+            "fh_score":  fh_result.get(t) or {"total_score": None, "group_scores": None, "indicator_scores": None},
+            "analyst":   analyst_result.get(t) or {},
+            "linkedin":  linkedin_result.get(t) or {"count": None, "source": "unavailable"},
+        }
+
+    response_data = {
+        "main": _company_data(ticker),
+        "competitors": [
+            {**_company_data(c), "price_history": price_result.get(c) or []}
+            for c in competitors
+        ],
+        "price_history_main": price_result.get(ticker) or [],
+        "business_diff": business_diff,
+    }
+
+    return jsonify(response_data), 200
 
 
 # ── Supply Chain routes ────────────────────────────────────────────────────────
