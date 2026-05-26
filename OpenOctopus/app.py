@@ -9,6 +9,7 @@ Usage:
 """
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -565,13 +566,16 @@ def _fh_cache_get(ticker: str):
     return None
 
 
+_TICKER_RE = re.compile(r'^[A-Z0-9.]{1,10}$')
+
+
 @app.route("/api/financial_health/transcript/<ticker>")
 def fh_transcript(ticker: str) -> Response:
     """Fetch latest earnings transcript for a ticker (FMP → HF cache → EDGAR)."""
     from tools.earnings_transcript import EarningsTranscriptTool
     t = ticker.strip().upper()
-    if not t:
-        return jsonify({"error": "ticker_required"}), 400
+    if not _TICKER_RE.match(t):
+        return jsonify({"error": "invalid_ticker"}), 400
     return jsonify(EarningsTranscriptTool().execute({"ticker": t}))
 
 
