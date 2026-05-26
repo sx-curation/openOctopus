@@ -4899,8 +4899,33 @@
     if (clr) clr.classList.add('hidden');
     _hideBacklogDropdown();
     if (added) {
-      _backlogLastRefresh = 0; // force refresh
-      loadBacklogPage(true);
+      // Only fetch the newly added ticker — avoid full reload which triggers 429
+      const placeholder = {
+        ticker: t, name: '⟳', sector: '⟳',
+        price: null, vs_52w_low: null, w52_chg_pct: null,
+        w52_high: null, w52_low: null, ma10: null, ma50: null,
+        error: null, _loading: true,
+      };
+      if (!window._ooBacklogData) window._ooBacklogData = [];
+      window._ooBacklogData = _mergeBacklogMeta([...window._ooBacklogData, placeholder]);
+      renderBacklogTable(window._ooBacklogData);
+
+      fetch('/api/backlog/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers: [t] }),
+      })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.items) return;
+        const returnedMap = Object.fromEntries(data.items.map(r => [r.ticker, r]));
+        window._ooBacklogData = _mergeBacklogMeta(
+          (window._ooBacklogData || []).map(item => returnedMap[item.ticker] || item)
+        );
+        renderBacklogTable(window._ooBacklogData);
+        setTimeout(() => _fetchBacklogValuation(t), 200);
+      })
+      .catch(() => {});
     }
   }
 
