@@ -65,19 +65,20 @@ def _fetch_5yr_pe_range(stock) -> tuple[float | None, float | None]:
             return None, None
 
         pe_list = []
+        hist_start = hist.index.min()
         for col in list(income.columns)[:5]:
             try:
                 eps_row = float(income.loc[eps_key, col])
-            except Exception:
-                continue
-            if eps_row <= 0:
+            except Exception as exc:
+                logger.debug("valuation pe_range: loc failed col=%s err=%s", col, exc)
                 continue
             col_ts = pd.Timestamp(col)
             if col_ts.tzinfo is not None:
                 col_ts = col_ts.tz_convert(None)
             hist_idx = hist.index.tz_convert(None) if hist.index.tz is not None else hist.index
-            nearby = hist[hist_idx <= col_ts + pd.DateOffset(months=3)]
-            if nearby.empty:
+            cutoff = col_ts + pd.DateOffset(months=3)
+            nearby = hist[hist_idx <= cutoff]
+            if eps_row <= 0 or nearby.empty:
                 continue
             price = float(nearby["Close"].iloc[-1])
             pe = price / eps_row
