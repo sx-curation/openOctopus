@@ -818,6 +818,7 @@
               <th class="pr-3 py-2 whitespace-nowrap text-right" title="e_price = TTM PE × TTM EPS&#10;e×1.2 = e_price × 1.2 (bull case, 20% premium)">e×1.2</th>
               <th class="pr-3 py-2 whitespace-nowrap text-right" title="e_price_cal = e_price × (1 + g + r) / (1 + MOS)&#10;e_price = TTM PE × TTM EPS&#10;g = 10% (forecast growth)&#10;r = 6% (min required return)&#10;MOS = 25% (margin of safety)">e_cal</th>
               <th class="pr-3 py-2 whitespace-nowrap text-right" title="a_price = mean(e_cal, e_2u, e×0.8)&#10;e_2u = EPS × (pe_min + pe_step×2)&#10;pe_step = (pe_max − pe_min) / 5&#10;pe_min/max from 5-year annual PE history">avg</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="(a_price − latest price) / latest price × 100&#10;Positive = stock trades below model avg (potential upside)&#10;Negative = stock trades above model avg (overvalued vs model)">Δ avg</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
@@ -4536,6 +4537,7 @@
         <td id="bval-12-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td id="bval-cal-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td id="bval-avg-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
+        <td id="bval-delta-${safeId}" class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_high)}</td>
@@ -4709,6 +4711,20 @@
         avgEl.title = `a_price = mean(e_cal, e_2u, e×0.8)${missingNote}\ne_2u = EPS × (pe_min + pe_step×2) = ${e2uStr}\npe_min=${peMinStr}, pe_max=${peMaxStr}, pe_step=${peStepStr}`;
         if (missing.length > 0) {
           avgEl.innerHTML += '<span class="text-amber-500 text-[8px] ml-0.5 cursor-help">*</span>';
+        }
+      }
+
+      // Δ avg vs latest price
+      const deltaEl = document.getElementById('bval-delta-' + safeId);
+      if (deltaEl) {
+        const latestPrice = _bItemVal.price;
+        if (d.a_price != null && latestPrice != null && latestPrice > 0) {
+          const pct = (d.a_price - latestPrice) / latestPrice * 100;
+          const sign = pct >= 0 ? '+' : '';
+          const color = pct >= 0 ? 'text-green-500' : 'text-red-400';
+          deltaEl.innerHTML = `<span class="${color}" title="a_price $${d.a_price.toFixed(2)} vs price $${latestPrice.toFixed(2)}">${sign}${pct.toFixed(1)}%</span>`;
+        } else {
+          deltaEl.innerHTML = '<span class="text-on-surface-variant/30">—</span>';
         }
       }
     }
