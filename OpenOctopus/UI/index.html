@@ -825,8 +825,7 @@
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low" title="Lowest price in the past 52 weeks. A stock near this level may be near a support zone.">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10" title="10-day Moving Average. A short-term trend indicator. Price above MA10 suggests recent momentum.">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="pr-3 py-2 whitespace-nowrap text-right" title="(latest price − MA10) / MA10 × 100&#10;Positive = price above MA10 (bullish short-term)&#10;Negative = price below MA10 (bearish short-term)">Δ MA10</th>
+              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10" title="10-day Moving Average. A short-term trend indicator. Price above MA10 suggests recent momentum.&#10;Δ = (price − MA10) / MA10 × 100">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma50" data-i18n="backlog.col.ma50" title="50-day Moving Average. A medium-term trend indicator. Price above MA50 generally indicates an uptrend.">MA50 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="py-2 w-8"></th>
             </tr>
@@ -4547,8 +4546,7 @@
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_high)}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.w52_low)}</td>
-        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.ma10)}</td>
-        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">${(item.price != null && item.ma10 != null && item.ma10 > 0) ? (() => { const p = (item.price - item.ma10) / item.ma10 * 100; const s = p >= 0 ? '+' : ''; const c = p >= 0 ? 'text-green-500' : 'text-red-400'; return `<span class="${c}">${s}${p.toFixed(1)}%</span>`; })() : '—'}</td>
+        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.ma10)}${(item.price != null && item.ma10 != null && item.ma10 > 0) ? (() => { const p = (item.price - item.ma10) / item.ma10 * 100; const s = p >= 0 ? '+' : ''; const c = p >= 0 ? 'text-green-500' : 'text-red-400'; return `<br><span class="${c} text-[9px]">${s}${p.toFixed(1)}%</span>`; })() : ''}</td>
         <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${fmt(item.ma50)}</td>
         <td class="py-2 text-center">
           <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
