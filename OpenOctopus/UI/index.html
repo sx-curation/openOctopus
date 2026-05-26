@@ -172,6 +172,7 @@
   #chips-tip-popup .tip-section { margin-top: 5px; }
   #chips-tip-popup .tip-thresh { color: #94a3b8; }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
 </head>
 <body class="bg-surface font-body text-on-surface flex min-h-screen">
 
@@ -295,337 +296,7 @@
     <div class="p-6 flex gap-6 min-h-0">
 
       <!-- ─── CENTER CONTENT ─── -->
-      <div class="flex-[3] space-y-6 min-w-0">
-
-        <!-- Trinity Divergence Hero -->
-        <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
-          <div class="flex justify-between items-start mb-8">
-            <div>
-              <div class="relative inline-flex items-center gap-1 group">
-                <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="section.pii.label">Performance Integrity Index</p>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
-                <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="section.pii.tooltip">
-                  Combines EPS earnings, price trend and analyst consensus into a single integrity score.
-                </div>
-              </div>
-              <h2 class="font-headline text-2xl font-extrabold text-primary" id="dashboard-hero-title">—</h2>
-              <p class="text-[10px] text-on-surface-variant mt-2" id="dashboard-active-ticker"></p>
-              <div class="mt-2 text-[9px] text-on-surface-variant" id="dashboard-source-meta"></div>
-            </div>
-            <div class="text-right relative group">
-              <div class="inline-flex items-center justify-end gap-1">
-                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" id="dashboard-hero-metric-label">Selected Ticker</p>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;" id="dashboard-hero-metric-tooltip-icon">info</span>
-              </div>
-              <div class="flex items-center gap-1.5 justify-end">
-                <span class="text-2xl font-headline font-bold tabular-nums text-performance-green" id="dashboard-hero-metric-value">--</span>
-                <span class="material-symbols-outlined fill-icon text-performance-green" style="font-size:22px;" id="dashboard-hero-metric-icon">trending_up</span>
-              </div>
-              <p class="text-[9px] text-on-surface-variant mt-1" id="dashboard-hero-metric-note">Average analyst target versus current price.</p>
-              <div class="absolute right-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg leading-relaxed ambient-shadow opacity-0 group-hover:opacity-100 pointer-events-none z-50 hidden" id="dashboard-hero-metric-tooltip" data-i18n-html="hero.metric.tooltip">
-                Mean Target Upside = (Analyst mean target − current price) / current price × 100
-              </div>
-            </div>
-          </div>
-
-          <!-- Trinity tab buttons hidden — controlled by Data Mode (No-AI/AI) in right sidebar -->
-          <div class="hidden">
-            <button id="trinity-tab-ai">AI Overlay</button>
-            <button id="trinity-tab-raw">Raw Data</button>
-          </div>
-
-          <div id="trinity-ai-panel">
-          <!-- Three Gauges -->
-          <div class="grid grid-cols-3 gap-8">
-            <!-- Gauge 1 -->
-            <div class="flex flex-col items-center">
-              <div class="relative w-28 h-28 flex items-center justify-center">
-                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#000f27" stroke-width="7"
-                    stroke-dasharray="351.86"
-                    stroke-dashoffset="56.3"
-                    stroke-linecap="round"
-                    class="gauge-circle"/>
-                </svg>
-                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-realized-value">84%</span>
-              </div>
-              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.realized">Realized Performance</p>
-              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-realized-note">AUM Variance: -0.4%</p>
-            </div>
-            <!-- Gauge 2 -->
-            <div class="flex flex-col items-center">
-              <div class="relative w-28 h-28 flex items-center justify-center">
-                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7"
-                    stroke-dasharray="351.86"
-                    stroke-dashoffset="112.6"
-                    stroke-linecap="round"
-                    class="gauge-circle"/>
-                </svg>
-                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-guidance-value">68%</span>
-              </div>
-              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.guidance">Guidance vs. Actuals</p>
-              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-guidance-note">Conservative Bias</p>
-            </div>
-            <!-- Gauge 3 -->
-            <div class="flex flex-col items-center">
-              <div class="relative w-28 h-28 flex items-center justify-center">
-                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
-                  <circle cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7"
-                    stroke-dasharray="351.86"
-                    stroke-dashoffset="28.15"
-                    stroke-linecap="round"
-                    class="gauge-circle"/>
-                </svg>
-                <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-consensus-value">92%</span>
-              </div>
-              <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.consensus">Analyst Consensus</p>
-              <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-consensus-note">Sell-Side Alignment</p>
-            </div>
-          </div>
-
-          <!-- Sparkline Trend -->
-            <div class="mt-8 pt-5" style="border-top:1px solid rgba(196,198,207,0.15);">
-              <div class="flex justify-between items-center mb-3">
-                <span class="font-label text-[9px] uppercase tracking-widest font-semibold text-on-surface-variant" id="alignment-panel-title">Alignment Trend (4Q Trailing)</span>
-                <span class="font-label text-[9px] tabular-nums text-on-surface-variant" id="alignment-panel-metric">Target Convergence: 100.0</span>
-              </div>
-              <div class="h-14 w-full relative overflow-hidden" id="alignment-sparkline-wrap">
-                <svg id="sparkline-svg" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 56">
-                <defs>
-                  <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#000f27;stop-opacity:0.12"/>
-                    <stop offset="100%" style="stop-color:#000f27;stop-opacity:0"/>
-                  </linearGradient>
-                </defs>
-                <path id="sparkline-area" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12 L800,56 L0,56 Z" fill="url(#sparkGrad)"/>
-                <path id="sparkline-line" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12" fill="none" stroke="#000f27" stroke-width="2" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="hidden" id="alignment-word-cloud">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <p class="text-[9px] uppercase tracking-widest text-performance-green mb-2 flex items-center gap-1">
-                      <span class="material-symbols-outlined" style="font-size:12px;">trending_up</span>
-                      <span data-i18n="alignment.positive">Alpha Signals</span>
-                    </p>
-                    <div class="space-y-2" id="alignment-alpha-signals"></div>
-                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-positive-cloud"></div>
-                  </div>
-                  <div>
-                    <p class="text-[9px] uppercase tracking-widest text-performance-red mb-2 flex items-center gap-1">
-                      <span class="material-symbols-outlined" style="font-size:12px;">warning</span>
-                      <span data-i18n="alignment.negative">Beta Risks</span>
-                    </p>
-                    <div class="space-y-2" id="alignment-beta-risks"></div>
-                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-negative-cloud"></div>
-                  </div>
-                </div>
-                <!-- Disguised Negatives -->
-                <div class="mt-3 hidden" id="alignment-disguised-negatives-wrap">
-                  <p class="text-[9px] uppercase tracking-widest mb-2 flex items-center gap-1" style="color:#FF9F43;">
-                    <span class="material-symbols-outlined" style="font-size:12px;">visibility_off</span>
-                    <span data-i18n="alignment.disguised">Disguised Negatives</span>
-                    <span class="relative group">
-                      <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:11px;">info</span>
-                      <span class="absolute left-0 top-full mt-1 w-48 p-2 tooltip-glass text-inverse-on-surface text-[8px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="alignment.disguised.tooltip">
-                        Negative signals concealed within positive language, identified via semantic analysis.
-                      </span>
-                    </span>
-                  </p>
-                  <div class="space-y-2" id="alignment-disguised-negatives"></div>
-                </div>
-              </div>
-              <p class="mt-2 text-[9px] text-on-surface-variant" id="alignment-trend-note">Loading analyst alignment trend...</p>
-            </div>
-          </div>
-
-          <div id="trinity-raw-panel" class="hidden">
-            <div class="grid grid-cols-3 gap-6">
-              <div class="bg-surface-container-low rounded-lg p-4">
-                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.earnings_power">Earnings Power</p>
-                <div class="space-y-3" id="raw-earnings-power"></div>
-              </div>
-              <div class="bg-surface-container-low rounded-lg p-4">
-                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.surprise_track">Surprise Track</p>
-                <div class="space-y-3" id="raw-surprise-track"></div>
-              </div>
-              <div class="bg-surface-container-low rounded-lg p-4">
-                <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.market_lens">Market Lens</p>
-                <div class="space-y-3" id="raw-market-lens"></div>
-              </div>
-            </div>
-          </div>
-          </section>
-
-        <!-- Quarterly Earnings Reaction Cycle -->
-        <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
-          <div class="flex items-start justify-between mb-4">
-            <div class="relative inline-flex items-center gap-1 group">
-              <h3 class="font-headline text-[11px] font-extrabold text-primary uppercase tracking-tight" data-i18n="section.earnings_cycle">Quarterly Earnings Reaction Cycle</h3>
-              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
-              <div class="absolute left-0 top-full mt-2 w-60 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="earnings.tooltip">
-                对比财报日前后5日股价，观察 EPS beat/miss 与市场反应之间的规律。
-              </div>
-            </div>
-            <!-- Next earnings countdown -->
-            <div id="earnings-next-badge" class="hidden items-center gap-1.5 px-2 py-1 rounded-full" style="background:rgba(0,15,39,0.07);">
-              <span class="material-symbols-outlined text-primary" style="font-size:13px;">event</span>
-              <span class="font-label text-[9px] text-primary font-bold" id="earnings-next-text"></span>
-            </div>
-          </div>
-
-          <!-- Analyst target price banner -->
-          <div id="earnings-analyst-banner" class="hidden mb-4 px-3 py-2 rounded-lg flex items-center justify-between gap-3" style="background:rgba(0,15,39,0.05);border:1px solid rgba(0,15,39,0.08);">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">price_check</span>
-              <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.analyst_target.label">Analyst Mean Target</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="font-headline text-[13px] font-bold text-primary tabular-nums" id="earnings-analyst-mean">--</span>
-              <span class="font-label text-[9px] text-on-surface-variant" id="earnings-analyst-range"></span>
-              <span class="font-label text-[10px] font-bold tabular-nums" id="earnings-analyst-upside"></span>
-            </div>
-          </div>
-
-          <!-- Column headers -->
-          <div class="flex items-center gap-4 mb-2">
-            <div class="w-16"></div>
-            <div class="w-28 shrink-0"></div>
-            <div class="w-28 shrink-0 font-label text-[8px] uppercase tracking-widest text-on-surface-variant text-center" data-i18n="earnings.col.eps">EPS Est → Act</div>
-            <div class="flex-1 relative">
-              <div class="flex justify-between text-[8px] font-label uppercase tracking-widest text-on-surface-variant px-1">
-                <span>T-5</span>
-                <span>Day 0</span>
-                <span>T+5</span>
-              </div>
-            </div>
-            <div class="w-14 text-right font-label text-[8px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.col.return">5d Return</div>
-          </div>
-
-          <div class="space-y-4" id="earnings-cycle-list">
-            <!-- dynamic content -->
-          </div>
-
-          <!-- Pattern summary row -->
-          <div id="earnings-pattern-summary" class="hidden mt-4 pt-3 flex items-center gap-4 flex-wrap" style="border-top:1px solid rgba(196,198,207,0.15);">
-            <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.pattern.label">Pattern:</span>
-            <span class="font-label text-[9px] text-on-surface" id="earnings-beat-rate"></span>
-            <span class="font-label text-[9px] text-performance-green" id="earnings-avg-beat"></span>
-            <span class="font-label text-[9px] text-performance-red" id="earnings-avg-miss"></span>
-          </div>
-
-          <p class="mt-3 text-[9px] text-on-surface-variant text-center" id="earnings-cycle-status">Loading earnings window...</p>
-        </section>
-
-        <!-- Management Credibility Center -->
-        <section class="bg-surface-container-lowest rounded-lg grid grid-cols-3 overflow-visible ambient-shadow">
-          <!-- Column A: Reliability Index + Management Transparency (stacked) -->
-          <div class="p-6" style="border-right:1px solid rgba(196,198,207,0.15);">
-            <!-- Reliability Index -->
-            <div class="mb-6">
-              <div class="relative inline-flex items-center gap-1 group mb-3">
-                <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.reliability">Guidance Accuracy</h4>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
-                <div class="absolute left-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.reliability.tooltip">
-                  How reliably management's quarterly guidance translates into actual results. Graded A–D based on 8-quarter EPS beat/miss history.
-                </div>
-              </div>
-
-              <!-- Grade badge + label -->
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
-                  <span class="font-headline text-xl font-extrabold" id="mgmt-reliability-grade" style="color:#10AC84;">—</span>
-                </div>
-                <div class="min-w-0">
-                  <p class="text-[11px] font-bold text-on-surface leading-tight" id="mgmt-reliability-label">—</p>
-                  <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-reliability-value">—</p>
-                </div>
-              </div>
-
-              <!-- Beat/miss pattern bars -->
-              <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5" id="mgmt-reliability-bars">
-                <div class="flex-1 rounded-sm bg-primary/30" style="height:55%;"></div>
-                <div class="flex-1 rounded-sm bg-primary/40" style="height:75%;"></div>
-                <div class="flex-1 rounded-sm bg-primary/30" style="height:40%;"></div>
-                <div class="flex-1 rounded-sm bg-primary/50" style="height:88%;"></div>
-                <div class="flex-1 rounded-sm bg-primary/35" style="height:65%;"></div>
-                <div class="flex-1 rounded-sm bg-primary/55" style="height:80%;"></div>
-              </div>
-              <p class="text-[8px] text-on-surface-variant text-center mt-1" data-i18n="mgmt.8quarter_label">8-quarter beat pattern</p>
-
-              <!-- Forecast variance -->
-              <div class="mt-2 flex justify-between items-center">
-                <span class="text-[9px] text-on-surface-variant" data-i18n="mgmt.stddev">Forecast Variance</span>
-                <span class="text-[9px] font-bold tabular-nums" id="mgmt-stddev-value">—</span>
-              </div>
-            </div>
-
-            <!-- Divider -->
-            <div class="border-t mb-6" style="border-color:rgba(196,198,207,0.15);"></div>
-
-            <!-- Management Transparency -->
-            <div>
-              <div class="relative inline-flex items-center gap-1 mb-4 group">
-                <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.transparency">Management Transparency</h4>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
-                <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.transparency.tooltip">
-                  Evaluates earnings call language clarity, direct analyst Q&A response rate, and hedging frequency.
-                </div>
-              </div>
-              <div class="h-20 w-full rounded-lg relative overflow-hidden" style="background:linear-gradient(to right,#EE5253,#FF9F43,#10AC84);">
-                <div class="absolute inset-0 flex items-center px-4 justify-between">
-                  <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.opacity">Opacity</span>
-                  <div class="absolute w-0.5 bg-white/90 top-2 bottom-2 rounded-full z-10 shadow-lg" style="left:74%;" id="mgmt-transparency-indicator"></div>
-                  <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.lucid">Lucid</span>
-                </div>
-              </div>
-              <div class="mt-3 flex justify-between items-center">
-                <span class="text-xs font-bold text-performance-green" id="mgmt-transparency-score">7.4 / 10.0</span>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:15px;">info</span>
-              </div>
-              <div class="mt-3 text-[9px] text-on-surface-variant hidden" id="mgmt-methodology-note"></div>
-            </div>
-          </div>
-
-          <!-- Column B+C: Strategy Execution (spans 2 columns) -->
-          <div class="col-span-2 p-6">
-            <div class="relative inline-flex items-center gap-1 group mb-4">
-              <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.strategy">Strategy Execution</h4>
-              <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
-              <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.strategy.tooltip">
-                Compares prior-quarter management commitments against current-quarter actuals to assess execution quality.
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-surface-container-low rounded-lg p-3">
-                <div class="mb-2">
-                  <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.commitment">Last Quarter's Promises</p>
-                  <div class="flex justify-between items-center mt-0.5">
-                    <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.commitment.sub">Did management follow through?</p>
-                    <span class="text-[10px] font-bold" id="mgmt-commitment-value">—</span>
-                  </div>
-                </div>
-                <div class="space-y-2" id="mgmt-commitment-checklist"></div>
-              </div>
-              <div class="bg-surface-container-low rounded-lg p-3">
-                <div class="mb-2">
-                  <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.continuity">Narrative Consistency</p>
-                  <div class="flex justify-between items-center mt-0.5">
-                    <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.continuity.sub">Are key topics carried forward?</p>
-                    <span class="text-[10px] font-bold" id="mgmt-mention-value">—</span>
-                  </div>
-                </div>
-                <div class="space-y-2" id="mgmt-mention-topics"></div>
-              </div>
-            </div>
-            <p class="mt-3 text-[9px] text-on-surface-variant italic leading-relaxed" id="mgmt-narrative">High correlation between verbal guidance and subsequent CapEx deployment.</p>
-          </div>
-        </section>
-
+      <div class="flex-[3] min-w-0">
       </div><!-- end center -->
 
       <!-- ─── RIGHT SIDEBAR ─── -->
@@ -1143,10 +814,10 @@
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.tags">Tags</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_score" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Estimated price × 0.8 (bear case, 20% discount from TTM PE × EPS)">e×0.8</th>
-              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Estimated price × 1.2 (bull case, 20% premium from TTM PE × EPS)">e×1.2</th>
-              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Intrinsic value: e_price × (1 + growth + min_return) / (1 + MOS), where growth=10%, min_return=6%, MOS=25%">e_cal</th>
-              <th class="pr-3 py-2 whitespace-nowrap text-right" title="Average anchor: avg(e_cal, e×0.8)">avg</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="e_price = TTM PE × TTM EPS&#10;e×0.8 = e_price × 0.8 (bear case, 20% margin of safety)">e×0.8</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="e_price = TTM PE × TTM EPS&#10;e×1.2 = e_price × 1.2 (bull case, 20% premium)">e×1.2</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="e_price_cal = e_price × (1 + g + r) / (1 + MOS)&#10;e_price = TTM PE × TTM EPS&#10;g = 10% (forecast growth)&#10;r = 6% (min required return)&#10;MOS = 25% (margin of safety)">e_cal</th>
+              <th class="pr-3 py-2 whitespace-nowrap text-right" title="a_price = mean(e_cal, e_2u, e×0.8)&#10;e_2u = EPS × (pe_min + pe_step×2)&#10;pe_step = (pe_max − pe_min) / 5&#10;pe_min/max from 5-year annual PE history">avg</th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
@@ -1233,6 +904,8 @@
       <div id="fh-tabs-bar" class="hidden flex gap-1 mb-4 p-1 bg-surface-container rounded-xl w-fit">
         <button class="fh-tab fh-tab-active px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors" data-fh-tab="indicators" data-i18n="fh.tab.indicators">Health Metrics</button>
         <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="drilldown" data-i18n="fh.tab.drilldown">AI Factor Analysis</button>
+        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="competitor" data-i18n="fh.tab.competitor">Competitor Comparison</button>
+        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="report">Report Response Analysis</button>
       </div>
 
       <!-- ── Tab 1: Health Metrics ── -->
@@ -1298,6 +971,376 @@
           <button id="fh-drilldown-retry" class="ml-auto px-3 py-1 text-[10px] font-bold bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors" data-i18n="fh.btn.retry">Retry</button>
         </div>
       </div>
+
+      <!-- ── Competitor Comparison Panel ── -->
+      <div id="fh-panel-competitor" class="fh-panel hidden">
+
+        <!-- Selector Section -->
+        <div id="cc-selector" class="mb-5 p-4 bg-surface-container rounded-xl border border-outline-variant/40">
+          <p class="text-[10px] text-on-surface-variant mb-3" data-i18n="fh.competitor.hint">Select up to 4 competitors to compare against the main company.</p>
+
+          <!-- Suggested peers row -->
+          <div class="mb-3">
+            <span class="text-[9px] uppercase tracking-widest text-on-surface-variant/60 mr-2" data-i18n="fh.competitor.suggested">Suggested</span>
+            <span id="cc-peers-loading" class="text-[10px] text-on-surface-variant/50 italic">Loading…</span>
+            <div id="cc-peers-chips" class="inline-flex flex-wrap gap-1.5 mt-1"></div>
+          </div>
+
+          <!-- Manual input row -->
+          <div class="flex items-center gap-2 mb-3">
+            <input id="cc-ticker-input" type="text" autocomplete="off" spellcheck="false"
+              maxlength="10"
+              class="h-8 px-3 text-[11px] bg-background border border-outline-variant rounded-lg w-36 focus:outline-none focus:ring-1 focus:ring-primary uppercase"
+              data-i18n-placeholder="fh.competitor.add_placeholder"
+              placeholder="Add ticker (e.g. MSFT)">
+            <button id="cc-add-btn"
+              class="h-8 px-3 text-[11px] font-bold bg-secondary-container text-on-secondary-container rounded-lg hover:bg-secondary-container/80 transition-colors"
+              title="">+ Add</button>
+          </div>
+
+          <!-- Selected chips row -->
+          <div id="cc-selected-chips" class="flex flex-wrap gap-1.5 mb-3 min-h-[28px]"></div>
+
+          <!-- Run button -->
+          <button id="cc-run-btn"
+            class="h-9 px-5 text-[11px] font-bold bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            data-i18n="fh.competitor.run">Run Comparison</button>
+          <span id="cc-run-status" class="ml-3 text-[10px] text-on-surface-variant/60 italic"></span>
+        </div>
+
+        <!-- Loading overlay -->
+        <div id="cc-loading" class="hidden py-16 text-center text-on-surface-variant/50 text-[11px]">
+          <span class="material-symbols-outlined animate-spin text-primary text-3xl">progress_activity</span>
+          <p class="mt-2" data-i18n="fh.competitor.loading">Loading comparison data…</p>
+        </div>
+
+        <!-- Results container -->
+        <div id="cc-results" class="hidden space-y-6">
+
+          <!-- Business Profiles Section -->
+          <div>
+            <h3 class="text-[11px] font-bold text-on-surface uppercase tracking-wider mb-3" data-i18n="fh.competitor.section.profiles">Business Overview</h3>
+            <div id="cc-profiles" class="flex gap-3 flex-wrap"></div>
+            <!-- AI Business Diff -->
+            <div id="cc-business-diff" class="mt-3 p-3 bg-surface-container-high rounded-lg border border-outline-variant/30 text-[10px] text-on-surface-variant hidden">
+              <span class="text-[9px] font-semibold text-tertiary mr-2" data-i18n="fh.competitor.ai_note">⚡ AI Generated</span>
+              <span id="cc-diff-summary"></span>
+              <ul id="cc-diff-list" class="mt-1.5 space-y-0.5 list-disc list-inside"></ul>
+            </div>
+          </div>
+
+          <!-- Price Trend Chart Section -->
+          <div>
+            <h3 class="text-[11px] font-bold text-on-surface uppercase tracking-wider mb-3" data-i18n="fh.competitor.section.price">1-Year Price Trend</h3>
+            <div id="cc-price-chart-wrap" class="bg-surface-container p-3 rounded-xl border border-outline-variant/30" style="height:280px;">
+              <canvas id="cc-price-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- FH Score Comparison Table -->
+          <div>
+            <h3 class="text-[11px] font-bold text-on-surface uppercase tracking-wider mb-3" data-i18n="fh.competitor.section.fh_table">Financial Health Score Comparison</h3>
+            <div id="cc-fh-table" class="overflow-x-auto"></div>
+          </div>
+
+          <!-- Analyst Ratings Section -->
+          <div>
+            <h3 class="text-[11px] font-bold text-on-surface uppercase tracking-wider mb-3" data-i18n="fh.competitor.section.analyst">Analyst Ratings</h3>
+            <div id="cc-analyst" class="flex gap-3 flex-wrap"></div>
+          </div>
+
+          <!-- Hiring Trend Section -->
+          <div>
+            <h3 class="text-[11px] font-bold text-on-surface uppercase tracking-wider mb-3" data-i18n="fh.competitor.section.jobs">Hiring Trend (LinkedIn)</h3>
+            <div id="cc-jobs" class="flex gap-3 flex-wrap"></div>
+          </div>
+
+        </div><!-- /cc-results -->
+      </div><!-- /fh-panel-competitor -->
+
+      <!-- ── Tab 4: Report Response Analysis ── -->
+      <div id="fh-panel-report" class="fh-panel hidden">
+        <div class="space-y-6">
+          <!-- Trinity Divergence Hero -->
+          <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+            <div class="flex justify-between items-start mb-8">
+              <div>
+                <div class="relative inline-flex items-center gap-1 group">
+                  <p class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-1" data-i18n="section.pii.label">Performance Integrity Index</p>
+                  <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                  <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="section.pii.tooltip">
+                    Combines EPS earnings, price trend and analyst consensus into a single integrity score.
+                  </div>
+                </div>
+                <h2 class="font-headline text-2xl font-extrabold text-primary" id="dashboard-hero-title">—</h2>
+                <p class="text-[10px] text-on-surface-variant mt-2" id="dashboard-active-ticker"></p>
+                <div class="mt-2 text-[9px] text-on-surface-variant" id="dashboard-source-meta"></div>
+              </div>
+              <div class="text-right relative group">
+                <div class="inline-flex items-center justify-end gap-1">
+                  <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-1" id="dashboard-hero-metric-label">Selected Ticker</p>
+                  <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;" id="dashboard-hero-metric-tooltip-icon">info</span>
+                </div>
+                <div class="flex items-center gap-1.5 justify-end">
+                  <span class="text-2xl font-headline font-bold tabular-nums text-performance-green" id="dashboard-hero-metric-value">--</span>
+                  <span class="material-symbols-outlined fill-icon text-performance-green" style="font-size:22px;" id="dashboard-hero-metric-icon">trending_up</span>
+                </div>
+                <p class="text-[9px] text-on-surface-variant mt-1" id="dashboard-hero-metric-note">Average analyst target versus current price.</p>
+                <div class="absolute right-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg leading-relaxed ambient-shadow opacity-0 group-hover:opacity-100 pointer-events-none z-50 hidden" id="dashboard-hero-metric-tooltip" data-i18n-html="hero.metric.tooltip">
+                  Mean Target Upside = (Analyst mean target − current price) / current price × 100
+                </div>
+              </div>
+            </div>
+            <div class="hidden">
+              <button id="trinity-tab-ai">AI Overlay</button>
+              <button id="trinity-tab-raw">Raw Data</button>
+            </div>
+            <div id="trinity-ai-panel">
+            <div class="grid grid-cols-3 gap-8">
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#000f27" stroke-width="7" stroke-dasharray="351.86" stroke-dashoffset="56.3" stroke-linecap="round" class="gauge-circle"/>
+                  </svg>
+                  <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-realized-value">84%</span>
+                </div>
+                <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.realized">Realized Performance</p>
+                <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-realized-note">AUM Variance: -0.4%</p>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#778cb5" stroke-width="7" stroke-dasharray="351.86" stroke-dashoffset="112.6" stroke-linecap="round" class="gauge-circle"/>
+                  </svg>
+                  <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-guidance-value">68%</span>
+                </div>
+                <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.guidance">Guidance vs. Actuals</p>
+                <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-guidance-note">Conservative Bias</p>
+              </div>
+              <div class="flex flex-col items-center">
+                <div class="relative w-28 h-28 flex items-center justify-center">
+                  <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#e9e7eb" stroke-width="7"/>
+                    <circle cx="64" cy="64" r="56" fill="none" stroke="#10AC84" stroke-width="7" stroke-dasharray="351.86" stroke-dashoffset="28.15" stroke-linecap="round" class="gauge-circle"/>
+                  </svg>
+                  <span class="absolute font-headline font-bold text-base tabular-nums text-primary" id="gauge-consensus-value">92%</span>
+                </div>
+                <p class="mt-3 font-label text-[10px] uppercase tracking-widest font-bold text-center" data-i18n="gauge.consensus">Analyst Consensus</p>
+                <p class="text-[9px] text-on-surface-variant mt-0.5" id="gauge-consensus-note">Sell-Side Alignment</p>
+              </div>
+            </div>
+            <div class="mt-8 pt-5" style="border-top:1px solid rgba(196,198,207,0.15);">
+              <div class="flex justify-between items-center mb-3">
+                <span class="font-label text-[9px] uppercase tracking-widest font-semibold text-on-surface-variant" id="alignment-panel-title">Alignment Trend (4Q Trailing)</span>
+                <span class="font-label text-[9px] tabular-nums text-on-surface-variant" id="alignment-panel-metric">Target Convergence: 100.0</span>
+              </div>
+              <div class="h-14 w-full relative overflow-hidden" id="alignment-sparkline-wrap">
+                <svg id="sparkline-svg" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 56">
+                  <defs>
+                    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style="stop-color:#000f27;stop-opacity:0.12"/>
+                      <stop offset="100%" style="stop-color:#000f27;stop-opacity:0"/>
+                    </linearGradient>
+                  </defs>
+                  <path id="sparkline-area" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12 L800,56 L0,56 Z" fill="url(#sparkGrad)"/>
+                  <path id="sparkline-line" d="M0,42 C80,18 130,38 200,20 S320,46 400,22 S520,42 600,8 S720,28 800,12" fill="none" stroke="#000f27" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="hidden" id="alignment-word-cloud">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <p class="text-[9px] uppercase tracking-widest text-performance-green mb-2 flex items-center gap-1">
+                      <span class="material-symbols-outlined" style="font-size:12px;">trending_up</span>
+                      <span data-i18n="alignment.positive">Alpha Signals</span>
+                    </p>
+                    <div class="space-y-2" id="alignment-alpha-signals"></div>
+                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-positive-cloud"></div>
+                  </div>
+                  <div>
+                    <p class="text-[9px] uppercase tracking-widest text-performance-red mb-2 flex items-center gap-1">
+                      <span class="material-symbols-outlined" style="font-size:12px;">warning</span>
+                      <span data-i18n="alignment.negative">Beta Risks</span>
+                    </p>
+                    <div class="space-y-2" id="alignment-beta-risks"></div>
+                    <div class="flex flex-wrap gap-1.5 mt-2" id="alignment-negative-cloud"></div>
+                  </div>
+                </div>
+                <div class="mt-3 hidden" id="alignment-disguised-negatives-wrap">
+                  <p class="text-[9px] uppercase tracking-widest mb-2 flex items-center gap-1" style="color:#FF9F43;">
+                    <span class="material-symbols-outlined" style="font-size:12px;">visibility_off</span>
+                    <span data-i18n="alignment.disguised">Disguised Negatives</span>
+                    <span class="relative group">
+                      <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:11px;">info</span>
+                      <span class="absolute left-0 top-full mt-1 w-48 p-2 tooltip-glass text-inverse-on-surface text-[8px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="alignment.disguised.tooltip">
+                        Negative signals concealed within positive language, identified via semantic analysis.
+                      </span>
+                    </span>
+                  </p>
+                  <div class="space-y-2" id="alignment-disguised-negatives"></div>
+                </div>
+              </div>
+              <p class="mt-2 text-[9px] text-on-surface-variant" id="alignment-trend-note">Loading analyst alignment trend...</p>
+            </div>
+            </div>
+            <div id="trinity-raw-panel" class="hidden">
+              <div class="grid grid-cols-3 gap-6">
+                <div class="bg-surface-container-low rounded-lg p-4">
+                  <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.earnings_power">Earnings Power</p>
+                  <div class="space-y-3" id="raw-earnings-power"></div>
+                </div>
+                <div class="bg-surface-container-low rounded-lg p-4">
+                  <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.surprise_track">Surprise Track</p>
+                  <div class="space-y-3" id="raw-surprise-track"></div>
+                </div>
+                <div class="bg-surface-container-low rounded-lg p-4">
+                  <p class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant mb-3" data-i18n="raw.market_lens">Market Lens</p>
+                  <div class="space-y-3" id="raw-market-lens"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Quarterly Earnings Reaction Cycle -->
+          <section class="bg-surface-container-lowest rounded-lg p-6 ambient-shadow">
+            <div class="flex items-start justify-between mb-4">
+              <div class="relative inline-flex items-center gap-1 group">
+                <h3 class="font-headline text-[11px] font-extrabold text-primary uppercase tracking-tight" data-i18n="section.earnings_cycle">Quarterly Earnings Reaction Cycle</h3>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                <div class="absolute left-0 top-full mt-2 w-60 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="earnings.tooltip">
+                  对比财报日前后5日股价，观察 EPS beat/miss 与市场反应之间的规律。
+                </div>
+              </div>
+              <div id="earnings-next-badge" class="hidden items-center gap-1.5 px-2 py-1 rounded-full" style="background:rgba(0,15,39,0.07);">
+                <span class="material-symbols-outlined text-primary" style="font-size:13px;">event</span>
+                <span class="font-label text-[9px] text-primary font-bold" id="earnings-next-text"></span>
+              </div>
+            </div>
+            <div id="earnings-analyst-banner" class="hidden mb-4 px-3 py-2 rounded-lg flex items-center justify-between gap-3" style="background:rgba(0,15,39,0.05);border:1px solid rgba(0,15,39,0.08);">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">price_check</span>
+                <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.analyst_target.label">Analyst Mean Target</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="font-headline text-[13px] font-bold text-primary tabular-nums" id="earnings-analyst-mean">--</span>
+                <span class="font-label text-[9px] text-on-surface-variant" id="earnings-analyst-range"></span>
+                <span class="font-label text-[10px] font-bold tabular-nums" id="earnings-analyst-upside"></span>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 mb-2">
+              <div class="w-16"></div>
+              <div class="w-28 shrink-0"></div>
+              <div class="w-28 shrink-0 font-label text-[8px] uppercase tracking-widest text-on-surface-variant text-center" data-i18n="earnings.col.eps">EPS Est → Act</div>
+              <div class="flex-1 relative">
+                <div class="flex justify-between text-[8px] font-label uppercase tracking-widest text-on-surface-variant px-1">
+                  <span>T-5</span><span>Day 0</span><span>T+5</span>
+                </div>
+              </div>
+              <div class="w-14 text-right font-label text-[8px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.col.return">5d Return</div>
+            </div>
+            <div class="space-y-4" id="earnings-cycle-list"></div>
+            <div id="earnings-pattern-summary" class="hidden mt-4 pt-3 flex items-center gap-4 flex-wrap" style="border-top:1px solid rgba(196,198,207,0.15);">
+              <span class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant" data-i18n="earnings.pattern.label">Pattern:</span>
+              <span class="font-label text-[9px] text-on-surface" id="earnings-beat-rate"></span>
+              <span class="font-label text-[9px] text-performance-green" id="earnings-avg-beat"></span>
+              <span class="font-label text-[9px] text-performance-red" id="earnings-avg-miss"></span>
+            </div>
+            <p class="mt-3 text-[9px] text-on-surface-variant text-center" id="earnings-cycle-status">Loading earnings window...</p>
+          </section>
+
+          <!-- Management Credibility Center -->
+          <section class="bg-surface-container-lowest rounded-lg grid grid-cols-3 overflow-visible ambient-shadow">
+            <div class="p-6" style="border-right:1px solid rgba(196,198,207,0.15);">
+              <div class="mb-6">
+                <div class="relative inline-flex items-center gap-1 group mb-3">
+                  <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.reliability">Guidance Accuracy</h4>
+                  <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                  <div class="absolute left-0 top-full mt-2 w-56 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.reliability.tooltip">
+                    How reliably management's quarterly guidance translates into actual results. Graded A–D based on 8-quarter EPS beat/miss history.
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="flex items-center justify-center rounded-xl shrink-0" style="width:52px;height:52px;background:rgba(16,172,132,0.10);border:2px solid rgba(16,172,132,0.25);">
+                    <span class="font-headline text-xl font-extrabold" id="mgmt-reliability-grade" style="color:#10AC84;">—</span>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-bold text-on-surface leading-tight" id="mgmt-reliability-label">—</p>
+                    <p class="text-[9px] text-on-surface-variant mt-0.5" id="mgmt-reliability-value">—</p>
+                  </div>
+                </div>
+                <div class="h-10 w-full bg-surface-container-low rounded-sm p-1.5 flex items-end gap-0.5" id="mgmt-reliability-bars">
+                  <div class="flex-1 rounded-sm bg-primary/30" style="height:55%;"></div>
+                  <div class="flex-1 rounded-sm bg-primary/40" style="height:75%;"></div>
+                  <div class="flex-1 rounded-sm bg-primary/30" style="height:40%;"></div>
+                  <div class="flex-1 rounded-sm bg-primary/50" style="height:88%;"></div>
+                  <div class="flex-1 rounded-sm bg-primary/35" style="height:65%;"></div>
+                  <div class="flex-1 rounded-sm bg-primary/55" style="height:80%;"></div>
+                </div>
+                <p class="text-[8px] text-on-surface-variant text-center mt-1" data-i18n="mgmt.8quarter_label">8-quarter beat pattern</p>
+                <div class="mt-2 flex justify-between items-center">
+                  <span class="text-[9px] text-on-surface-variant" data-i18n="mgmt.stddev">Forecast Variance</span>
+                  <span class="text-[9px] font-bold tabular-nums" id="mgmt-stddev-value">—</span>
+                </div>
+              </div>
+              <div class="border-t mb-6" style="border-color:rgba(196,198,207,0.15);"></div>
+              <div>
+                <div class="relative inline-flex items-center gap-1 mb-4 group">
+                  <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.management.transparency">Management Transparency</h4>
+                  <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                  <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.transparency.tooltip">
+                    Evaluates earnings call language clarity, direct analyst Q&A response rate, and hedging frequency.
+                  </div>
+                </div>
+                <div class="h-20 w-full rounded-lg relative overflow-hidden" style="background:linear-gradient(to right,#EE5253,#FF9F43,#10AC84);">
+                  <div class="absolute inset-0 flex items-center px-4 justify-between">
+                    <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.opacity">Opacity</span>
+                    <div class="absolute w-0.5 bg-white/90 top-2 bottom-2 rounded-full z-10 shadow-lg" style="left:74%;" id="mgmt-transparency-indicator"></div>
+                    <span class="text-[9px] text-white font-bold uppercase tracking-wider" data-i18n="mgmt.lucid">Lucid</span>
+                  </div>
+                </div>
+                <div class="mt-3 flex justify-between items-center">
+                  <span class="text-xs font-bold text-performance-green" id="mgmt-transparency-score">7.4 / 10.0</span>
+                  <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:15px;">info</span>
+                </div>
+                <div class="mt-3 text-[9px] text-on-surface-variant hidden" id="mgmt-methodology-note"></div>
+              </div>
+            </div>
+            <div class="col-span-2 p-6">
+              <div class="relative inline-flex items-center gap-1 group mb-4">
+                <h4 class="font-headline text-[10px] font-extrabold text-primary uppercase" data-i18n="section.strategy">Strategy Execution</h4>
+                <span class="material-symbols-outlined text-on-surface-variant cursor-help" style="font-size:14px;">info</span>
+                <div class="absolute left-0 top-full mt-2 w-52 p-3 tooltip-glass text-inverse-on-surface text-[9px] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 leading-relaxed ambient-shadow" data-i18n-html="mgmt.strategy.tooltip">
+                  Compares prior-quarter management commitments against current-quarter actuals to assess execution quality.
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-surface-container-low rounded-lg p-3">
+                  <div class="mb-2">
+                    <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.commitment">Last Quarter's Promises</p>
+                    <div class="flex justify-between items-center mt-0.5">
+                      <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.commitment.sub">Did management follow through?</p>
+                      <span class="text-[10px] font-bold" id="mgmt-commitment-value">—</span>
+                    </div>
+                  </div>
+                  <div class="space-y-2" id="mgmt-commitment-checklist"></div>
+                </div>
+                <div class="bg-surface-container-low rounded-lg p-3">
+                  <div class="mb-2">
+                    <p class="text-[10px] font-semibold text-on-surface" data-i18n="mgmt.continuity">Narrative Consistency</p>
+                    <div class="flex justify-between items-center mt-0.5">
+                      <p class="text-[9px] text-on-surface-variant" data-i18n="mgmt.continuity.sub">Are key topics carried forward?</p>
+                      <span class="text-[10px] font-bold" id="mgmt-mention-value">—</span>
+                    </div>
+                  </div>
+                  <div class="space-y-2" id="mgmt-mention-topics"></div>
+                </div>
+              </div>
+              <p class="mt-3 text-[9px] text-on-surface-variant italic leading-relaxed" id="mgmt-narrative">High correlation between verbal guidance and subsequent CapEx deployment.</p>
+            </div>
+          </section>
+        </div>
+      </div><!-- /fh-panel-report -->
 
     </div>
   </div>
@@ -1734,6 +1777,7 @@
     if (page === 'supply-chain' && typeof window.loadSupplyChainPage === 'function') window.loadSupplyChainPage();
     if (page === 'chips' && typeof window._initChipsControls === 'function') window._initChipsControls();
   }
+  window.showPage = showPage;
 
   async function fetchJson(url) {
     const res = await fetch(url);
@@ -3346,6 +3390,7 @@
 
     loadDashboardFeeds();
   })();
+  window.loadDashboardData = loadDashboardData;
 })();
 
 // ═══════════════════════════════════════════════════════
@@ -3361,6 +3406,78 @@
   // ─── Per-market state store ─────────────────────────────────────────────────
   // Each market independently tracks its own job, rendering state, and selection.
   const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50'];
+
+  // ── FH score fetch queue (max 5 concurrent, prevents yfinance 429) ────────
+  const _fhQueue = [];
+  const _fhActive = new Set();
+  let _fhActiveCount = 0;
+  const _FH_CONCURRENCY = 5;
+
+  function _fetchBacklogScoreAsync(ticker) {
+    return new Promise(function(resolve) {
+      const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+
+      // 24h TTL cache — skip fetch if fresh score exists
+      try {
+        const raw = localStorage.getItem('oo_fh_' + ticker);
+        if (raw) {
+          const d = JSON.parse(raw);
+          const ageH = d._cached_at ? (Date.now() - d._cached_at) / 3600000 : 999;
+          if (d && d.weighted_100 != null && ageH < 24) {
+            const liveCell = document.getElementById('bscore-' + safeId);
+            if (liveCell) _updateScoreCell(liveCell, d);
+            return resolve();  // must resolve — queue depends on this
+          }
+        }
+      } catch(e) {}
+
+      // Show spinner
+      const cellNow = document.getElementById('bscore-' + safeId);
+      if (cellNow) cellNow.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
+
+      fetch('/api/financial_health/data?ticker=' + encodeURIComponent(ticker))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(d) {
+          const liveCell = document.getElementById('bscore-' + safeId);
+          if (!d || d.error) { if (liveCell) liveCell.textContent = '—'; return; }
+          try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify({...d, _cached_at: Date.now()})); } catch(e) {}
+          if (d.weighted_100 != null) {
+            const now = new Date().toISOString();
+            _saveBacklogItemField(ticker, 'fh_score', d.weighted_100);
+            _saveBacklogItemField(ticker, 'fh_fetched_at', now);
+            if (window._ooBacklogData) {
+              const item = window._ooBacklogData.find(x => x.ticker === ticker);
+              if (item) { item.fh_score = d.weighted_100; item.fh_fetched_at = now; }
+            }
+          }
+          if (liveCell) _updateScoreCell(liveCell, d);
+        })
+        .catch(function() {
+          const liveCell = document.getElementById('bscore-' + safeId);
+          if (liveCell) liveCell.textContent = '—';
+        })
+        .finally(resolve);  // always resolve so queue counter decrements
+    });
+  }
+
+  function _fhDrain() {
+    while (_fhActiveCount < _FH_CONCURRENCY && _fhQueue.length > 0) {
+      const ticker = _fhQueue.shift();
+      _fhActiveCount++;
+      _fhActive.add(ticker);
+      _fetchBacklogScoreAsync(ticker).finally(function() {
+        _fhActive.delete(ticker);
+        _fhActiveCount--;
+        _fhDrain();
+      });
+    }
+  }
+
+  function _fhEnqueue(ticker) {
+    if (_fhQueue.includes(ticker) || _fhActive.has(ticker)) return;
+    _fhQueue.push(ticker);
+    _fhDrain();
+  }
   const _mktState = {};
   MARKETS.forEach(m => {
     _mktState[m] = {
@@ -3546,12 +3663,13 @@
       }
     }
     switch (state) {
-      case 'idle':      btnStart.classList.remove('hidden'); break;
-      case 'running':   btnPause.classList.remove('hidden'); break;
-      case 'paused':    btnResume.classList.remove('hidden'); btnCancel && btnCancel.classList.remove('hidden'); break;
-      case 'done':      btnRescan && btnRescan.classList.remove('hidden'); _updateLastScanTs(); break;
-      case 'cancelled': btnStart.classList.remove('hidden'); break;
-      case 'error':     btnStart.classList.remove('hidden'); break;
+      case 'idle':             btnStart.classList.remove('hidden'); break;
+      case 'fetching_tickers': btnCancel && btnCancel.classList.remove('hidden'); break;
+      case 'running':          btnPause.classList.remove('hidden'); break;
+      case 'paused':           btnResume.classList.remove('hidden'); btnCancel && btnCancel.classList.remove('hidden'); break;
+      case 'done':             btnRescan && btnRescan.classList.remove('hidden'); _updateLastScanTs(); break;
+      case 'cancelled':        btnStart.classList.remove('hidden'); break;
+      case 'error':            btnStart.classList.remove('hidden'); break;
     }
   }
 
@@ -4044,9 +4162,16 @@
     if (!st.jobId) return;
     try {
       const data = await fetch(`/api/screener/status/${st.jobId}`).then(r => r.json());
+      st.pollErrors = 0;
       st.lastData = data;
       renderScreenerStatus(data, market);
-    } catch(e) { /* network hiccup */ }
+    } catch(e) {
+      st.pollErrors = (st.pollErrors || 0) + 1;
+      if (st.pollErrors >= 5) {
+        _clearPoll(market);
+        _setButtonState('error');
+      }
+    }
   }
 
   // ─── Public control API ───────────────────────────────────────────────────────
@@ -4079,6 +4204,7 @@
       st.lastData = status;
       renderScreenerStatus(status, market);
       if (!['done', 'cancelled', 'error'].includes(status.status)) {
+        st.pollErrors = 0;
         st.pollTimer = setInterval(() => _pollMarket(market), 2000);
       }
     } catch(err) {
@@ -4283,18 +4409,24 @@
     })));
     renderBacklogTable(placeholders);
 
-    // Phase 2: fetch live data and update
+    // Phase 2: fetch live data in chunks of 50, update table progressively
     if (statusEl) statusEl.textContent = I18N ? I18N.t('backlog.refreshing') : 'Refreshing...';
     try {
-      const res = await fetch('/api/backlog/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tickers }),
-      });
-      const data = await res.json();
-      window._ooBacklogData = _mergeBacklogMeta(data.items || []);
+      const CHUNK = 50;
+      let allItems = [];
+      for (let i = 0; i < tickers.length; i += CHUNK) {
+        const chunk = tickers.slice(i, i + CHUNK);
+        const res = await fetch('/api/backlog/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tickers: chunk }),
+        });
+        const data = res.ok ? await res.json() : { items: [] };
+        allItems = allItems.concat(data.items || []);
+        window._ooBacklogData = _mergeBacklogMeta(allItems);
+        renderBacklogTable(window._ooBacklogData);
+      }
       _backlogLastRefresh = Date.now();
-      renderBacklogTable(window._ooBacklogData);
       _refreshTagFilter();
     } catch(e) {
       if (statusEl) statusEl.textContent = 'Error: ' + e.message;
@@ -4418,10 +4550,33 @@
       </tr>`;
     }).join('');
 
-    // Kick off async FH score fetch and valuation fetch for all loaded rows (uses cache)
-    sorted.filter(item => !item._loading && !item.error).forEach(item => {
-      _fetchBacklogScore(item.ticker);
-      _fetchBacklogValuation(item.ticker);
+    sorted.filter(item => !item._loading && !item.error).forEach((item, idx) => {
+      const safeId = item.ticker.replace(/[^a-zA-Z0-9]/g, '_');
+      const cell = document.getElementById('bscore-' + safeId);
+      let served = false;
+      try {
+        const raw = localStorage.getItem('oo_fh_' + item.ticker);
+        if (raw) {
+          const d = JSON.parse(raw);
+          const ageH = d._cached_at ? (Date.now() - d._cached_at) / 3600000 : 999;
+          if (d.weighted_100 != null && ageH < 24) {
+            if (cell) _updateScoreCell(cell, d);
+            item.fh_score = d.weighted_100;
+            served = true;
+          }
+        }
+      } catch(e) {}
+      if (!served) {
+        if (cell) cell.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
+        _fhEnqueue(item.ticker);
+      }
+      // If valuation already in memory, restore instantly (no API call). Else stagger.
+      const _bItem = (window._ooBacklogData || []).find(x => x.ticker === item.ticker);
+      if (_bItem && _bItem.valuation) {
+        _fetchBacklogValuation(item.ticker);
+      } else {
+        setTimeout(() => _fetchBacklogValuation(item.ticker), idx * 300);
+      }
     });
 
     // Bind events after innerHTML
@@ -4461,53 +4616,7 @@
     }
   }
 
-  // ── Backlog Score async fetch ────────────────────────────────────────────
-  function _fetchBacklogScore(ticker) {
-    const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
-    const cellNow = document.getElementById('bscore-' + safeId);
-    if (!cellNow) return;
-
-    // Show loading spinner immediately
-    cellNow.innerHTML = '<span class="animate-pulse text-on-surface-variant/40 text-[9px]">⟳</span>';
-
-    // Check localStorage cache (same key pattern as FH page: oo_fh_{ticker})
-    try {
-      const raw = localStorage.getItem('oo_fh_' + ticker);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d && d.weighted_100 != null) {
-          // Re-query: table may have been re-rendered since cellNow was captured
-          const liveCell = document.getElementById('bscore-' + safeId);
-          if (liveCell) _updateScoreCell(liveCell, d);
-          return;
-        }
-      }
-    } catch(e) {}
-
-    // Fetch from API — re-query cell inside callbacks to handle any re-renders
-    fetch('/api/financial_health/data?ticker=' + encodeURIComponent(ticker))
-      .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(d) {
-        const liveCell = document.getElementById('bscore-' + safeId);
-        if (!d || d.error) { if (liveCell) liveCell.textContent = '—'; return; }
-        try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify(d)); } catch(e) {}
-        // Persist fh_score to backlog item for sorting
-        if (d.weighted_100 != null) {
-          const now = new Date().toISOString();
-          _saveBacklogItemField(ticker, 'fh_score', d.weighted_100);
-          _saveBacklogItemField(ticker, 'fh_fetched_at', now);
-          if (window._ooBacklogData) {
-            const item = window._ooBacklogData.find(x => x.ticker === ticker);
-            if (item) { item.fh_score = d.weighted_100; item.fh_fetched_at = now; }
-          }
-        }
-        if (liveCell) _updateScoreCell(liveCell, d);
-      })
-      .catch(function() {
-        const liveCell = document.getElementById('bscore-' + safeId);
-        if (liveCell) liveCell.textContent = '—';
-      });
-  }
+  function _fetchBacklogScore(ticker) { _fhEnqueue(ticker); }
 
   function _updateScoreCell(cell, d) {
     const score = d.weighted_100;
@@ -4557,18 +4666,19 @@
         const item = window._ooBacklogData.find(x => x.ticker === ticker);
         if (item) item.valuation = d;
       }
-      // Get current price from data for delta calculation
-      const currentPrice = window._ooBacklogData
-        ? (window._ooBacklogData.find(x => x.ticker === ticker) || {}).price
-        : null;
+      // Delta vs 52-week low (meaningful benchmark — unlike vs current price which is tautological)
+      const _bItemVal = window._ooBacklogData
+        ? (window._ooBacklogData.find(x => x.ticker === ticker) || {})
+        : {};
+      const w52Low = _bItemVal.w52_low || null;
 
       function _valCell(elId, val) {
         const el = document.getElementById(elId);
         if (!el) return;
         if (val == null) { el.innerHTML = '<span class="text-on-surface-variant/30">—</span>'; return; }
-        const delta = currentPrice ? ((val - currentPrice) / currentPrice * 100) : null;
+        const delta = w52Low ? ((val - w52Low) / w52Low * 100) : null;
         const deltaHtml = delta != null
-          ? `<br><span class="text-[9px] ${delta >= 0 ? 'text-green-600' : 'text-red-500'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span>`
+          ? `<br><span class="text-[9px] ${delta >= 0 ? 'text-green-600' : 'text-red-500'}" title="vs 52-week low">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span>`
           : '';
         el.innerHTML = `$${val.toFixed(2)}${deltaHtml}`;
       }
@@ -4577,6 +4687,30 @@
       _valCell('bval-12-' + safeId, d.e_price_12);
       _valCell('bval-cal-' + safeId, d.e_price_cal);
       _valCell('bval-avg-' + safeId, d.a_price);
+
+      // Cell-level tooltips with formula details
+      const _pe = d.pe_ttm != null ? d.pe_ttm.toFixed(1) : '?';
+      const _eps = d.eps_latest != null ? d.eps_latest.toFixed(2) : '?';
+      const _ep = d.e_price != null ? '$' + d.e_price.toFixed(2) : '?';
+      const e08El = document.getElementById('bval-08-' + safeId);
+      if (e08El) e08El.title = `e_price = pe_ttm × eps_ttm = ${_pe} × ${_eps} = ${_ep}\ne×0.8 = e_price × 0.8 (bear case, 20% margin of safety)`;
+      const calEl = document.getElementById('bval-cal-' + safeId);
+      if (calEl) calEl.title = `e_price_cal = e_price × (1 + g + r) / (1 + MOS)\ne_price = ${_ep}\ng=10%, r=6%, MOS=25%`;
+      const avgEl = document.getElementById('bval-avg-' + safeId);
+      if (avgEl && d.a_price != null) {
+        const peMinStr = d.pe_min != null ? d.pe_min.toFixed(1) : '?';
+        const peMaxStr = d.pe_max != null ? d.pe_max.toFixed(1) : '?';
+        const peStepStr = d.pe_step != null ? d.pe_step.toFixed(2) : '?';
+        const e2uStr = d.e_price_2u != null ? '$' + d.e_price_2u.toFixed(2) : 'n/a';
+        const missing = d.missing_components || [];
+        const missingNote = missing.length > 0
+          ? `\nmissing: ${missing.join(', ')} → avg from ${d.a_price_count} component(s)`
+          : '\nall 3 components available';
+        avgEl.title = `a_price = mean(e_cal, e_2u, e×0.8)${missingNote}\ne_2u = EPS × (pe_min + pe_step×2) = ${e2uStr}\npe_min=${peMinStr}, pe_max=${peMaxStr}, pe_step=${peStepStr}`;
+        if (missing.length > 0) {
+          avgEl.innerHTML += '<span class="text-amber-500 text-[8px] ml-0.5 cursor-help">*</span>';
+        }
+      }
     }
 
     // Check cache first
@@ -4738,7 +4872,7 @@
         const item = window._ooBacklogData.find(x => x.ticker === ticker);
         if (item) { item.fh_score = d.weighted_100; item.fh_fetched_at = now; }
       }
-      try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify(d)); } catch(e) {}
+      try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify({...d, _cached_at: Date.now()})); } catch(e) {}
       // Re-query cell after await — table may have been re-rendered
       const liveCell = document.getElementById('bscore-' + safeId);
       if (liveCell) {
@@ -5123,6 +5257,9 @@
         document.querySelectorAll('.fh-panel').forEach(p => p.classList.add('hidden'));
         const panel = document.getElementById(`fh-panel-${tab}`);
         if (panel) panel.classList.remove('hidden');
+        if (tab === 'report' && _fhCurrentTicker && typeof window.loadDashboardData === 'function') {
+          window.loadDashboardData(_fhCurrentTicker);
+        }
       });
     });
   }
@@ -5194,90 +5331,136 @@
     debtTrend_bonus:               "Bonus: Debt ratio consistently below 0.6. Score: 0–2 pts.",
   };
 
+  // Display category grouping for scoring breakdown
+  const _DISPLAY_GROUPS = [
+    ['盈利能力',           ['returnOnEquity_r', 'returnOnInvestedCapital_r']],
+    ['成长性',             ['epsgrowth_r', 'revenueGrowth_r', 'freeCashFlowGrowth_r']],
+    ['现金流质量',         ['operatingCashFlowToNetIncome_r']],
+    ['负债/偿债',          ['DebtToEquity_r', 'interestCoverage_r']],
+    ['价格/估值',          ['priceToEarningsRatio_r', 'peRatioTTM_r']],
+    ['波动',               ['beta_r']],
+    ['资本开支与递延收入', ['capitalExpenditure_growth_r', 'deferredRevenue_growth_r']],
+    ['其他加减分项',       []],
+  ];
+  const _IND_TO_CATEGORY = {};
+  _DISPLAY_GROUPS.forEach(([cat, inds]) => inds.forEach(n => { _IND_TO_CATEGORY[n] = cat; }));
+
+  const _SCORE_TIP = '5：连续 3 年阈值达标\n4：连续 2 年阈值达标\n3：近 3 年中 ≥2 年达标且最近 1 年达标\n2：最近 1 年达标\n1：近 3 年基本为正 / 基本达标\n0：未达标';
+
   function renderScoreGroups(groupScores, yearScores) {
     const container = document.getElementById('fh-score-groups');
     if (!container) return;
     const ys = yearScores || [];
+    const useFallback = ys.length === 0;
 
-    const html = Object.entries(groupScores).map(([group, gData]) => {
+    // Year labels shared across all groups
+    const yearLabels = useFallback ? ['Current'] : ys.map(y => y.year);
+    const colCount = 1 + yearLabels.length;
+
+    function getGroupCols(group, gData) {
+      const indicators = gData.indicators || [];
+      if (useFallback) {
+        const indMap = Object.fromEntries(indicators.map(i => [i.name, { score: i.score, max: i.max }]));
+        return [{ year: 'Current', gPct: gData.pct || 0, indScores: indMap, groupIndMap: indMap }];
+      }
+      return ys.map(y => ({
+        year: y.year,
+        gPct: (y.group_scores && y.group_scores[group]) ? y.group_scores[group].pct : null,
+        indScores: y.indicator_scores || {},
+        groupIndMap: (y.group_scores && y.group_scores[group] && y.group_scores[group].indicators)
+          ? Object.fromEntries(y.group_scores[group].indicators.map(i => [i.name, { score: i.score, max: i.max }]))
+          : {},
+      }));
+    }
+
+    function renderIndRow(ind, cols, catPrefix) {
+      catPrefix = catPrefix || '';
+      const tdCells = cols.map(c => {
+        let sc, mx;
+        if (useFallback) {
+          sc = ind.score; mx = ind.max;
+        } else {
+          const indObj = c.groupIndMap && c.groupIndMap[ind.name];
+          if (indObj != null) { sc = indObj.score; mx = indObj.max; }
+          else {
+            const raw = c.indScores[ind.name];
+            if (raw == null) { sc = null; mx = null; }
+            else { sc = raw; mx = ind.max; }
+          }
+        }
+        if (sc == null) return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] text-on-surface-variant/40">—</td>`;
+        const cls = sc > 0 ? 'text-emerald-600 font-semibold' : sc < 0 ? 'text-red-500 font-semibold' : 'text-on-surface-variant/40';
+        const maxStr = mx != null ? `/${mx}` : '';
+        return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] ${cls} cursor-help" title="${_escFH(_SCORE_TIP)}">${sc}${maxStr}</td>`;
+      }).join('');
+
+      const indDisplay = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
+      const indTip = _escFH(_IND_TOOLTIPS[ind.name] || ind.name);
+      return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
+        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${catPrefix}${_escFH(indDisplay)}</td>
+        ${tdCells}
+      </tr>`;
+    }
+
+    // Single thead with year labels (no per-group color)
+    const thYears = yearLabels.map(yr => `<th class="px-3 py-2 text-center font-bold text-[11px] min-w-[64px] text-on-surface-variant">${yr}</th>`).join('');
+
+    let bodyHtml = '';
+
+    Object.entries(groupScores).forEach(([group, gData]) => {
       const color = _GROUP_COLORS[group] || '#888';
       const label = _t(_GROUP_LABELS_KEY[group], _GROUP_LABELS_FB[group] || group);
       const indicators = gData.indicators || [];
+      const cols = getGroupCols(group, gData);
 
-      // Build year columns: newest-first (ys[0] = most recent)
-      // If no yearScores, show single "Current" column using groupScores directly
-      const useFallback = ys.length === 0;
-      const cols = useFallback
-        ? [{ year: 'Current', gPct: gData.pct || 0, indScores: Object.fromEntries(indicators.map(i => [i.name, { score: i.score, max: i.max }])) }]
-        : ys.map(y => ({
-            year: y.year,
-            gPct: (y.group_scores && y.group_scores[group]) ? y.group_scores[group].pct : null,
-            indScores: y.indicator_scores || {},
-            groupIndMap: (y.group_scores && y.group_scores[group] && y.group_scores[group].indicators)
-              ? Object.fromEntries(y.group_scores[group].indicators.map(i => [i.name, { score: i.score, max: i.max }]))
-              : {},
-          }));
+      // Group label row (full-width)
+      bodyHtml += `<tr class="bg-surface-container">
+        <td colspan="${colCount}" class="px-3 py-2 text-[11px] uppercase tracking-widest font-bold" style="color:${color}">${label}</td>
+      </tr>`;
 
-      // Header row: indicator col + year labels
-      const thYears = cols.map(c => `<th class="px-3 py-2 text-center font-bold text-[11px] min-w-[72px]" style="color:${color}">${c.year}</th>`).join('');
-
-      // Group score row (total %)
+      // Group score % row
       const tdGroupPcts = cols.map(c => {
-        if (c.gPct == null) return `<td class="px-3 py-2 text-center text-[11px] text-on-surface-variant/40">—</td>`;
-        return `<td class="px-3 py-2 text-center text-[12px] font-bold" style="color:${color}">${c.gPct}%</td>`;
+        if (c.gPct == null) return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] text-on-surface-variant/40">—</td>`;
+        return `<td class="px-3 py-2 text-center text-[12px] min-w-[64px] font-bold" style="color:${color}">${c.gPct}%</td>`;
       }).join('');
+      bodyHtml += `<tr class="bg-surface-container/60">
+        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant font-medium">Group Score</td>
+        ${tdGroupPcts}
+      </tr>`;
 
-      // Indicator rows
-      const tbodyRows = indicators.map(ind => {
-        const tdCells = cols.map(c => {
-          // For multiyear: use per-indicator data from group_scores[group].indicators
-          let sc, mx;
-          if (useFallback) {
-            sc = ind.score; mx = ind.max;
-          } else {
-            const indObj = c.groupIndMap && c.groupIndMap[ind.name];
-            if (indObj != null) { sc = indObj.score; mx = indObj.max; }
-            else {
-              // fallback: use indicator_scores only (no max available)
-              const raw = c.indScores[ind.name];
-              if (raw == null) { sc = null; mx = null; }
-              else { sc = raw; mx = ind.max; }
-            }
-          }
-          if (sc == null) return `<td class="px-3 py-2 text-center text-[11px] text-on-surface-variant/40">—</td>`;
-          const cls = sc > 0 ? 'text-emerald-600 font-semibold' : sc < 0 ? 'text-red-500 font-semibold' : 'text-on-surface-variant/40';
-          const maxStr = mx != null ? `/${mx}` : '';
-          return `<td class="px-3 py-2 text-center text-[11px] ${cls}">${sc}${maxStr}</td>`;
-        }).join('');
+      // Sort indicators into category buckets
+      const catMap = {};
+      _DISPLAY_GROUPS.forEach(([cat]) => { catMap[cat] = []; });
+      const OTHER_CAT = '其他加减分项';
+      indicators.forEach(ind => {
+        const cat = _IND_TO_CATEGORY[ind.name] || OTHER_CAT;
+        if (!catMap[cat]) catMap[cat] = [];
+        catMap[cat].push(ind);
+      });
 
-        const indDisplay = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
-        const indTip = _escFH(_IND_TOOLTIPS[ind.name] || ind.name);
-        return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
-          <td class="px-3 py-2 text-[11px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${_escFH(indDisplay)}</td>
-          ${tdCells}
-        </tr>`;
-      }).join('');
+      _DISPLAY_GROUPS.forEach(([cat]) => {
+        const catInds = catMap[cat] || [];
+        if (catInds.length === 0) return;
+        catInds.forEach((ind, idx) => {
+          const catPrefix = idx === 0
+            ? `<span class="text-[9px] text-on-surface-variant/55 mr-1 font-medium">[${cat}]</span>`
+            : `<span class="inline-block w-[36px]"></span>`;
+          bodyHtml += renderIndRow(ind, cols, catPrefix);
+        });
+      });
+    });
 
-      return `<div class="rounded-xl overflow-hidden border border-outline-variant/30">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr class="bg-surface-container">
-              <th class="px-3 py-2 text-left text-[11px] uppercase tracking-widest font-bold" style="color:${color}">${label}</th>
-              ${thYears}
-            </tr>
-            <tr class="bg-surface-container/60">
-              <td class="px-3 py-2 text-[11px] text-on-surface-variant font-medium">Group Score</td>
-              ${tdGroupPcts}
-            </tr>
-          </thead>
-          <tbody>
-            ${tbodyRows}
-          </tbody>
-        </table>
-      </div>`;
-    }).join('');
-
-    container.innerHTML = html;
+    container.innerHTML = `<div class="rounded-xl overflow-hidden border border-outline-variant/30">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-surface-container">
+            <th class="px-3 py-2 text-left text-[11px] min-w-[160px] uppercase tracking-widest font-bold text-on-surface-variant">指标</th>
+            ${thYears}
+          </tr>
+        </thead>
+        <tbody>${bodyHtml}</tbody>
+      </table>
+    </div>`;
   }
 
   // ── Score summary card ──────────────────────────────────────────────
@@ -5295,7 +5478,18 @@
     const nameEl = document.getElementById('fh-company-name');
     const secEl  = document.getElementById('fh-sector-info');
     if (nameEl) nameEl.textContent = info.companyName || data.ticker || '';
-    if (secEl)  secEl.textContent  = [info.sector, info.industry].filter(Boolean).join(' · ');
+    if (secEl) {
+      secEl.textContent = [info.sector, info.industry].filter(Boolean).join(' · ');
+      const src = data.data_source;
+      if (src && src !== 'error') {
+        const badge = document.createElement('span');
+        badge.textContent = src === 'fmp' ? 'FMP' : 'yf';
+        badge.style.cssText = 'font-size:10px;padding:1px 5px;border-radius:3px;background:' +
+          (src === 'fmp' ? '#1a4a7a' : '#3a3a3a') +
+          ';color:#9ab;margin-left:7px;font-family:monospace;vertical-align:middle';
+        secEl.appendChild(badge);
+      }
+    }
 
     // Group bars
     const groupScores = data.group_scores || {};
@@ -5413,6 +5607,27 @@
     try { renderScoreCard(data); } catch(e) { console.warn('renderScoreCard error:', e); }
     try { renderFundamentalsTable(data.fundamentals || {}, data.years || []); } catch(e) { console.warn('renderFundamentalsTable error:', e); }
     try { renderScoreGroups(data.group_scores || {}, data.year_scores || []); } catch(e) { console.warn('renderScoreGroups error:', e); }
+
+    // Fetch transcript and cache into document library state (no display in FH panel)
+    if (data.ticker) {
+      fetch(`/api/financial_health/transcript/${encodeURIComponent(data.ticker)}`)
+        .then(r => r.json())
+        .then(d => {
+          if (!d.error && (d.transcript_excerpt || d.earnings_release_excerpt)) {
+            if (!window._ooDocLibCache) window._ooDocLibCache = [];
+            const t = data.ticker;
+            const text = d.transcript_excerpt || d.earnings_release_excerpt || '';
+            const existing = window._ooDocLibCache.findIndex(
+              item => item.ticker === t && item.type === 'transcript'
+            );
+            const entry = { ticker: t, type: 'transcript', date: d.date || '', summary: text, source: 'fh_panel' };
+            if (existing >= 0) window._ooDocLibCache[existing] = entry;
+            else window._ooDocLibCache.unshift(entry);
+            if (window._ooDocLibLoaded) renderDocumentLibrary(window._ooDocLibCache);
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   // ── LLM Summary ────────────────────────────────────────────────────
@@ -5570,11 +5785,11 @@
         const v = _validateTicker(raw);
         if (!v.ok) { _setFhStatus(v.msg); return; }
         _fhCurrentTicker = v.ticker;
+        window._fhCurrentTicker = v.ticker;
+        window._ccResetPeers && window._ccResetPeers();
         loadFinancialHealthData(v.ticker);
       });
     }
-
-    // Wire up backlog select → auto-analyze on selection
     const sel = document.getElementById('fh-backlog-select');
     if (sel && !sel._fhWired) {
       sel._fhWired = true;
@@ -5583,6 +5798,7 @@
         const input = document.getElementById('fh-ticker-input');
         if (input) input.value = sel.value;
         _fhCurrentTicker = sel.value;
+        window._fhCurrentTicker = sel.value;
         loadFinancialHealthData(sel.value);
       });
     }
@@ -5638,10 +5854,568 @@
     // Auto-load if ticker supplied (e.g. navigated from backlog)
     if (autoTicker) {
       _fhCurrentTicker = autoTicker;
+      window._fhCurrentTicker = autoTicker;
       const input = document.getElementById('fh-ticker-input');
       if (input) input.value = autoTicker;
       loadFinancialHealthData(autoTicker);
     }
+  };
+
+})();
+
+// ── Competitor Comparison ──────────────────────────────────────────────────────
+(function () {
+  'use strict';
+
+  // ── State ──
+  let _ccSelectedTickers = [];       // array of competitor ticker strings (max 4)
+  let _ccSuggestedTickers = [];      // peers from API
+  let _ccCache = {};                 // {mainTicker: {data, cachedAt}}
+  const _CC_CACHE_TTL = 300000;      // 5 min in ms
+  let _ccPriceChart = null;          // Chart.js instance
+
+  // ── Chart colours ──
+  const _CC_COLORS = ['#5b5ea6', '#e86c3a', '#2e9e6b', '#c94fa8', '#f5a623'];
+
+  // ── Helpers ──
+  function _t(key, fallback) {
+    try { return window.i18n ? window.i18n(key) || fallback : fallback; }
+    catch(e) { return fallback; }
+  }
+  function _fmtNum(n) {
+    if (n == null) return 'N/A';
+    return Number(n).toLocaleString();
+  }
+  function _fmtMktCap(v) {
+    if (!v) return 'N/A';
+    if (v >= 1e12) return '$' + (v / 1e12).toFixed(1) + 'T';
+    if (v >= 1e9)  return '$' + (v / 1e9).toFixed(1) + 'B';
+    if (v >= 1e6)  return '$' + (v / 1e6).toFixed(1) + 'M';
+    return '$' + v;
+  }
+
+  // ── Chip helpers ──
+  function _renderSelectedChips() {
+    const container = document.getElementById('cc-selected-chips');
+    if (!container) return;
+    container.innerHTML = '';
+    _ccSelectedTickers.forEach(t => {
+      const chip = document.createElement('span');
+      chip.className = 'inline-flex items-center gap-1 px-2 py-0.5 bg-primary/15 text-primary text-[10px] font-semibold rounded-full';
+      chip.innerHTML = `${t} <button class="text-primary/60 hover:text-primary font-bold leading-none" data-remove="${t}">×</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        _ccSelectedTickers = _ccSelectedTickers.filter(x => x !== t);
+        _renderSelectedChips();
+        _updateSuggestedChipStates();
+        _updateRunBtn();
+      });
+      container.appendChild(chip);
+    });
+    _updateRunBtn();
+  }
+
+  function _updateSuggestedChipStates() {
+    document.querySelectorAll('#cc-peers-chips .cc-peer-chip').forEach(el => {
+      const t = el.dataset.ticker;
+      if (_ccSelectedTickers.includes(t)) {
+        el.classList.add('bg-primary/15', 'text-primary', 'border-primary/40');
+        el.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+      } else {
+        el.classList.remove('bg-primary/15', 'text-primary', 'border-primary/40');
+        el.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      }
+    });
+  }
+
+  function _updateRunBtn() {
+    const addBtn = document.getElementById('cc-add-btn');
+    const runBtn = document.getElementById('cc-run-btn');
+    if (!addBtn || !runBtn) return;
+    const atMax = _ccSelectedTickers.length >= 4;
+    addBtn.disabled = atMax;
+    addBtn.title = atMax ? _t('fh.competitor.max_hint', 'Maximum 4 competitors') : '';
+    runBtn.disabled = _ccSelectedTickers.length === 0;
+  }
+
+  function _addTicker(t) {
+    t = t.trim().toUpperCase();
+    if (!t || _ccSelectedTickers.includes(t) || _ccSelectedTickers.length >= 4) return false;
+    _ccSelectedTickers.push(t);
+    _renderSelectedChips();
+    _updateSuggestedChipStates();
+    _updateRunBtn();
+    return true;
+  }
+
+  // ── Load suggested peers ──
+  function loadCCPeers(mainTicker) {
+    const loading = document.getElementById('cc-peers-loading');
+    const chips   = document.getElementById('cc-peers-chips');
+    if (!loading || !chips) return;
+    loading.classList.remove('hidden');
+    chips.innerHTML = '';
+
+    fetch(`/api/fh/peers/${mainTicker}`)
+      .then(r => r.json())
+      .then(data => {
+        _ccSuggestedTickers = data.peers || [];
+        loading.classList.add('hidden');
+        chips.innerHTML = '';
+        _ccSuggestedTickers.forEach(t => {
+          const chip = document.createElement('button');
+          chip.className = 'cc-peer-chip px-2 py-0.5 text-[10px] font-medium rounded-full border border-outline-variant/50 bg-surface-container-high text-on-surface-variant hover:bg-primary/10 transition-colors';
+          chip.dataset.ticker = t;
+          chip.textContent = t;
+          chip.addEventListener('click', () => {
+            _addTicker(t);
+          });
+          chips.appendChild(chip);
+        });
+        _updateSuggestedChipStates();
+      })
+      .catch(() => { loading.classList.add('hidden'); });
+  }
+
+  // ── Run comparison ──
+  function runComparison(mainTicker) {
+    if (_ccSelectedTickers.length === 0) return;
+
+    // Check cache
+    const cached = _ccCache[mainTicker];
+    if (cached && (Date.now() - cached.cachedAt) < _CC_CACHE_TTL) {
+      renderComparison(cached.data);
+      return;
+    }
+
+    const runBtn   = document.getElementById('cc-run-btn');
+    const loading  = document.getElementById('cc-loading');
+    const results  = document.getElementById('cc-results');
+    const status   = document.getElementById('cc-run-status');
+
+    if (runBtn)  { runBtn.disabled = true; runBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[14px] align-middle">progress_activity</span> Loading…'; }
+    if (loading) loading.classList.remove('hidden');
+    if (results) results.classList.add('hidden');
+    if (status)  status.textContent = '';
+
+    fetch('/api/fh/competitor_compare', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ticker: mainTicker, competitors: _ccSelectedTickers}),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        _ccCache[mainTicker] = {data, cachedAt: Date.now()};
+        renderComparison(data);
+      })
+      .catch(err => {
+        if (status) status.textContent = '⚠ ' + (err.message || 'Failed');
+      })
+      .finally(() => {
+        if (runBtn)  { runBtn.disabled = _ccSelectedTickers.length === 0; runBtn.innerHTML = _t('fh.competitor.run', 'Run Comparison'); }
+        if (loading) loading.classList.add('hidden');
+      });
+  }
+
+  // ── Render: top-level ──
+  function renderComparison(data) {
+    const results = document.getElementById('cc-results');
+    if (!results) return;
+
+    renderProfiles(data.main, data.competitors, data.business_diff);
+    renderPriceChart(data.main.ticker, data.price_history_main, data.competitors);
+    renderFHTable(data.main, data.competitors);
+    renderAnalyst(data.main, data.competitors);
+    renderJobs(data.main, data.competitors);
+
+    results.classList.remove('hidden');
+  }
+
+  // ── E-1 / E-2: Profiles + LLM diff ──
+  function renderProfiles(main, competitors, diff) {
+    const container = document.getElementById('cc-profiles');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const allCompanies = [main, ...competitors];
+    allCompanies.forEach((comp, i) => {
+      const isMain = i === 0;
+      const p = comp.profile || {};
+      const name = p.companyName || comp.ticker;
+      const descFull = p.description || '';
+      const descShort = descFull.length > 200 ? descFull.slice(0, 200) + '…' : descFull;
+      const empStr = p.fullTimeEmployees ? _fmtNum(p.fullTimeEmployees) : 'N/A';
+      const mktStr = _fmtMktCap(p.mktCap);
+      const website = p.website ? `<a href="${p.website}" target="_blank" class="text-primary underline truncate max-w-[120px] inline-block">${p.website.replace(/^https?:\/\//,'')}</a>` : '';
+
+      const card = document.createElement('div');
+      card.className = isMain
+        ? 'flex-[1.8_1.8_0%] min-w-[220px] p-4 bg-surface-container-high rounded-xl border-2 border-primary/40'
+        : 'flex-1 min-w-[160px] p-3 bg-surface-container rounded-xl border border-outline-variant/30';
+
+      card.innerHTML = `
+        <div class="flex items-start justify-between mb-1">
+          <span class="text-[11px] font-bold text-on-surface truncate max-w-[90%]">${name}</span>
+          ${isMain ? '<span class="text-[8px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold">MAIN</span>' : ''}
+        </div>
+        <div class="text-[9.5px] text-on-surface-variant mb-1">${comp.ticker} · ${p.exchange || ''} · ${p.country || ''}</div>
+        <div class="text-[9.5px] text-on-surface-variant mb-1">${p.sector || ''}${p.industry ? ' / ' + p.industry : ''}</div>
+        <div class="flex gap-3 text-[9.5px] text-on-surface-variant mb-2">
+          <span>${_t('fh.competitor.employees','Employees')}: <strong>${empStr}</strong></span>
+          <span>Mkt Cap: <strong>${mktStr}</strong></span>
+        </div>
+        ${p.ipoDate ? `<div class="text-[9px] text-on-surface-variant/60 mb-1.5">${_t('fh.competitor.ipo','IPO')}: ${p.ipoDate}</div>` : ''}
+        <div class="text-[9.5px] text-on-surface-variant leading-relaxed cc-desc-short">${descShort}</div>
+        ${descFull.length > 200 ? `<button class="text-[9px] text-primary mt-1 cc-expand-btn">Show more</button><div class="text-[9.5px] text-on-surface-variant leading-relaxed cc-desc-full hidden">${descFull}<button class="text-[9px] text-primary mt-1 cc-collapse-btn">Show less</button></div>` : ''}
+        ${website ? `<div class="mt-2">${website}</div>` : ''}
+      `;
+
+      // Expand/collapse description
+      const expandBtn   = card.querySelector('.cc-expand-btn');
+      const collapseBtn = card.querySelector('.cc-collapse-btn');
+      const shortEl     = card.querySelector('.cc-desc-short');
+      const fullEl      = card.querySelector('.cc-desc-full');
+      if (expandBtn)   expandBtn.addEventListener('click',   () => { shortEl.classList.add('hidden'); fullEl.classList.remove('hidden'); });
+      if (collapseBtn) collapseBtn.addEventListener('click', () => { fullEl.classList.add('hidden'); shortEl.classList.remove('hidden'); });
+
+      container.appendChild(card);
+    });
+
+    // Business diff
+    const diffEl   = document.getElementById('cc-business-diff');
+    const summaryEl = document.getElementById('cc-diff-summary');
+    const listEl    = document.getElementById('cc-diff-list');
+    if (!diffEl || !summaryEl || !listEl) return;
+
+    if (diff && diff.summary) {
+      summaryEl.textContent = diff.summary;
+      listEl.innerHTML = (diff.key_diffs || []).map(d => `<li>${d}</li>`).join('');
+      diffEl.classList.remove('hidden');
+    } else {
+      diffEl.classList.add('hidden');
+    }
+  }
+
+  // ── E-3 / E-4: Price Chart ──
+  function renderPriceChart(mainTicker, priceMain, competitors) {
+    const canvas = document.getElementById('cc-price-chart');
+    if (!canvas) return;
+
+    // Destroy old chart instance to avoid "Canvas already in use"
+    if (_ccPriceChart) { _ccPriceChart.destroy(); _ccPriceChart = null; }
+
+    const allData = [
+      {ticker: mainTicker, prices: priceMain || [], yAxisID: 'yMain', color: _CC_COLORS[0]},
+      ...competitors.map((c, i) => ({
+        ticker: c.ticker,
+        prices: c.price_history || [],
+        yAxisID: i === 0 ? 'yComp' : 'yMain',
+        color: _CC_COLORS[i + 1] || _CC_COLORS[_CC_COLORS.length - 1],
+      })),
+    ];
+
+    if (!allData.some(d => d.prices.length > 0)) return;
+
+    // Build unified date labels from main prices
+    const labels = (priceMain || []).map(p => p.date);
+
+    const datasets = allData.map(d => ({
+      label: d.ticker,
+      data: labels.map(date => {
+        const pt = d.prices.find(p => p.date === date);
+        return pt ? pt.close : null;
+      }),
+      borderColor: d.color,
+      backgroundColor: d.color + '18',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+      spanGaps: true,
+      yAxisID: d.yAxisID,
+    }));
+
+    _ccPriceChart = new Chart(canvas, {
+      type: 'line',
+      data: {labels, datasets},
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {mode: 'index', intersect: false},
+        plugins: {
+          legend: {
+            labels: {font: {size: 10}, color: '#6b7280', boxWidth: 12},
+          },
+          tooltip: {
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (item) => ` ${item.dataset.label}: $${(item.raw || 0).toFixed(2)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: {
+              font: {size: 9},
+              color: '#9ca3af',
+              maxRotation: 0,
+              callback: function(val, idx) {
+                const label = this.getLabelForValue(val);
+                if (!label) return '';
+                const d = new Date(label + 'T00:00:00');
+                if (d.getDate() === 1) {
+                  return d.toLocaleDateString('en-US', {month: 'short', year: '2-digit'});
+                }
+                return '';
+              },
+            },
+            grid: {color: '#f3f4f6'},
+          },
+          yMain: {
+            type: 'linear',
+            position: 'left',
+            ticks: {font: {size: 9}, color: _CC_COLORS[0], callback: v => '$' + v.toFixed(0)},
+            grid: {color: '#f3f4f6'},
+          },
+          yComp: {
+            type: 'linear',
+            position: 'right',
+            ticks: {font: {size: 9}, color: _CC_COLORS[1], callback: v => '$' + v.toFixed(0)},
+            grid: {drawOnChartArea: false},
+          },
+        },
+      },
+    });
+  }
+
+  // ── E-5: FH Score Table ──
+  function renderFHTable(main, competitors) {
+    const container = document.getElementById('cc-fh-table');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const allCompanies = [main, ...competitors];
+    const mainScore = main.fh_score || {};
+    const mainTotal = mainScore.total_score;
+    const mainGroups = mainScore.group_scores || {};
+
+    const groupKeys = ['profitability', 'leverage', 'liquidity', 'efficiency', 'growth'];
+    const groupLabels = {
+      profitability: 'Profitability',
+      leverage: 'Leverage',
+      liquidity: 'Liquidity',
+      efficiency: 'Efficiency',
+      growth: 'Growth',
+    };
+
+    let html = '<table class="w-full text-[10px] border-collapse">';
+
+    // Header
+    html += '<thead><tr>';
+    html += '<th class="text-left p-2 text-on-surface-variant/70 font-semibold border-b border-outline-variant/30 w-24">Metric</th>';
+    allCompanies.forEach((c, i) => {
+      const isMain = i === 0;
+      html += `<th class="text-center p-2 ${isMain ? 'text-primary font-bold' : 'text-on-surface font-semibold'} border-b border-outline-variant/30">${c.ticker}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Group rows
+    groupKeys.forEach(key => {
+      html += '<tr class="hover:bg-surface-container/50">';
+      html += `<td class="p-2 text-on-surface-variant">${groupLabels[key] || key}</td>`;
+      const mainVal = mainGroups[key] != null ? mainGroups[key] : null;
+      allCompanies.forEach((c, i) => {
+        const isMain = i === 0;
+        const fh = c.fh_score || {};
+        const groups = fh.group_scores || {};
+        const val = groups[key];
+        let cellBg = '';
+        if (!isMain && val != null && mainVal != null) {
+          cellBg = val > mainVal ? 'bg-red-50' : val < mainVal ? 'bg-green-50' : '';
+        }
+        const display = val != null ? val.toFixed(1) : '—';
+        html += `<td class="text-center p-2 ${cellBg} ${isMain ? 'font-bold text-primary' : ''}">${display}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    // Total row
+    html += '<tr class="border-t-2 border-outline-variant/50 font-bold">';
+    html += '<td class="p-2 text-on-surface">Total Score</td>';
+    allCompanies.forEach((c, i) => {
+      const isMain = i === 0;
+      const val = (c.fh_score || {}).total_score;
+      let cellBg = '';
+      if (!isMain && val != null && mainTotal != null) {
+        cellBg = val > mainTotal ? 'bg-red-50' : val < mainTotal ? 'bg-green-50' : '';
+      }
+      const display = val != null ? val.toFixed(1) : '—';
+      html += `<td class="text-center p-2 ${cellBg} ${isMain ? 'text-primary text-[12px]' : ''}">${display}</td>`;
+    });
+    html += '</tr>';
+
+    html += '</tbody></table>';
+    html += '<p class="text-[9px] text-on-surface-variant/50 mt-1">Green = main company leads · Red = competitor leads</p>';
+    container.innerHTML = html;
+  }
+
+  // ── E-6: Analyst Ratings ──
+  function renderAnalyst(main, competitors) {
+    const container = document.getElementById('cc-analyst');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const allCompanies = [main, ...competitors];
+    allCompanies.forEach((c, i) => {
+      const isMain = i === 0;
+      const a = c.analyst || {};
+      const total = a.total || 0;
+      const buy   = a.buy   || 0;
+      const hold  = a.hold  || 0;
+      const sell  = a.sell  || 0;
+
+      const buyPct  = total > 0 ? (buy  / total * 100).toFixed(0) : 0;
+      const holdPct = total > 0 ? (hold / total * 100).toFixed(0) : 0;
+      const sellPct = total > 0 ? (sell / total * 100).toFixed(0) : 0;
+
+      const tMean = a.target_mean != null ? `$${a.target_mean.toFixed(2)}` : 'N/A';
+      const tHigh = a.target_high != null ? `$${a.target_high.toFixed(2)}` : 'N/A';
+      const tLow  = a.target_low  != null ? `$${a.target_low.toFixed(2)}`  : 'N/A';
+
+      const card = document.createElement('div');
+      card.className = isMain
+        ? 'flex-[1.4_1.4_0%] min-w-[180px] p-3 bg-surface-container-high rounded-xl border-2 border-primary/30'
+        : 'flex-1 min-w-[140px] p-3 bg-surface-container rounded-xl border border-outline-variant/30';
+
+      card.innerHTML = total > 0 ? `
+        <div class="text-[10px] font-bold text-on-surface mb-1">${c.ticker} <span class="font-normal text-on-surface-variant">(${total} ${_t('fh.competitor.analysts','analysts')})</span></div>
+        <div class="flex h-3 rounded-full overflow-hidden mb-1.5">
+          ${buyPct > 0  ? `<div class="bg-emerald-500 transition-all" style="width:${buyPct}%" title="Buy ${buyPct}%"></div>` : ''}
+          ${holdPct > 0 ? `<div class="bg-gray-300 transition-all"    style="width:${holdPct}%" title="Hold ${holdPct}%"></div>` : ''}
+          ${sellPct > 0 ? `<div class="bg-red-400 transition-all"     style="width:${sellPct}%" title="Sell ${sellPct}%"></div>` : ''}
+        </div>
+        <div class="flex gap-2 text-[9px] text-on-surface-variant mb-2">
+          <span class="text-emerald-600">▲ Buy ${buyPct}%</span>
+          <span>Hold ${holdPct}%</span>
+          <span class="text-red-500">▼ Sell ${sellPct}%</span>
+        </div>
+        <div class="text-[9px] text-on-surface-variant">${_t('fh.competitor.target_price','Target')}: <strong>${tLow} — ${tMean} — ${tHigh}</strong></div>
+      ` : `
+        <div class="text-[10px] font-bold text-on-surface mb-1">${c.ticker}</div>
+        <div class="text-[9.5px] text-on-surface-variant/60">${_t('fh.competitor.no_rating','No analyst data')}</div>
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  // ── E-7: Jobs / LinkedIn ──
+  function renderJobs(main, competitors) {
+    const container = document.getElementById('cc-jobs');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const allCompanies = [main, ...competitors];
+    allCompanies.forEach((c, i) => {
+      const isMain = i === 0;
+      const j = c.linkedin || {};
+      const blocked = j.source === 'blocked' || j.source === 'unavailable' || j.count == null;
+
+      const card = document.createElement('div');
+      card.className = isMain
+        ? 'flex-[1.2_1.2_0%] min-w-[140px] p-3 bg-surface-container-high rounded-xl border-2 border-primary/30 text-center'
+        : 'flex-1 min-w-[120px] p-3 bg-surface-container rounded-xl border border-outline-variant/30 text-center';
+
+      card.innerHTML = `
+        <div class="text-[10px] font-bold text-on-surface mb-1">${c.ticker}</div>
+        ${blocked
+          ? `<div class="text-[13px] font-bold text-on-surface-variant/40">N/A</div>
+             <div class="text-[8.5px] text-on-surface-variant/50 mt-0.5">${_t('fh.competitor.na_jobs','LinkedIn restricted')}</div>`
+          : `<div class="text-[18px] font-bold text-primary">${_fmtNum(j.count)}</div>
+             <div class="text-[8.5px] text-on-surface-variant/60 mt-0.5">open jobs (30d)</div>`
+        }
+      `;
+
+      container.appendChild(card);
+    });
+  }
+
+  // ── Wire up events ──
+  function _initCC() {
+    const addBtn   = document.getElementById('cc-add-btn');
+    const input    = document.getElementById('cc-ticker-input');
+    const runBtn   = document.getElementById('cc-run-btn');
+
+    // Set initial disabled state (no competitors selected yet)
+    _updateRunBtn();
+
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          const ok = _addTicker(input.value);
+          if (ok) input.value = '';
+          else {
+            input.classList.add('ring-2', 'ring-error');
+            setTimeout(() => input.classList.remove('ring-2', 'ring-error'), 800);
+          }
+        }
+      });
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        if (!input) return;
+        const ok = _addTicker(input.value);
+        if (ok) input.value = '';
+      });
+    }
+
+    if (runBtn) {
+      runBtn.addEventListener('click', () => {
+        const mainTicker = (window._fhCurrentTicker || '').toUpperCase();
+        if (!mainTicker) return;
+        runComparison(mainTicker);
+      });
+    }
+
+    // Tab switch: auto-load peers + cache check
+    document.querySelectorAll('.fh-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.fhTab;
+        if (tab !== 'competitor') return;
+        const mainTicker = (window._fhCurrentTicker || '').toUpperCase();
+        if (!mainTicker) return;
+
+        // Load peers if not yet loaded
+        if (_ccSuggestedTickers.length === 0) {
+          loadCCPeers(mainTicker);
+        }
+
+        // Auto-render if cached result exists
+        const cached = _ccCache[mainTicker];
+        if (cached && (Date.now() - cached.cachedAt) < _CC_CACHE_TTL) {
+          const results = document.getElementById('cc-results');
+          const loading = document.getElementById('cc-loading');
+          if (loading) loading.classList.add('hidden');
+          renderComparison(cached.data);
+        }
+      });
+    });
+  }
+
+  // Init on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _initCC);
+  } else {
+    _initCC();
+  }
+
+  // Expose reset hook for FH ticker change
+  window._ccResetPeers = function() {
+    _ccSuggestedTickers = [];
+    const chips = document.getElementById('cc-peers-chips');
+    const loading = document.getElementById('cc-peers-loading');
+    if (chips) chips.innerHTML = '';
+    if (loading) loading.classList.remove('hidden');
   };
 
 })();
