@@ -801,6 +801,29 @@
         <button id="backlog-chips-btn"
           class="h-8 px-4 rounded bg-sky-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-sky-700 active:scale-95 transition-transform"
           title="Load volume, short interest and options data for all watchlist tickers">Load Chips</button>
+        <div class="relative inline-block ml-1">
+          <button id="backlog-cols-btn"
+            class="h-8 w-8 rounded bg-surface-container-high text-on-surface-variant text-sm hover:bg-surface-container-low transition-colors flex items-center justify-center"
+            title="Customize visible columns">⚙</button>
+          <div id="backlog-cols-panel" class="hidden absolute left-0 top-full mt-1 z-50 bg-surface-container border border-outline-variant rounded-lg shadow-xl p-3 min-w-[180px]">
+            <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2">Column Groups</div>
+            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 hover:text-primary">
+              <input type="checkbox" class="blcol-toggle accent-primary" data-group="info" checked> Basic Info
+            </label>
+            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 hover:text-primary">
+              <input type="checkbox" class="blcol-toggle accent-primary" data-group="scores" checked> FH Scores
+            </label>
+            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 hover:text-primary">
+              <input type="checkbox" class="blcol-toggle accent-primary" data-group="chips" checked> Chips
+            </label>
+            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 hover:text-primary">
+              <input type="checkbox" class="blcol-toggle accent-primary" data-group="val" checked> Valuation
+            </label>
+            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 hover:text-primary">
+              <input type="checkbox" class="blcol-toggle accent-primary" data-group="stats" checked> 52W / MA
+            </label>
+          </div>
+        </div>
         <span id="backlog-count-badge" class="text-[10px] text-on-surface-variant/70 ml-1"></span>
         <span id="backlog-status" class="text-[10px] text-on-surface-variant/60 ml-1 italic"></span>
       </div>
@@ -4647,6 +4670,9 @@
         tbody.querySelectorAll('.backlog-row-check').forEach(cb => { cb.checked = selectAll.checked; });
       });
     }
+
+    // Reapply column visibility after every render (tbody.innerHTML rebuild wipes hidden classes)
+    if (typeof _applyColVisibility === 'function') _applyColVisibility();
   }
 
   function _fetchBacklogScore(ticker) { _fhEnqueue(ticker); }
@@ -5149,6 +5175,33 @@
   }
 
   // Bind backlog controls after DOM ready
+  // ── Column group visibility ───────────────────────────────────────────────
+  const _COL_GROUPS = ['info', 'scores', 'chips', 'val', 'stats'];
+  let _colGroupVisible = { info: true, scores: true, chips: true, val: true, stats: true };
+
+  function _loadColVisibility() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('oo_backlog_cols') || '{}');
+      _COL_GROUPS.forEach(g => { if (typeof saved[g] === 'boolean') _colGroupVisible[g] = saved[g]; });
+    } catch(e) {}
+  }
+
+  function _saveColVisibility() {
+    try { localStorage.setItem('oo_backlog_cols', JSON.stringify(_colGroupVisible)); } catch(e) {}
+  }
+
+  function _applyColVisibility() {
+    _COL_GROUPS.forEach(g => {
+      document.querySelectorAll('.blcol-g-' + g).forEach(el => {
+        el.classList.toggle('hidden', !_colGroupVisible[g]);
+      });
+    });
+    // Sync panel checkboxes if panel exists
+    document.querySelectorAll('.blcol-toggle').forEach(cb => {
+      cb.checked = !!_colGroupVisible[cb.dataset.group];
+    });
+  }
+
   (function _initBacklogControls() {
     const addBtn = document.getElementById('backlog-add-btn');
     const unifiedInp = document.getElementById('backlog-unified-search');
@@ -5261,6 +5314,30 @@
     // Load Chips button
     const chipsBtn = document.getElementById('backlog-chips-btn');
     if (chipsBtn) chipsBtn.addEventListener('click', () => _loadBacklogChips());
+
+    // Column customization: load saved prefs, wire gear toggle + checkboxes
+    _loadColVisibility();
+    _applyColVisibility();
+    const colsBtn = document.getElementById('backlog-cols-btn');
+    const colsPanel = document.getElementById('backlog-cols-panel');
+    if (colsBtn && colsPanel) {
+      colsBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        colsPanel.classList.toggle('hidden');
+      });
+      document.addEventListener('mousedown', e => {
+        if (!colsPanel.classList.contains('hidden') && !colsPanel.contains(e.target) && e.target !== colsBtn) {
+          colsPanel.classList.add('hidden');
+        }
+      });
+      colsPanel.querySelectorAll('.blcol-toggle').forEach(cb => {
+        cb.addEventListener('change', () => {
+          _colGroupVisible[cb.dataset.group] = cb.checked;
+          _saveColVisibility();
+          _applyColVisibility();
+        });
+      });
+    }
 
     // Sort listeners — bind once here instead of inside renderBacklogTable
     document.querySelectorAll('.backlog-sortable').forEach(th => {
