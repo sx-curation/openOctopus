@@ -290,6 +290,57 @@ def backlog_refresh() -> Response:
     return jsonify({"items": fetch_backlog_data(tickers)})
 
 
+@app.route("/api/backlog/chips_batch", methods=["POST"])
+def backlog_chips_batch() -> Response:
+    """Fetch chips data (volume, short interest, options) for a list of backlog tickers."""
+    from services.chips.volume import fetch_volume_data
+    from services.chips.short_interest import fetch_short_interest
+    from services.chips.options_flow import fetch_options_flow
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from concurrent.futures import TimeoutError as FuturesTimeoutError
+
+    body = request.get_json(silent=True) or {}
+    tickers = body.get("tickers") or []
+    if not isinstance(tickers, list):
+        return jsonify({"error": "tickers must be a list"}), 400
+    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:50]
+    if not tickers:
+        return jsonify({"items": []})
+
+    results: dict = {}
+
+    def _fetch(t: str):
+        vol = fetch_volume_data(t)
+        short = fetch_short_interest(t)
+        opts = fetch_options_flow(t)
+        return t, {
+            "ticker": t,
+            "rvol": vol.get("rvol"),
+            "rvol_signal": vol.get("rvol_signal"),
+            "price_vs_vwap_pct": vol.get("price_vs_vwap_pct"),
+            "days_to_cover": short.get("days_to_cover"),
+            "mom_change_pct": short.get("mom_change_pct"),
+            "pcr_oi": opts.get("pcr_oi"),
+            "error": vol.get("error") or short.get("error") or opts.get("error"),
+        }
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        futs = {ex.submit(_fetch, t): t for t in tickers}
+        try:
+            for fut in as_completed(futs, timeout=90):
+                try:
+                    t, data = fut.result()
+                    results[t] = data
+                except Exception as exc:
+                    t = futs[fut]
+                    results[t] = {"ticker": t, "error": str(exc)}
+        except FuturesTimeoutError:
+            pass
+
+    items = [results.get(t, {"ticker": t, "error": "timeout"}) for t in tickers]
+    return jsonify({"items": items})
+
+
 @app.route("/api/backlog/search")
 def backlog_search() -> Response:
     """Search for tickers by symbol or company name."""
