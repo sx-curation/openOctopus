@@ -808,7 +808,7 @@
           <thead>
             <tr class="text-left text-[9px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
               <th class="pr-2 py-2 w-6"><input type="checkbox" id="backlog-select-all" class="cursor-pointer accent-primary" title="Select all"></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
+              <th class="backlog-sortable sticky left-0 z-10 bg-surface-container-low pr-3 py-2 cursor-pointer select-none whitespace-nowrap border-r border-outline-variant/30" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
               <th class="pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.tags">Tags</th>
@@ -4526,7 +4526,7 @@
       if (item.error) {
         return `<tr class="border-b border-outline-variant/20 bg-red-50/40">
           <td class="pr-2 py-2"></td>
-          <td class="pr-3 py-2 font-extrabold text-primary">${_esc(item.ticker)}</td>
+          <td class="sticky left-0 z-10 bg-red-50/40 border-r border-outline-variant/30 pr-3 py-2 font-extrabold text-primary">${_esc(item.ticker)}</td>
           <td colspan="16" class="py-2 text-red-400 italic text-[9px]">${_esc(item.error)}</td>
           <td class="py-2 text-center">
             <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
@@ -4539,9 +4539,9 @@
         `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] bg-primary/10 text-primary font-medium whitespace-nowrap">${_esc(tag)}</span>`
       ).join(' ');
       const tagsDisplay = tagPills || `<span class="text-on-surface-variant/30 text-[9px] select-none">+</span>`;
-      return `<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
+      return `<tr class="group border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
         <td class="pr-2 py-2"><input type="checkbox" class="backlog-row-check cursor-pointer accent-primary" data-ticker="${_esc(item.ticker)}"></td>
-        <td class="pr-3 py-2 whitespace-nowrap"><span class="font-extrabold text-primary cursor-pointer hover:underline" data-fhnav="${_esc(item.ticker)}">${_esc(item.ticker)}</span></td>
+        <td class="sticky left-0 z-10 bg-surface group-hover:bg-surface-container-low/50 border-r border-outline-variant/30 pr-3 py-2 whitespace-nowrap transition-colors"><span class="font-extrabold text-primary cursor-pointer hover:underline" data-fhnav="${_esc(item.ticker)}">${_esc(item.ticker)}</span></td>
         <td class="pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
         <td class="pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
         <td id="btags-${safeId}" data-ticker="${_esc(item.ticker)}" class="btags-cell pr-3 py-2 cursor-pointer max-w-[160px]">${tagsDisplay}</td>
