@@ -798,6 +798,9 @@
         <button id="backlog-calc-fh-btn"
           class="h-8 px-4 rounded bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-transform"
           data-i18n="backlog.calc_fh">Calculate FH</button>
+        <button id="backlog-chips-btn"
+          class="h-8 px-4 rounded bg-sky-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-sky-700 active:scale-95 transition-transform"
+          title="Load volume, short interest and options data for all watchlist tickers">Load Chips</button>
         <span id="backlog-count-badge" class="text-[10px] text-on-surface-variant/70 ml-1"></span>
         <span id="backlog-status" class="text-[10px] text-on-surface-variant/60 ml-1 italic"></span>
       </div>
@@ -4424,6 +4427,7 @@
       ticker: x.ticker, name: '⟳', sector: '⟳',
       price: null, vs_52w_low: null, w52_chg_pct: null,
       w52_high: null, w52_low: null, ma10: null, ma50: null,
+      chips_rvol: null, chips_vwap: null, chips_dtc: null, chips_pcr: null,
       error: null, _loading: true,
     })));
     renderBacklogTable(placeholders);
@@ -4929,6 +4933,104 @@
     _pctCell('bhealth-' + safeId, hPct);
   }
 
+  // ── Chips Data: RVOL / Δ VWAP / Short DTC / PCR ────────────────────────
+  function _applyChipsData(ticker, d) {
+    const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+    const item = (window._ooBacklogData || []).find(x => x.ticker === ticker);
+    if (item) {
+      item.chips_rvol = d.rvol ?? null;
+      item.chips_vwap = d.price_vs_vwap_pct ?? null;
+      item.chips_dtc  = d.days_to_cover ?? null;
+      item.chips_pcr  = d.pcr_oi ?? null;
+    }
+    // RVOL: ≥2x amber, 1-2x sky-blue, <1x muted
+    const rvolEl = document.getElementById('bchips-rvol-' + safeId);
+    if (rvolEl) {
+      if (d.rvol != null) {
+        const c = d.rvol >= 2 ? 'text-amber-500' : d.rvol >= 1 ? 'text-sky-500' : 'text-on-surface-variant/50';
+        rvolEl.innerHTML = `<span class="${c} font-semibold">${d.rvol.toFixed(2)}x</span>`;
+      } else { rvolEl.textContent = '—'; }
+    }
+    // Δ VWAP: positive = green, negative = red
+    const vwapEl = document.getElementById('bchips-vwap-' + safeId);
+    if (vwapEl) {
+      if (d.price_vs_vwap_pct != null) {
+        const pct = d.price_vs_vwap_pct;
+        const s = pct >= 0 ? '+' : '';
+        const c = pct >= 0 ? 'text-green-500' : 'text-red-400';
+        vwapEl.innerHTML = `<span class="${c}">${s}${pct.toFixed(2)}%</span>`;
+      } else { vwapEl.textContent = '—'; }
+    }
+    // Short DTC + MoM% sub-label (rising short = bearish = red sub-label)
+    const shortEl = document.getElementById('bchips-short-' + safeId);
+    if (shortEl) {
+      if (d.days_to_cover != null) {
+        const dtc = d.days_to_cover;
+        const c = dtc > 10 ? 'text-red-500' : dtc > 5 ? 'text-amber-500' : 'text-on-surface';
+        let html = `<span class="${c} font-semibold">${dtc.toFixed(1)}d</span>`;
+        if (d.mom_change_pct != null) {
+          const mc = d.mom_change_pct;
+          const ms = mc >= 0 ? '+' : '';
+          const mc_c = mc >= 0 ? 'text-red-400' : 'text-green-500';
+          html += `<br><span class="${mc_c} text-[9px]">${ms}${mc.toFixed(1)}%</span>`;
+        }
+        shortEl.innerHTML = html;
+      } else { shortEl.textContent = '—'; }
+    }
+    // PCR: >1 bearish (red), <0.7 bullish (green), else neutral (amber)
+    const pcrEl = document.getElementById('bchips-pcr-' + safeId);
+    if (pcrEl) {
+      if (d.pcr_oi != null) {
+        const c = d.pcr_oi > 1 ? 'text-red-400' : d.pcr_oi < 0.7 ? 'text-green-500' : 'text-amber-500';
+        pcrEl.innerHTML = `<span class="${c} font-semibold">${d.pcr_oi.toFixed(2)}</span>`;
+      } else { pcrEl.textContent = '—'; }
+    }
+  }
+
+  async function _loadBacklogChips() {
+    const btn = document.getElementById('backlog-chips-btn');
+    const statusEl = document.getElementById('backlog-status');
+    if (btn) { btn.disabled = true; btn.textContent = '⟳ Loading…'; }
+    const tickers = (window._ooBacklogData || []).map(x => x.ticker).filter(Boolean);
+    if (!tickers.length) { if (btn) { btn.disabled = false; btn.textContent = 'Load Chips'; } return; }
+
+    const now = Date.now();
+    const stale = [];
+    tickers.forEach(t => {
+      try {
+        const raw = localStorage.getItem('oo_chips_' + t);
+        if (raw) {
+          const d = JSON.parse(raw);
+          if ((now - (d._cached_at || 0)) < 3600000) { _applyChipsData(t, d); return; }
+        }
+      } catch(e) {}
+      stale.push(t);
+    });
+
+    if (stale.length > 0) {
+      if (statusEl) statusEl.textContent = `Loading chips for ${stale.length} ticker(s)…`;
+      try {
+        const res = await fetch('/api/backlog/chips_batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tickers: stale }),
+        });
+        const data = res.ok ? await res.json() : null;
+        if (data?.items) {
+          data.items.forEach(d => {
+            if (!d || !d.ticker) return;
+            d._cached_at = now;
+            try { localStorage.setItem('oo_chips_' + d.ticker, JSON.stringify(d)); } catch(e) {}
+            _applyChipsData(d.ticker, d);
+          });
+        }
+      } catch(e) {}
+    }
+
+    if (statusEl) statusEl.textContent = '';
+    if (btn) { btn.disabled = false; btn.textContent = 'Load Chips'; }
+  }
+
   async function _fetchAndSaveBacklogFH(ticker) {
     const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
     // Show spinner immediately on the current cell
@@ -5155,6 +5257,10 @@
         if (sa) sa.checked = false;
       });
     }
+
+    // Load Chips button
+    const chipsBtn = document.getElementById('backlog-chips-btn');
+    if (chipsBtn) chipsBtn.addEventListener('click', () => _loadBacklogChips());
 
     // Sort listeners — bind once here instead of inside renderBacklogTable
     document.querySelectorAll('.backlog-sortable').forEach(th => {
