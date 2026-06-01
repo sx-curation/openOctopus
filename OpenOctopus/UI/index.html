@@ -800,7 +800,8 @@
           data-i18n="backlog.calc_fh">Calculate FH</button>
         <button id="backlog-chips-btn"
           class="h-8 px-4 rounded bg-sky-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-sky-700 active:scale-95 transition-transform"
-          title="Load volume, short interest and options data for all watchlist tickers">Load Chips</button>
+          data-i18n="backlog.load_chips"
+          title="Load volume, short interest and options data for all watchlist tickers">加载筹码面数据</button>
         <div class="relative inline-block ml-1">
           <button id="backlog-cols-btn"
             class="h-8 w-8 rounded bg-surface-container-high text-on-surface-variant text-sm hover:bg-surface-container-low transition-colors flex items-center justify-center"
@@ -5016,9 +5017,20 @@
   async function _loadBacklogChips() {
     const btn = document.getElementById('backlog-chips-btn');
     const statusEl = document.getElementById('backlog-status');
-    if (btn) { btn.disabled = true; btn.textContent = '⟳ Loading…'; }
+    const _btnLabel = () => I18N ? I18N.t('backlog.load_chips') : '加载筹码面数据';
+    const _setBtn = (txt) => { if (btn) { btn.disabled = false; btn.textContent = txt || _btnLabel(); } };
+
+    if (btn) { btn.disabled = true; btn.textContent = '⟳ 加载中…'; }
+
+    // Wait a tick so the browser repaints the button state
+    await new Promise(r => setTimeout(r, 0));
+
     const tickers = (window._ooBacklogData || []).map(x => x.ticker).filter(Boolean);
-    if (!tickers.length) { if (btn) { btn.disabled = false; btn.textContent = 'Load Chips'; } return; }
+    if (!tickers.length) {
+      if (statusEl) statusEl.textContent = '无持仓数据';
+      setTimeout(() => { if (statusEl) statusEl.textContent = ''; _setBtn(); }, 2000);
+      return;
+    }
 
     const now = Date.now();
     const stale = [];
@@ -5027,34 +5039,48 @@
         const raw = localStorage.getItem('oo_chips_' + t);
         if (raw) {
           const d = JSON.parse(raw);
-          if ((now - (d._cached_at || 0)) < 3600000) { _applyChipsData(t, d); return; }
+          // Reject stale data from chips analysis page (different schema — missing rvol field)
+          if (d.rvol !== undefined && (now - (d._cached_at || 0)) < 3600000) {
+            _applyChipsData(t, d); return;
+          }
         }
       } catch(e) {}
       stale.push(t);
     });
 
     if (stale.length > 0) {
-      if (statusEl) statusEl.textContent = `Loading chips for ${stale.length} ticker(s)…`;
+      if (statusEl) statusEl.textContent = `加载 ${stale.length} 只股票筹码数据…`;
+      let loaded = 0;
       try {
         const res = await fetch('/api/backlog/chips_batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tickers: stale }),
         });
-        const data = res.ok ? await res.json() : null;
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         if (data?.items) {
           data.items.forEach(d => {
             if (!d || !d.ticker) return;
             d._cached_at = now;
             try { localStorage.setItem('oo_chips_' + d.ticker, JSON.stringify(d)); } catch(e) {}
             _applyChipsData(d.ticker, d);
+            if (!d.error) loaded++;
           });
         }
-      } catch(e) {}
+        if (statusEl) statusEl.textContent = `筹码数据已加载 ${loaded}/${stale.length} 只`;
+        setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+      } catch(e) {
+        console.error('[chips_batch]', e);
+        if (statusEl) statusEl.textContent = `加载失败: ${e.message}`;
+        setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000);
+      }
+    } else {
+      if (statusEl) statusEl.textContent = '筹码数据已从缓存加载';
+      setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 2000);
     }
 
-    if (statusEl) statusEl.textContent = '';
-    if (btn) { btn.disabled = false; btn.textContent = 'Load Chips'; }
+    _setBtn();
   }
 
   async function _fetchAndSaveBacklogFH(ticker) {
