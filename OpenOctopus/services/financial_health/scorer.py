@@ -32,7 +32,8 @@ class Rule:
 
 def _to_float(v) -> Optional[float]:
     try:
-        return float(v)
+        f = float(v)
+        return None if (f != f or f == float('inf') or f == float('-inf')) else f
     except Exception:
         return None
 

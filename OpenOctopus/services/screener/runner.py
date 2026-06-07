@@ -126,9 +126,10 @@ def _make_initial_state(market: str, total: int) -> dict:
 def start_screener(market: str, force: bool = False) -> str:
     """Start a screener job for *market* and return its job_id.
 
-    - If a job for this market is already running, return the existing job_id.
+    - If a job for this market is already running/fetching, return the existing job_id.
     - If today's cache exists AND force=False, return a completed job_id immediately.
-    - Otherwise start a new background scan.
+    - Otherwise start a new background job and return immediately (ticker fetch
+      happens inside the thread so the HTTP request doesn't block).
     """
     if market not in _VALID_MARKETS:
         raise ValueError(f"Unknown market: {market!r}")
@@ -136,7 +137,7 @@ def start_screener(market: str, force: bool = False) -> str:
     # Check for already-running job for this market
     with _STATE_LOCK:
         for jid, state in _SCREENER_STATE.items():
-            if state.get("market") == market and state.get("status") == "running":
+            if state.get("market") == market and state.get("status") in ("running", "fetching_tickers"):
                 return jid
 
     # Check today's disk cache (skip if force=True)
@@ -164,31 +165,15 @@ def start_screener(market: str, force: bool = False) -> str:
                 }
             return job_id
 
-    # Fetch constituents
-    try:
-        if market == MARKET_SP500:
-            tickers, _ = get_sp500_tickers()
-        elif market == MARKET_NDX:
-            tickers, _ = get_nasdaq100_tickers()
-        elif market == MARKET_TW50:
-            tickers, _ = get_tw50_tickers()
-        else:
-            tickers, _ = get_dax40_tickers()
-    except Exception as exc:
-        job_id = str(uuid.uuid4())
-        with _STATE_LOCK:
-            _SCREENER_STATE[job_id] = {
-                **_make_initial_state(market, 0),
-                "status": "error",
-                "error": f"Failed to fetch constituent tickers: {exc}",
-            }
-        return job_id
-
+    # Return immediately — ticker fetch + scan run entirely inside the daemon thread.
     job_id = str(uuid.uuid4())
     with _STATE_LOCK:
-        _SCREENER_STATE[job_id] = _make_initial_state(market, len(tickers))
+        _SCREENER_STATE[job_id] = {
+            **_make_initial_state(market, 0),
+            "status": "fetching_tickers",
+        }
 
-    t = threading.Thread(target=_run, args=(job_id, market, tickers), daemon=True)
+    t = threading.Thread(target=_run, args=(job_id, market, force), daemon=True)
     t.start()
     return job_id
 
@@ -261,8 +246,31 @@ def _update_date_range(state: dict, data_start: str, data_end: str) -> None:
         dr["end"] = data_end
 
 
-def _run(job_id: str, market: str, tickers: list[str]) -> None:
+def _run(job_id: str, market: str, force: bool) -> None:  # noqa: ARG001
     """Main batch scanning loop executed in a daemon thread."""
+    # Step 1: Fetch constituent tickers (moved here so the HTTP request returns fast)
+    try:
+        if market == MARKET_SP500:
+            tickers, _ = get_sp500_tickers()
+        elif market == MARKET_NDX:
+            tickers, _ = get_nasdaq100_tickers()
+        elif market == MARKET_TW50:
+            tickers, _ = get_tw50_tickers()
+        else:
+            tickers, _ = get_dax40_tickers()
+    except Exception as exc:
+        with _STATE_LOCK:
+            if job_id in _SCREENER_STATE:
+                _SCREENER_STATE[job_id]["status"] = "error"
+                _SCREENER_STATE[job_id]["error"] = f"Failed to fetch constituent tickers: {exc}"
+        return
+
+    with _STATE_LOCK:
+        if job_id not in _SCREENER_STATE or _SCREENER_STATE[job_id].get("cancelled"):
+            return
+        _SCREENER_STATE[job_id]["status"] = "running"
+        _SCREENER_STATE[job_id]["total"] = len(tickers)
+
     priority = _price_priority_for(market)
     batch_size = _batch_size_for(market)
     current_priority = list(priority)  # mutable copy for source switching

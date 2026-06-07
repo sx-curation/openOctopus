@@ -105,10 +105,22 @@ def _fetch_one(ticker: str) -> dict:
 
 
 def fetch_backlog_data(tickers: list[str]) -> list[dict]:
-    """Fetch live data for a list of tickers, with 0.3s sleep between requests."""
-    results = []
-    for i, ticker in enumerate(tickers):
-        results.append(_fetch_one(ticker))
-        if i < len(tickers) - 1:
-            time.sleep(0.3)
-    return results
+    """Fetch live data for a list of tickers, up to 5 concurrent yfinance calls."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results_map: dict[str, dict] = {}
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_ticker = {executor.submit(_fetch_one, t): t for t in tickers}
+        for future in as_completed(future_to_ticker):
+            t = future_to_ticker[future]
+            try:
+                results_map[t] = future.result()
+            except Exception as exc:
+                results_map[t] = {
+                    "ticker": t.upper(), "name": None, "sector": None,
+                    "price": None, "vs_52w_low": None, "w52_chg_pct": None,
+                    "w52_high": None, "w52_low": None, "ma10": None, "ma50": None,
+                    "error": str(exc),
+                    "updated_at": datetime.now().isoformat()[:19],
+                }
+    return [results_map.get(t, {"ticker": t.upper(), "error": "not fetched"}) for t in tickers]

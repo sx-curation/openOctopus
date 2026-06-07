@@ -8,9 +8,11 @@ Usage:
     python app.py          # starts on http://localhost:5000
 """
 import json
+import math
 import os
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Ensure the app root is on sys.path so local packages (agent, config, etc.)
@@ -620,6 +622,40 @@ def _fh_cache_get(ticker: str):
 _TICKER_RE = re.compile(r'^[A-Z0-9.]{1,10}$')
 
 
+def _sanitize_nan(obj):
+    """Recursively replace float NaN/Inf with None for valid JSON serialization."""
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize_nan(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_nan(v) for v in obj]
+    return obj
+
+
+_fx_cache: dict = {}
+
+
+@app.route("/api/exchange-rate")
+def exchange_rate() -> Response:
+    """Return USD→EUR rate via yfinance. Cached 10 min."""
+    import yfinance as yf
+    import time as _t
+    cached = _fx_cache.get('EURUSD')
+    if cached and (_t.time() - cached['at']) < 600:
+        return jsonify(cached['payload'])
+    try:
+        info = yf.Ticker('EURUSD=X').fast_info
+        eurusd = float(info.get('lastPrice') or info.get('last_price') or 1.0)
+        # EURUSD=X = how many USD per 1 EUR; invert to get USD→EUR multiplier
+        rate = 1.0 / eurusd if eurusd else 1.0
+    except Exception:
+        rate = (_fx_cache.get('EURUSD') or {}).get('payload', {}).get('rate', 1.0)
+    payload = {'base': 'USD', 'quote': 'EUR', 'rate': round(rate, 6)}
+    _fx_cache['EURUSD'] = {'payload': payload, 'at': _t.time()}
+    return jsonify(payload)
+
+
 @app.route("/api/financial_health/transcript/<ticker>")
 def fh_transcript(ticker: str) -> Response:
     """Fetch latest earnings transcript for a ticker (FMP → HF cache → EDGAR)."""
@@ -661,8 +697,9 @@ def financial_health_data() -> Response:
         "data_source":  raw.get("data_source", "yfinance"),
         "cached":       False,
     }
-    _fh_data_cache[ticker] = {"payload": payload, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
-    return jsonify(payload), 200
+    clean = _sanitize_nan(payload)
+    _fh_data_cache[ticker] = {"payload": clean, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
+    return jsonify(clean), 200
 
 
 @app.route("/api/financial_health/summary", methods=["POST"])
@@ -1011,6 +1048,52 @@ def chips_institutional(ticker: str) -> Response:
                 results[key] = {"error": str(e)}
 
     return jsonify({"ticker": ticker.upper(), **results}), 200
+
+
+@app.route("/api/company/news")
+def company_news() -> Response:
+    """Fetch and categorise recent company news via yfinance."""
+    ticker = request.args.get("ticker", "").strip().upper()
+    if not ticker:
+        return jsonify({"error": "ticker required", "items": []})
+    try:
+        import yfinance as yf
+        raw = yf.Ticker(ticker).news or []
+        _CATS: dict[str, list[str]] = {
+            "legal":     ["lawsuit", "sue", "legal", "court", "litigation", "settlement",
+                          "verdict", "penalty", "fine", "regulatory", "class action",
+                          "investigation", "antitrust", "ftc charges", "sec charges"],
+            "product":   ["launch", "release", "unveil", "new product", "introduces",
+                          "debut", "ships", "rolls out", "announces new"],
+            "tech":      ["ai ", "artificial intelligence", "chip", "software", "hardware",
+                          "patent", "algorithm", "innovation", "breakthrough", "model"],
+            "financial": ["earnings", "revenue", "profit", "loss", "quarterly", "eps",
+                          "dividend", "buyback", "guidance", "forecast", "outlook"],
+            "deal":      ["acquire", "merger", "acquisition", "deal", "partnership",
+                          "joint venture", "invest", "stake"],
+        }
+
+        def _cat(title: str) -> str:
+            tl = title.lower()
+            for k, kws in _CATS.items():
+                if any(w in tl for w in kws):
+                    return k
+            return "general"
+
+        items = [
+            {
+                "title": n.get("title", ""),
+                "publisher": n.get("publisher", ""),
+                "link": n.get("link", ""),
+                "published_at": n.get("providerPublishTime", 0),
+                "category": _cat(n.get("title", "")),
+            }
+            for n in raw[:20]
+        ]
+        return jsonify({"ticker": ticker, "items": items,
+                        "fetched_at": datetime.now().isoformat()[:19]})
+    except Exception as exc:
+        return jsonify({"error": str(exc), "items": [], "ticker": ticker})
 
 
 if __name__ == "__main__":

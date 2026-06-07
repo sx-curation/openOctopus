@@ -1,1 +1,1 @@
-gunicorn --bind=0.0.0.0:8000 --timeout 120 app:app
+gunicorn --bind=0.0.0.0:8000 --timeout 120 --worker-class gthread --workers 1 --threads 16 app:app
