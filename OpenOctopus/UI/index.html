@@ -654,6 +654,18 @@
           <span data-i18n="screener.market.tw50">TW50</span>
           <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
         </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="CN_CSI300">
+          <span data-i18n="screener.market.cn_csi300">沪深300</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="CN_SZ100">
+          <span data-i18n="screener.market.cn_sz100">深证100</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="CN_GEM">
+          <span data-i18n="screener.market.cn_gem">创业板</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
       </div>
 
       <!-- Control Row -->
@@ -3531,7 +3543,7 @@
 
   // ─── Per-market state store ─────────────────────────────────────────────────
   // Each market independently tracks its own job, rendering state, and selection.
-  const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50'];
+  const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50', 'CN_CSI300', 'CN_SZ100', 'CN_GEM'];
 
   // ── FH score fetch queue (max 5 concurrent, prevents yfinance 429) ────────
   const _fhQueue = [];
@@ -4666,11 +4678,15 @@
       const tickerCls = fromScreener
         ? 'font-extrabold cursor-pointer hover:underline px-1 rounded bg-yellow-200/70 text-yellow-900 dark:bg-yellow-400/20 dark:text-yellow-300'
         : 'font-extrabold text-primary cursor-pointer hover:underline';
+      const _zhMode = typeof I18N !== 'undefined' && I18N.currentLang() === 'zh';
+      const displayName = (_zhMode && item.name_cn) ? item.name_cn : (item.name || '—');
+      const _SECTOR_ZH = {'Technology':'信息技术','Financial Services':'金融','Consumer Defensive':'消费必需品','Consumer Cyclical':'非必需消费品','Healthcare':'医疗保健','Energy':'能源','Industrials':'工业','Basic Materials':'原材料','Utilities':'公用事业','Communication Services':'通信服务','Real Estate':'房地产','Industrials':'工业'};
+      const displaySector = (_zhMode && item.sector && _SECTOR_ZH[item.sector]) ? _SECTOR_ZH[item.sector] : (item.sector || '—');
       return `<tr class="group border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
         <td class="pr-2 py-2"><input type="checkbox" class="backlog-row-check cursor-pointer accent-primary" data-ticker="${_esc(item.ticker)}"></td>
         <td class="sticky left-0 z-10 bg-surface group-hover:bg-surface-container-low/50 border-r border-outline-variant/30 pr-3 py-2 whitespace-nowrap transition-colors"><span class="${tickerCls}" data-fhnav="${_esc(item.ticker)}">${_esc(item.ticker)}</span></td>
-        <td class="blcol-g-info pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(item.name || '')}">${_esc(item.name || '—')}</td>
-        <td class="blcol-g-info pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(item.sector || '')}">${_esc(item.sector || '—')}</td>
+        <td class="blcol-g-info pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(displayName)}">${_esc(displayName)}</td>
+        <td class="blcol-g-info pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(displaySector)}">${_esc(displaySector)}</td>
         <td id="btags-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-info btags-cell pr-3 py-2 cursor-pointer max-w-[160px]">${tagsDisplay}</td>
         <td id="bscore-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
         <td id="bgrowth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
@@ -5058,6 +5074,7 @@
   // ── Chips Data: RVOL / Δ VWAP / Short DTC / PCR ────────────────────────
   function _applyChipsData(ticker, d) {
     const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
+    const _isCN = ticker.toUpperCase().endsWith('.SH') || ticker.toUpperCase().endsWith('.SZ');
     const item = (window._ooBacklogData || []).find(x => x.ticker === ticker);
     if (item) {
       item.chips_rvol = d.rvol ?? null;
@@ -5086,7 +5103,9 @@
     // Short DTC + MoM% sub-label (rising short = bearish = red sub-label)
     const shortEl = document.getElementById('bchips-short-' + safeId);
     if (shortEl) {
-      if (d.days_to_cover != null) {
+      if (_isCN) {
+        shortEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]" title="A股融券数据不在yfinance">N/A</span>';
+      } else if (d.days_to_cover != null) {
         const dtc = d.days_to_cover;
         const c = dtc > 10 ? 'text-red-500' : dtc > 5 ? 'text-amber-500' : 'text-on-surface';
         let html = `<span class="${c} font-semibold">${dtc.toFixed(1)}d</span>`;
@@ -5102,7 +5121,9 @@
     // PCR: >1 bearish (red), <0.7 bullish (green), else neutral (amber)
     const pcrEl = document.getElementById('bchips-pcr-' + safeId);
     if (pcrEl) {
-      if (d.pcr_oi != null) {
+      if (_isCN) {
+        pcrEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]" title="A股个股期权数据不适用">N/A</span>';
+      } else if (d.pcr_oi != null) {
         const c = d.pcr_oi > 1 ? 'text-red-400' : d.pcr_oi < 0.7 ? 'text-green-500' : 'text-amber-500';
         pcrEl.innerHTML = `<span class="${c} font-semibold">${d.pcr_oi.toFixed(2)}</span>`;
       } else { pcrEl.textContent = '—'; }

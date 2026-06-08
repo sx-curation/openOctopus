@@ -9,10 +9,12 @@ from datetime import datetime
 
 def fetch_short_interest(ticker: str) -> dict:
     import yfinance as yf
+    from services.ashare import to_yf_ticker
 
     t = ticker.upper()
+    yf_sym = to_yf_ticker(t)  # .SH → .SS for Yahoo Finance
     try:
-        info = yf.Ticker(t).info or {}
+        info = yf.Ticker(yf_sym).info or {}
     except Exception as e:
         return {"ticker": t, "error": str(e), "fetched_at": _now()}
 

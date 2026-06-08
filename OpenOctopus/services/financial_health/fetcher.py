@@ -290,8 +290,10 @@ def _extract_yfinance(t: str):
     """
     import yfinance as yf
     import pandas as pd
+    from services.ashare import to_yf_ticker
 
-    stock   = yf.Ticker(t)
+    yf_sym  = to_yf_ticker(t)   # .SH → .SS for Shanghai stocks
+    stock   = yf.Ticker(yf_sym)
     income  = stock.financials
     balance = stock.balance_sheet
     cashflow = stock.cashflow

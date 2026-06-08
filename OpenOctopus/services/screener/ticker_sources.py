@@ -15,6 +15,7 @@ Public API
 from __future__ import annotations
 
 import csv
+import json
 import re
 import time
 import random
@@ -623,4 +624,104 @@ def get_tw50_tickers(
             last_err = exc
     # Hardcoded fallback — do not cache (static data)
     return list(_TW50_HARDCODED), "hardcoded"
+
+
+# ---------------------------------------------------------------------------
+# A-share indices via AKShare
+# ---------------------------------------------------------------------------
+
+_CN_NAMES_CACHE = _CACHE_DIR / "cn_names.json"
+
+
+def _code_to_ticker(code: str) -> str:
+    """Convert 6-digit A-share code to dot-suffix format."""
+    c = str(code).zfill(6)
+    return f"{c}.SH" if c.startswith("6") else f"{c}.SZ"
+
+
+def _update_cn_name_cache(new_entries: dict[str, str]) -> None:
+    """Merge new_entries into cn_names.json cache (read-modify-write)."""
+    existing: dict[str, str] = {}
+    if _CN_NAMES_CACHE.exists():
+        try:
+            with _CN_NAMES_CACHE.open(encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            pass
+    existing.update(new_entries)
+    try:
+        with _CN_NAMES_CACHE.open("w", encoding="utf-8") as f:
+            json.dump(existing, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def get_cn_name_map() -> dict[str, str]:
+    """Return {ticker: chinese_name} from cache. Empty dict if not available."""
+    if not _CN_NAMES_CACHE.exists():
+        return {}
+    try:
+        with _CN_NAMES_CACHE.open(encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _fetch_akshare_index(symbol: str) -> list[str]:
+    """Fetch constituent tickers for an AKShare index symbol.
+    Side-effect: updates cn_names.json cache with Chinese company names.
+    """
+    import akshare as ak
+    df = ak.index_stock_cons(symbol=symbol)
+    codes = df.iloc[:, 0].astype(str).str.zfill(6).tolist()
+    tickers = [_code_to_ticker(c) for c in codes if c.isdigit()]
+    # Extract Chinese names from column 1 if present
+    if df.shape[1] > 1:
+        names = df.iloc[:, 1].astype(str).tolist()
+        name_map = {
+            _code_to_ticker(c): n
+            for c, n in zip(codes, names)
+            if c.isdigit() and n and n != "nan"
+        }
+        if name_map:
+            _update_cn_name_cache(name_map)
+    return tickers
+
+
+def _sanity_cn(tickers: list[str], src: str, min_count: int = 50) -> list[str]:
+    tickers = [t for t in tickers if re.match(r"^\d{6}\.(SH|SZ)$", t)]
+    if len(tickers) < min_count:
+        raise ValueError(f"sanity check failed from {src}: only {len(tickers)} tickers")
+    return tickers
+
+
+def _make_cn_getter(cache_key: str, akshare_symbol: str, min_count: int = 50):
+    """Factory: returns a get_*_tickers() function for one A-share index."""
+    def getter() -> tuple[list[str], str]:
+        cached = _read_tickers_cache(cache_key)
+        if cached and len(cached) >= min_count:
+            return cached, "cache"
+        try:
+            tickers = _fetch_akshare_index(akshare_symbol)
+            tickers = _sanity_cn(tickers, "akshare", min_count)
+            _write_tickers_cache(cache_key, tickers)
+            return tickers, "akshare"
+        except Exception as exc:
+            raise RuntimeError(f"{cache_key} ticker fetch failed: {exc}") from exc
+    getter.__name__ = f"get_{cache_key.lower()}_tickers"
+    return getter
+
+
+get_cn_csi300_tickers = _make_cn_getter("CN_CSI300", "000300", min_count=200)
+get_cn_sz100_tickers  = _make_cn_getter("CN_SZ100",  "399004", min_count=80)
+get_cn_gem_tickers    = _make_cn_getter("CN_GEM",    "399006", min_count=50)
+
+
+def get_cn_a_tickers() -> tuple[list[str], str]:
+    """Combined CN_A universe (kept for backwards compat)."""
+    csi300, _ = get_cn_csi300_tickers()
+    sz100,  _ = get_cn_sz100_tickers()
+    gem,    _ = get_cn_gem_tickers()
+    combined = list(dict.fromkeys(csi300 + sz100 + gem))
+    return combined, "akshare"
 

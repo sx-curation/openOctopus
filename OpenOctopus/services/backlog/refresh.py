@@ -10,7 +10,20 @@ import time
 import logging
 from datetime import datetime
 
+from services.ashare import is_cn
+from services.ashare.names import get_cn_name_map
+
 logger = logging.getLogger(__name__)
+
+_cn_name_map: dict | None = None
+
+
+def _get_cn_names() -> dict:
+    """Lazy-load CN name map once per process (refreshed when screener runs)."""
+    global _cn_name_map
+    if _cn_name_map is None:
+        _cn_name_map = get_cn_name_map()
+    return _cn_name_map
 
 
 def _fetch_one(ticker: str) -> dict:
@@ -20,15 +33,17 @@ def _fetch_one(ticker: str) -> dict:
     yfinance manages its own curl_cffi session internally.
     """
     import yfinance as yf  # lazy import to keep module load fast
+    from services.ashare import to_yf_ticker
 
     t = ticker.upper()
+    yf_sym = to_yf_ticker(t)  # .SH → .SS for Yahoo Finance
     last_exc: Exception | None = None
 
     for attempt in range(2):
         if attempt > 0:
             time.sleep(1.5)
         try:
-            yticker = yf.Ticker(t)
+            yticker = yf.Ticker(yf_sym)
             info = yticker.info or {}
 
             # Price fallback chain: regularMarketPrice → currentPrice → previousClose
@@ -70,9 +85,11 @@ def _fetch_one(ticker: str) -> dict:
             except Exception as e:
                 logger.warning("backlog: history fetch failed for %s: %s", t, e)
 
+            name_cn = _get_cn_names().get(t) if is_cn(t) else None
             return {
                 "ticker": t,
                 "name": info.get("shortName") or info.get("longName") or t,
+                "name_cn": name_cn,
                 "sector": info.get("sector") or "—",
                 "price": round(float(price), 2) if price is not None else None,
                 "vs_52w_low": vs_52w_low,
@@ -91,6 +108,7 @@ def _fetch_one(ticker: str) -> dict:
     return {
         "ticker": t,
         "name": None,
+        "name_cn": None,
         "sector": None,
         "price": None,
         "vs_52w_low": None,
@@ -117,7 +135,7 @@ def fetch_backlog_data(tickers: list[str]) -> list[dict]:
                 results_map[t] = future.result()
             except Exception as exc:
                 results_map[t] = {
-                    "ticker": t.upper(), "name": None, "sector": None,
+                    "ticker": t.upper(), "name": None, "name_cn": None, "sector": None,
                     "price": None, "vs_52w_low": None, "w52_chg_pct": None,
                     "w52_high": None, "w52_low": None, "ma10": None, "ma50": None,
                     "error": str(exc),

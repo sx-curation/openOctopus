@@ -391,7 +391,7 @@ def analyze_status(job_id: str) -> Response:
 
 from services.screener import runner as _screener_runner  # noqa: E402
 
-_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50"}
+_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50", "CN_CSI300", "CN_SZ100", "CN_GEM"}
 
 
 @app.route("/api/screener/start", methods=["POST"])
@@ -446,6 +446,14 @@ def screener_status(job_id: str) -> Response:
     return jsonify(state)
 
 
+
+
+@app.route("/api/ashare/concept_tags/<ticker>")
+def ashare_concept_tags(ticker: str) -> Response:
+    """Return A-share concept/sector tags for a ticker. Lazy-builds cache on first call."""
+    from services.ashare.concept_tags import get_concept_tags
+    tags = get_concept_tags(ticker.upper())
+    return jsonify({"ticker": ticker.upper(), "tags": tags})
 
 
 @app.route("/api/policy", methods=["GET"])

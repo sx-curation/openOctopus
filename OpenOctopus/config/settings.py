@@ -57,3 +57,11 @@ POLICY_ENABLED_SOURCES: list[str] = [
 	for s in os.getenv("POLICY_ENABLED_SOURCES", "EUR_LEX,FEDERAL_REGISTER,SEC").split(",")
 	if s.strip()
 ]
+
+# A-share data sources
+TDX_SERVERS: list = [
+    ("119.147.212.81", 7709),
+    ("124.74.236.94", 7709),
+    ("180.153.18.170", 7709),
+]
+IWENCAI_COOKIE: str = os.getenv("IWENCAI_COOKIE", "")  # reserved, not yet used

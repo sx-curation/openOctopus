@@ -9,9 +9,11 @@ import yfinance as yf
 
 
 def fetch_volume_data(ticker: str) -> dict:
+    from services.ashare import to_yf_ticker
     t = ticker.upper()
+    yf_sym = to_yf_ticker(t)  # .SH → .SS for Yahoo Finance
     try:
-        hist = yf.Ticker(t).history(period="3mo", interval="1d")
+        hist = yf.Ticker(yf_sym).history(period="3mo", interval="1d")
     except Exception as e:
         return {"ticker": t, "error": str(e), "fetched_at": _now()}
 

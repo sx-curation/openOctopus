@@ -68,6 +68,10 @@ MARKET_SP500 = "SP500"
 MARKET_NDX = "NASDAQ100"
 MARKET_DAX = "DAX40"
 MARKET_TW50 = "TW50"
+MARKET_CN_A    = "CN_A"       # kept for backwards compat; not exposed in UI
+MARKET_CN_CSI300 = "CN_CSI300"  # 沪深300
+MARKET_CN_SZ100  = "CN_SZ100"   # 深证100
+MARKET_CN_GEM    = "CN_GEM"     # 创业板 ChiNext
 
 _US_MARKETS = (MARKET_SP500, MARKET_NDX)
 
@@ -303,6 +307,18 @@ if _YF_AVAILABLE:
     _SOURCE_FUNCS["yahoo"] = fetch_prices_yahoo
 _SOURCE_FUNCS["fmp"] = fetch_prices_fmp      # always registered; runtime checks API key
 _SOURCE_FUNCS["twse"] = fetch_prices_twse    # always registered; no API key required
+
+# A-share sources — registered lazily via lambda to avoid import at module load
+def _fetch_tencent(ticker: str, market: str) -> pd.Series | None:  # noqa: ARG001
+    from ..ashare.price_fetcher import fetch_prices_tencent
+    return fetch_prices_tencent(ticker)
+
+def _fetch_tdx(ticker: str, market: str) -> pd.Series | None:  # noqa: ARG001
+    from ..ashare.price_fetcher import fetch_prices_tdx
+    return fetch_prices_tdx(ticker)
+
+_SOURCE_FUNCS["tencent"] = _fetch_tencent
+_SOURCE_FUNCS["tdx"] = _fetch_tdx
 
 
 # ---------------------------------------------------------------------------

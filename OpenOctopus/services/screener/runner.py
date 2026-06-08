@@ -25,10 +25,14 @@ from typing import Any
 
 from .price_fetcher import (
     MARKET_SP500, MARKET_NDX, MARKET_DAX, MARKET_TW50,
+    MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM,
     RateLimitError,
     fetch_prices, compute_metrics, check_conditions,
 )
-from .ticker_sources import get_sp500_tickers, get_nasdaq100_tickers, get_dax40_tickers, get_tw50_tickers
+from .ticker_sources import (
+    get_sp500_tickers, get_nasdaq100_tickers, get_dax40_tickers, get_tw50_tickers,
+    get_cn_csi300_tickers, get_cn_sz100_tickers, get_cn_gem_tickers,
+)
 
 # ---------------------------------------------------------------------------
 # Cache directory (shared with ticker_sources)
@@ -43,11 +47,16 @@ _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 _SCREENER_STATE: dict[str, dict[str, Any]] = {}
 _STATE_LOCK = threading.Lock()
 
-_VALID_MARKETS = (MARKET_SP500, MARKET_NDX, MARKET_DAX, MARKET_TW50)
+_CN_MARKETS = (MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM)
+_VALID_MARKETS = (MARKET_SP500, MARKET_NDX, MARKET_DAX, MARKET_TW50) + _CN_MARKETS
 
 
 def _batch_size_for(market: str) -> int:
-    return {MARKET_SP500: 50, MARKET_NDX: 10, MARKET_DAX: 5, MARKET_TW50: 10}.get(market, 10)
+    sizes = {
+        MARKET_SP500: 50, MARKET_NDX: 10, MARKET_DAX: 5, MARKET_TW50: 10,
+        MARKET_CN_CSI300: 30, MARKET_CN_SZ100: 30, MARKET_CN_GEM: 30,
+    }
+    return sizes.get(market, 10)
 
 
 def _price_priority_for(market: str) -> list[str]:
@@ -55,6 +64,8 @@ def _price_priority_for(market: str) -> list[str]:
         return ["yahoo", "stooq", "fmp"]
     if market == MARKET_TW50:
         return ["yahoo", "twse"]
+    if market in _CN_MARKETS:
+        return ["tencent", "tdx"]
     return ["stooq", "yahoo", "fmp"]
 
 
@@ -256,6 +267,12 @@ def _run(job_id: str, market: str, force: bool) -> None:  # noqa: ARG001
             tickers, _ = get_nasdaq100_tickers()
         elif market == MARKET_TW50:
             tickers, _ = get_tw50_tickers()
+        elif market == MARKET_CN_CSI300:
+            tickers, _ = get_cn_csi300_tickers()
+        elif market == MARKET_CN_SZ100:
+            tickers, _ = get_cn_sz100_tickers()
+        elif market == MARKET_CN_GEM:
+            tickers, _ = get_cn_gem_tickers()
         else:
             tickers, _ = get_dax40_tickers()
     except Exception as exc:

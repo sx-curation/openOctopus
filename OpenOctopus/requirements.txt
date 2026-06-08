@@ -12,5 +12,8 @@ beautifulsoup4>=4.11.0
 selenium>=4.0.0
 duckdb>=0.10.0
 pandas-datareader>=0.10.0
+# A-share data sources
+pytdx>=1.72
+akshare>=1.12
 # Optional: required only when LLM_PROVIDER=free-claude (free-claude-code proxy path)
 # anthropic>=0.26.0
