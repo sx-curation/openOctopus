@@ -17,8 +17,8 @@ def fetch_volume_data(ticker: str) -> dict:
     except Exception as e:
         return {"ticker": t, "error": str(e), "fetched_at": _now()}
 
-    # Drop rows where volume is 0 (pre/post market artifacts or halted days)
-    hist = hist[hist["Volume"] > 0].copy()
+    # Drop rows where volume is 0 or close price is missing (intraday partial rows)
+    hist = hist[(hist["Volume"] > 0) & hist["Close"].notna()].copy()
 
     if len(hist) < 2:
         return {"ticker": t, "error": "Insufficient history data", "fetched_at": _now()}

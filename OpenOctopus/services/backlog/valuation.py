@@ -94,10 +94,12 @@ def _fetch_5yr_pe_range(stock) -> tuple[float | None, float | None]:
 def fetch_valuation(ticker: str) -> dict:
     """Fetch valuation prices for a ticker using yfinance TTM PE and EPS."""
     import yfinance as yf  # lazy import
+    from services.ashare import to_yf_ticker
 
     t = ticker.upper()
+    yf_sym = to_yf_ticker(t)  # .SH → .SS for Yahoo Finance
     try:
-        stock = yf.Ticker(t)
+        stock = yf.Ticker(yf_sym)
         info = stock.info or {}
     except Exception as exc:
         logger.warning("valuation: yfinance fetch failed for %s: %s", t, exc)

@@ -341,9 +341,25 @@ def _extract_yfinance(t: str):
         "fcf":           _pad(_series_from_df(cashflow, "Free Cash Flow")),
     }
 
+    # P/E fallback chain for non-US tickers (A-shares often missing trailingPE)
+    trailing_pe = _to_float(info.get("trailingPE"))
+    if not trailing_pe or trailing_pe <= 0:
+        # Try computing from current price / trailing EPS
+        price = _to_float(
+            info.get("regularMarketPrice") or info.get("currentPrice") or info.get("previousClose")
+        )
+        t_eps = _to_float(info.get("trailingEps"))
+        if price and t_eps and t_eps > 0:
+            trailing_pe = round(price / t_eps, 2)
+        else:
+            # Last resort: forward P/E
+            fpe = _to_float(info.get("forwardPE"))
+            if fpe and fpe > 0:
+                trailing_pe = fpe
+
     info_scalars = {
         "beta":             _to_float(info.get("beta")),
-        "trailingPE":       _to_float(info.get("trailingPE")),
+        "trailingPE":       trailing_pe,
         "returnOnEquity":   _to_float(info.get("returnOnEquity")),
         "marketCap":        _to_float(info.get("marketCap")),
         "debtToEquity_raw": _to_float(info.get("debtToEquity")),

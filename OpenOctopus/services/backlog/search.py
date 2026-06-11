@@ -15,6 +15,19 @@ logger = logging.getLogger(__name__)
 _TICKER_PATTERN = re.compile(r'^[A-Z0-9.\-]{1,10}$')
 
 
+def _normalize_symbol(symbol: str) -> str:
+    """Convert Yahoo Finance A-share symbols to internal format.
+
+    Yahoo Finance uses .SS for Shanghai; we use .SH internally.
+      600176.SS → 600176.SH
+      000858.SZ → 000858.SZ  (unchanged)
+    """
+    s = symbol.upper()
+    if s.endswith(".SS"):
+        return s[:-3] + ".SH"
+    return s
+
+
 def search_ticker(query: str) -> list[dict]:
     """Search for tickers by symbol or company name.
 
@@ -36,7 +49,7 @@ def search_ticker(query: str) -> list[dict]:
             quote_type = info.get("quoteType")
             if quote_type:
                 return [{
-                    "symbol": q_upper,
+                    "symbol": _normalize_symbol(q_upper),
                     "name": info.get("shortName") or info.get("longName") or q_upper,
                     "exchange": info.get("exchange") or "",
                 }]
@@ -55,7 +68,7 @@ def search_ticker(query: str) -> list[dict]:
             if not symbol:
                 continue
             results.append({
-                "symbol": symbol,
+                "symbol": _normalize_symbol(symbol),
                 "name": item.get("longname") or item.get("shortname") or symbol,
                 "exchange": item.get("exchange") or "",
             })

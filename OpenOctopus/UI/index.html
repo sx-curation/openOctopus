@@ -817,6 +817,9 @@
         <button id="backlog-clear-btn"
           class="h-8 px-4 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors"
           data-i18n="backlog.clear">Clear All</button>
+        <button id="backlog-clear-cache-btn"
+          class="h-8 px-4 rounded bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-low transition-colors"
+          data-i18n="backlog.clear_cache" title="Clear all cached market & valuation data, keeping the ticker list">Clear Cache</button>
         <button id="backlog-calc-fh-btn"
           class="h-8 px-4 rounded bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-transform"
           data-i18n="backlog.calc_fh">Calculate FH</button>
@@ -946,14 +949,14 @@
         </div>
         <!-- Score color legend -->
         <div class="flex items-center gap-4 mt-3 pt-2 border-t border-outline-variant/20">
-          <span class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">Score key:</span>
-          <span class="flex items-center gap-1 text-[9px] text-emerald-600"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>≥70 Strong</span>
-          <span class="flex items-center gap-1 text-[9px] text-amber-600"><span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>45–69 Fair</span>
-          <span class="flex items-center gap-1 text-[9px] text-red-500"><span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>&lt;45 Weak</span>
+          <span class="text-[9px] text-on-surface-variant/60 uppercase tracking-widest" data-i18n="fh.score_key">Score key:</span>
+          <span class="flex items-center gap-1 text-[9px] text-emerald-600"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span><span data-i18n="fh.score.strong">≥70 Strong</span></span>
+          <span class="flex items-center gap-1 text-[9px] text-amber-600"><span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span><span data-i18n="fh.score.fair">45–69 Fair</span></span>
+          <span class="flex items-center gap-1 text-[9px] text-red-500"><span class="inline-block w-2 h-2 rounded-full bg-red-400"></span><span data-i18n="fh.score.weak">&lt;45 Weak</span></span>
         </div>
         <!-- Year trend mini chart -->
         <div id="fh-year-trend" class="hidden mt-4 pt-3 border-t border-outline-variant/30">
-          <div class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2">5-Year Score Trend</div>
+          <div class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2" data-i18n="fh.trend.title">5-Year Score Trend</div>
           <div id="fh-year-trend-bars" class="flex items-end gap-2 h-12"></div>
         </div>
       </div>
@@ -963,7 +966,7 @@
         <button class="fh-tab fh-tab-active px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors" data-fh-tab="indicators" data-i18n="fh.tab.indicators">Health Metrics</button>
         <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="drilldown" data-i18n="fh.tab.drilldown">AI Factor Analysis</button>
         <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="competitor" data-i18n="fh.tab.competitor">Competitor Comparison</button>
-        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="report">Report Response Analysis</button>
+        <button class="fh-tab px-4 py-1.5 text-[11px] font-semibold rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high" data-fh-tab="report" data-i18n="fh.tab.report">Report Response Analysis</button>
       </div>
 
       <!-- ── Tab 1: Health Metrics ── -->
@@ -977,7 +980,7 @@
           <div>
             <div class="flex items-center gap-2 mb-3">
               <h3 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant" data-i18n="fh.fundamentals.title">5-Year Fundamentals</h3>
-              <span class="text-[9px] text-on-surface-variant/50 italic">B = billions · M = millions</span>
+              <span class="text-[9px] text-on-surface-variant/50 italic" data-i18n="fh.fundamentals.legend">B = billions · M = millions</span>
             </div>
             <div id="fh-fundamentals-table" class="overflow-x-auto text-[10px]"></div>
           </div>
@@ -4804,7 +4807,14 @@
     const ticker = cell.dataset.ticker || '';
     cell.style.cursor = 'pointer';
     cell.title = 'Click to view full Financial Health analysis';
-    cell.innerHTML = '<span class="' + colorCls + ' font-semibold hover:underline">' + score.toFixed(0) + '</span>' + deltaHtml;
+    const rPct = d.group_scores?.risk?.pct ?? 0;
+    let riskHtml = '';
+    if (rPct < 0) {
+      const sev = Math.abs(rPct);
+      const col = sev >= 3 ? '#ef4444' : sev === 2 ? '#f97316' : '#f59e0b';
+      riskHtml = `<span style="color:${col};font-size:9px;margin-left:2px" title="風險扣分: ${rPct} pts">⚠</span>`;
+    }
+    cell.innerHTML = '<span class="' + colorCls + ' font-semibold hover:underline">' + score.toFixed(0) + '</span>' + deltaHtml + riskHtml;
     if (ticker && !cell._scoreClickWired) {
       cell._scoreClickWired = true;
       cell.addEventListener('click', (e) => {
@@ -5425,6 +5435,27 @@
       _showGenericToast(I18N ? I18N.t('backlog.cleared') : 'Backlog cleared.');
     });
 
+    const clearCacheBtn = document.getElementById('backlog-clear-cache-btn');
+    if (clearCacheBtn) clearCacheBtn.addEventListener('click', () => {
+      // Clear all oo_bval_* valuation caches
+      Object.keys(localStorage).filter(k => k.startsWith('oo_bval_')).forEach(k => localStorage.removeItem(k));
+      // Strip market data from oo_backlog entries but keep tickers, tags, fh_score, added_by
+      try {
+        const items = _getBacklogItems().map(it => ({
+          ticker: it.ticker,
+          tags: it.tags || [],
+          fh_score: it.fh_score || null,
+          fh_growth: it.fh_growth || null,
+          fh_health: it.fh_health || null,
+          fh_fetched_at: it.fh_fetched_at || null,
+          added_by: it.added_by || 'manual',
+        }));
+        _saveBacklogItems(items);
+      } catch(e) {}
+      _backlogLastRefresh = 0;
+      _showGenericToast(I18N ? I18N.t('backlog.cache_cleared') : 'Cache cleared. Click Refresh to reload data.');
+    });
+
     // Calculate FH for selected tickers (sequential)
     const calcFhBtn = document.getElementById('backlog-calc-fh-btn');
     if (calcFhBtn) {
@@ -5655,6 +5686,8 @@
     { key: 'revenue',                     label: 'Revenue',                fmt: 'B' },
     { key: 'netIncome',                   label: 'Net Income',             fmt: 'B' },
     { key: 'freeCashFlow',               label: 'Free Cash Flow',          fmt: 'B' },
+    { key: 'priceToEarningsRatio',        label: 'P/E Ratio',              fmt: 'x' },
+    { key: 'beta',                        label: 'Beta',                   fmt: 'ratio' },
   ];
 
   // ── Format helpers ──────────────────────────────────────────────────
@@ -5744,6 +5777,8 @@
     revenue:                     "Total Revenue for the fiscal year (in billions or millions).",
     netIncome:                   "Net profit after all expenses and taxes (in billions or millions).",
     freeCashFlow:                "Free Cash Flow = Operating Cash Flow − Capital Expenditures (in B/M).",
+    priceToEarningsRatio:        "Trailing P/E = Market Price ÷ Trailing 12-Month EPS. Lower = cheaper. Score thresholds: <15 (4pts), <20 (2pts).",
+    beta:                        "Beta measures volatility relative to the market. <1.0 = less volatile than market.",
   };
 
   function renderFundamentalsTable(fundamentals, years) {
@@ -5756,11 +5791,12 @@
     const rows = FH_TABLE_METRICS.map(m => {
       const vals = fundamentals[m.key] || [];
       const tip = _METRIC_TOOLTIPS[m.key] || m.key;
+      const label = _t('fh.metric.' + m.key, m.label);
       const cells = displayYears.map((_, i) => `<td class="text-right px-2 py-1">${_fmtVal(vals[i], m.fmt)}</td>`).join('');
-      return `<tr><td class="pr-4 py-1 whitespace-nowrap text-on-surface-variant" title="${_escFH(tip)}" style="cursor:help">${_escFH(m.label)}</td>${cells}</tr>`;
+      return `<tr><td class="pr-4 py-1 whitespace-nowrap text-on-surface-variant" title="${_escFH(tip)}" style="cursor:help">${_escFH(label)}</td>${cells}</tr>`;
     }).join('');
 
-    container.innerHTML = `<table class="fh-fundamentals-tbl w-full"><thead><tr><th class="text-left pr-4 py-1 font-medium text-on-surface-variant/70">Metric</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
+    container.innerHTML = `<table class="fh-fundamentals-tbl w-full"><thead><tr><th class="text-left pr-4 py-1 font-medium text-on-surface-variant/70">${_escFH(_t('fh.metric.header', 'Metric'))}</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   // ── Score groups ────────────────────────────────────────────────────
@@ -5796,6 +5832,7 @@
   };
 
   // Display category grouping for scoring breakdown
+  // Keys are used as internal identifiers for _IND_TO_CATEGORY lookup (kept in Chinese for backward compat)
   const _DISPLAY_GROUPS = [
     ['盈利能力',           ['returnOnEquity_r', 'returnOnInvestedCapital_r']],
     ['成长性',             ['epsgrowth_r', 'revenueGrowth_r', 'freeCashFlowGrowth_r']],
@@ -5806,10 +5843,21 @@
     ['资本开支与递延收入', ['capitalExpenditure_growth_r', 'deferredRevenue_growth_r']],
     ['其他加减分项',       []],
   ];
+  const _DISP_GROUP_I18N = {
+    '盈利能力':           'fh.disp_group.profitability',
+    '成长性':             'fh.disp_group.growth',
+    '现金流质量':         'fh.disp_group.cashflow',
+    '负债/偿债':          'fh.disp_group.debt',
+    '价格/估值':          'fh.disp_group.valuation',
+    '波动':               'fh.disp_group.volatility',
+    '资本开支与递延收入': 'fh.disp_group.capex',
+    '其他加减分项':       'fh.disp_group.other',
+  };
   const _IND_TO_CATEGORY = {};
   _DISPLAY_GROUPS.forEach(([cat, inds]) => inds.forEach(n => { _IND_TO_CATEGORY[n] = cat; }));
 
-  const _SCORE_TIP = '5：连续 3 年阈值达标\n4：连续 2 年阈值达标\n3：近 3 年中 ≥2 年达标且最近 1 年达标\n2：最近 1 年达标\n1：近 3 年基本为正 / 基本达标\n0：未达标';
+  const _SCORE_TIP_EN = '5: Threshold met 3 consecutive years\n4: Threshold met 2 consecutive years\n3: Met ≥2 of last 3 years AND last year\n2: Met last year\n1: Largely positive / met over last 3 years\n0: Not met';
+  function _getScoreTip() { return _t('fh.score_tip', _SCORE_TIP_EN); }
 
   function renderScoreGroups(groupScores, yearScores) {
     const container = document.getElementById('fh-score-groups');
@@ -5854,11 +5902,12 @@
         }
         if (sc == null) return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] text-on-surface-variant/40">—</td>`;
         const cls = sc > 0 ? 'text-emerald-600 font-semibold' : sc < 0 ? 'text-red-500 font-semibold' : 'text-on-surface-variant/40';
-        const maxStr = mx != null ? `/${mx}` : '';
-        return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] ${cls} cursor-help" title="${_escFH(_SCORE_TIP)}">${sc}${maxStr}</td>`;
+        const maxStr = (mx != null && mx > 0) ? `/${mx}` : '';
+        return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] ${cls} cursor-help" title="${_escFH(_getScoreTip())}">${sc}${maxStr}</td>`;
       }).join('');
 
-      const indDisplay = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
+      const _indFallback = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
+      const indDisplay = _t('fh.ind.' + ind.name, _indFallback);
       const indTip = _escFH(_IND_TOOLTIPS[ind.name] || ind.name);
       return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
         <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${catPrefix}${_escFH(indDisplay)}</td>
@@ -5885,10 +5934,11 @@
       // Group score % row
       const tdGroupPcts = cols.map(c => {
         if (c.gPct == null) return `<td class="px-3 py-2 text-center text-[11px] min-w-[64px] text-on-surface-variant/40">—</td>`;
-        return `<td class="px-3 py-2 text-center text-[12px] min-w-[64px] font-bold" style="color:${color}">${c.gPct}%</td>`;
+        const gPctDisplay = c.gPct < 0 ? `<span style="color:#ef4444">${c.gPct} pts</span>` : `${c.gPct}%`;
+        return `<td class="px-3 py-2 text-center text-[12px] min-w-[64px] font-bold" style="color:${color}">${gPctDisplay}</td>`;
       }).join('');
       bodyHtml += `<tr class="bg-surface-container/60">
-        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant font-medium">Group Score</td>
+        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant font-medium">${_escFH(_t('fh.group_score', 'Group Score'))}</td>
         ${tdGroupPcts}
       </tr>`;
 
@@ -5905,9 +5955,10 @@
       _DISPLAY_GROUPS.forEach(([cat]) => {
         const catInds = catMap[cat] || [];
         if (catInds.length === 0) return;
+        const catDisplay = _escFH(_t(_DISP_GROUP_I18N[cat] || cat, cat));
         catInds.forEach((ind, idx) => {
           const catPrefix = idx === 0
-            ? `<span class="text-[9px] text-on-surface-variant/55 mr-1 font-medium">[${cat}]</span>`
+            ? `<span class="text-[9px] text-on-surface-variant/55 mr-1 font-medium">[${catDisplay}]</span>`
             : `<span class="inline-block w-[36px]"></span>`;
           bodyHtml += renderIndRow(ind, cols, catPrefix);
         });
@@ -5918,7 +5969,7 @@
       <table class="w-full border-collapse">
         <thead>
           <tr class="bg-surface-container">
-            <th class="px-3 py-2 text-left text-[11px] min-w-[160px] uppercase tracking-widest font-bold text-on-surface-variant">指标</th>
+            <th class="px-3 py-2 text-left text-[11px] min-w-[160px] uppercase tracking-widest font-bold text-on-surface-variant">${_escFH(_t('fh.metric.header', '指标'))}</th>
             ${thYears}
           </tr>
         </thead>
@@ -5960,13 +6011,22 @@
     ['growth', 'health', 'risk'].forEach(g => {
       const bar = document.getElementById(`fh-group-${g}`);
       if (!bar || !groupScores[g]) return;
-      const pct = groupScores[g].pct || 0;
+      const rawPct = groupScores[g].pct || 0;
       const color = _GROUP_COLORS[g];
       const label = _t(_GROUP_LABELS_KEY[g], _GROUP_LABELS_FB[g]);
-      bar.innerHTML = `
-        <span class="fh-group-label" style="color:${color}">${label}</span>
-        <div class="fh-group-track"><div class="fh-group-fill" style="width:${pct}%;background:${color}"></div></div>
-        <span class="fh-group-pct">${pct}%</span>`;
+      if (rawPct < 0) {
+        // Penalty-only group: show red bar proportional to deduction
+        const penaltyBarWidth = Math.min(Math.abs(rawPct) * 10, 100);
+        bar.innerHTML = `
+          <span class="fh-group-label" style="color:${color}">${label}</span>
+          <div class="fh-group-track"><div class="fh-group-fill" style="width:${penaltyBarWidth}%;background:#ef4444"></div></div>
+          <span class="fh-group-pct" style="color:#ef4444">${rawPct} pts</span>`;
+      } else {
+        bar.innerHTML = `
+          <span class="fh-group-label" style="color:${color}">${label}</span>
+          <div class="fh-group-track"><div class="fh-group-fill" style="width:${rawPct}%;background:${color}"></div></div>
+          <span class="fh-group-pct">${rawPct}%</span>`;
+      }
     });
 
     // Year trend mini bar chart
@@ -6002,8 +6062,8 @@
   const _TICKER_RE = /^[A-Z0-9.\-]{1,12}$/;
   function _validateTicker(raw) {
     const t = (raw || '').trim().toUpperCase();
-    if (!t) return { ok: false, ticker: '', msg: 'Please enter a ticker symbol (e.g. AAPL).' };
-    if (!_TICKER_RE.test(t)) return { ok: false, ticker: t, msg: `"${t}" doesn't look like a valid ticker. Use letters and numbers only (e.g. AAPL, BRK-B).` };
+    if (!t) return { ok: false, ticker: '', msg: _t('fh.error.empty', 'Please enter a ticker symbol (e.g. AAPL).') };
+    if (!_TICKER_RE.test(t)) return { ok: false, ticker: t, msg: `"${t}" ${_t('fh.error.invalid', "doesn't look like a valid ticker. Use letters and numbers only (e.g. AAPL, BRK-B).")}` };
     return { ok: true, ticker: t, msg: '' };
   }
 
@@ -6024,7 +6084,7 @@
     const badge = document.getElementById('fh-current-ticker-badge');
     if (badge) { badge.textContent = ticker; badge.classList.remove('hidden'); }
     const loadingText = document.getElementById('fh-loading-text');
-    if (loadingText) loadingText.textContent = `Loading 5-year financials for ${ticker}…`;
+    if (loadingText) loadingText.textContent = _t('fh.loading_ticker', 'Loading 5-year financials for {t}…').replace('{t}', ticker);
 
     _setFhStatus(_t('fh.status.loading', 'Loading…'));
     _showHide('fh-indicators-loading', true);
@@ -6047,8 +6107,8 @@
       try { data = await res.json(); } catch (_) { data = {}; }
       _showHide('fh-indicators-loading', false);
       if (!res.ok) {
-        const errMsg = data.error || 'Data not available';
-        const hint = res.status === 502 ? ` — Check that "${ticker}" is a valid US ticker symbol (e.g. TSMC is listed as TSM in the US).` : '';
+        const errMsg = data.error || _t('fh.error.unavail', 'Data not available');
+        const hint = res.status === 502 ? ` — ${_t('fh.error.check_ticker', 'Check that "{t}" is a valid US ticker symbol (e.g. TSMC is listed as TSM in the US).').replace('{t}', ticker)}` : '';
         _setFhStatus(`Error: ${errMsg}${hint}`);
         return;
       }
@@ -6057,7 +6117,7 @@
       _setFhStatus('');
     } catch (e) {
       _showHide('fh-indicators-loading', false);
-      _setFhStatus(`Error loading data: ${e.message || 'Unknown error'}. Please try again.`);
+      _setFhStatus(_t('fh.error.load_data', 'Error loading data: {msg}. Please try again.').replace('{msg}', e.message || 'Unknown error'));
     }
   }
 
@@ -6525,17 +6585,17 @@
       card.innerHTML = `
         <div class="flex items-start justify-between mb-1">
           <span class="text-[11px] font-bold text-on-surface truncate max-w-[90%]">${name}</span>
-          ${isMain ? '<span class="text-[8px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold">MAIN</span>' : ''}
+          ${isMain ? `<span class="text-[8px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold">${_escFH(_t('fh.competitor.main_badge', 'MAIN'))}</span>` : ''}
         </div>
         <div class="text-[9.5px] text-on-surface-variant mb-1">${comp.ticker} · ${p.exchange || ''} · ${p.country || ''}</div>
         <div class="text-[9.5px] text-on-surface-variant mb-1">${p.sector || ''}${p.industry ? ' / ' + p.industry : ''}</div>
         <div class="flex gap-3 text-[9.5px] text-on-surface-variant mb-2">
           <span>${_t('fh.competitor.employees','Employees')}: <strong>${empStr}</strong></span>
-          <span>Mkt Cap: <strong>${mktStr}</strong></span>
+          <span>${_escFH(_t('fh.competitor.mkt_cap','Mkt Cap'))}: <strong>${mktStr}</strong></span>
         </div>
         ${p.ipoDate ? `<div class="text-[9px] text-on-surface-variant/60 mb-1.5">${_t('fh.competitor.ipo','IPO')}: ${p.ipoDate}</div>` : ''}
         <div class="text-[9.5px] text-on-surface-variant leading-relaxed cc-desc-short">${descShort}</div>
-        ${descFull.length > 200 ? `<button class="text-[9px] text-primary mt-1 cc-expand-btn">Show more</button><div class="text-[9.5px] text-on-surface-variant leading-relaxed cc-desc-full hidden">${descFull}<button class="text-[9px] text-primary mt-1 cc-collapse-btn">Show less</button></div>` : ''}
+        ${descFull.length > 200 ? `<button class="text-[9px] text-primary mt-1 cc-expand-btn">${_escFH(_t('fh.competitor.show_more','Show more'))}</button><div class="text-[9.5px] text-on-surface-variant leading-relaxed cc-desc-full hidden">${descFull}<button class="text-[9px] text-primary mt-1 cc-collapse-btn">${_escFH(_t('fh.competitor.show_less','Show less'))}</button></div>` : ''}
         ${website ? `<div class="mt-2">${website}</div>` : ''}
       `;
 
@@ -6669,18 +6729,18 @@
 
     const groupKeys = ['profitability', 'leverage', 'liquidity', 'efficiency', 'growth'];
     const groupLabels = {
-      profitability: 'Profitability',
-      leverage: 'Leverage',
-      liquidity: 'Liquidity',
-      efficiency: 'Efficiency',
-      growth: 'Growth',
+      profitability: _t('fh.competitor.group.profitability', 'Profitability'),
+      leverage:      _t('fh.competitor.group.leverage', 'Leverage'),
+      liquidity:     _t('fh.competitor.group.liquidity', 'Liquidity'),
+      efficiency:    _t('fh.competitor.group.efficiency', 'Efficiency'),
+      growth:        _t('fh.competitor.group.growth', 'Growth'),
     };
 
     let html = '<table class="w-full text-[10px] border-collapse">';
 
     // Header
     html += '<thead><tr>';
-    html += '<th class="text-left p-2 text-on-surface-variant/70 font-semibold border-b border-outline-variant/30 w-24">Metric</th>';
+    html += `<th class="text-left p-2 text-on-surface-variant/70 font-semibold border-b border-outline-variant/30 w-24">${_escFH(_t('fh.competitor.metric_header', 'Metric'))}</th>`;
     allCompanies.forEach((c, i) => {
       const isMain = i === 0;
       html += `<th class="text-center p-2 ${isMain ? 'text-primary font-bold' : 'text-on-surface font-semibold'} border-b border-outline-variant/30">${c.ticker}</th>`;
@@ -6709,7 +6769,7 @@
 
     // Total row
     html += '<tr class="border-t-2 border-outline-variant/50 font-bold">';
-    html += '<td class="p-2 text-on-surface">Total Score</td>';
+    html += `<td class="p-2 text-on-surface">${_escFH(_t('fh.competitor.total_score', 'Total Score'))}</td>`;
     allCompanies.forEach((c, i) => {
       const isMain = i === 0;
       const val = (c.fh_score || {}).total_score;
@@ -6723,7 +6783,7 @@
     html += '</tr>';
 
     html += '</tbody></table>';
-    html += '<p class="text-[9px] text-on-surface-variant/50 mt-1">Green = main company leads · Red = competitor leads</p>';
+    html += `<p class="text-[9px] text-on-surface-variant/50 mt-1">${_escFH(_t('fh.competitor.legend', 'Green = main company leads · Red = competitor leads'))}</p>`;
     container.innerHTML = html;
   }
 

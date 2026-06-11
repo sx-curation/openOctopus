@@ -340,7 +340,7 @@ def backlog_chips_batch() -> Response:
             pass
 
     items = [results.get(t, {"ticker": t, "error": "timeout"}) for t in tickers]
-    return jsonify({"items": items})
+    return jsonify(_sanitize_nan({"items": items}))
 
 
 @app.route("/api/backlog/search")

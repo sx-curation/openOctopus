@@ -295,6 +295,10 @@ def compute_weighted_total(
         if mx > 0:
             total_w += sc * w
             max_w += mx * w
+        elif sc < 0:
+            # Pure penalty indicator (no positive max): apply deduction without
+            # inflating the denominator.
+            total_w += sc * w
 
     if max_w <= 0:
         return 0.0
@@ -558,7 +562,7 @@ def score_financial_health(funda: Dict[str, List]) -> Dict[str, Any]:
                 mx = 0.0
             group_total += sc * w
             group_max += mx * w
-            pct = round(sc / mx * 100) if mx > 0 else 0
+            pct = round(sc / mx * 100) if mx > 0 else int(round(sc * w))
             indicators.append({
                 "name": ind_name,
                 "score": sc,
@@ -566,7 +570,12 @@ def score_financial_health(funda: Dict[str, List]) -> Dict[str, Any]:
                 "weight": w,
                 "pct": pct,
             })
-        group_pct = round(group_total / group_max * 100) if group_max > 0 else 0
+        if group_max > 0:
+            group_pct = round(group_total / group_max * 100)
+        elif group_total < 0:
+            group_pct = int(round(group_total))  # penalty sum (e.g. -1, -2)
+        else:
+            group_pct = 0
         group_scores[group_name] = {
             "score": round(group_total, 1),
             "max": round(group_max, 1),

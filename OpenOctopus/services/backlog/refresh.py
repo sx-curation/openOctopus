@@ -71,8 +71,13 @@ def _fetch_one(ticker: str) -> dict:
             ma50 = None
             try:
                 hist = yticker.history(period="6mo", interval="1d")
+                # Drop rows with missing Close (intraday partial rows for A-shares during market hours)
+                hist = hist[hist["Close"].notna()]
                 if not hist.empty and len(hist) >= 10:
                     close = hist["Close"]
+                    # Price fallback from history when .info doesn't return it (e.g. some A-shares)
+                    if price is None and not close.empty:
+                        price = float(close.iloc[-1])
                     ma10_series = close.rolling(10).mean()
                     if not ma10_series.empty:
                         val = ma10_series.iloc[-1]
