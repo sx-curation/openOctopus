@@ -1,0 +1,49 @@
+# Policy Monitoring Agent — default configuration
+# All values can be overridden via environment variables (see config/settings.py).
+
+enabled_sources:
+  - EUR_LEX
+  - FEDERAL_REGISTER
+  - SEC
+
+http:
+  timeout_seconds: 30
+  retries: 3
+  backoff_base: 1.0
+  # SEC EDGAR requires a User-Agent identifying your app + contact info.
+  # Set POLICY_MONITORING_USER_AGENT in .env:
+  #   POLICY_MONITORING_USER_AGENT=MyApp/1.0 myemail@example.com
+  user_agent: "openOctopus-PolicyMonitor/1.0 research@example.com"
+
+cache:
+  type: disk          # uses Python shelve (built-in, no extra deps)
+  path: .cache/policy_monitoring
+  ttl_seconds: 3600   # 1 hour; policy data changes slowly
+
+eurlex:
+  sparql_endpoint: "https://publications.europa.eu/webapi/rdf/sparql"
+  default_languages:
+    - en
+  default_resource_types:
+    - REG    # Regulation
+    - DIR    # Directive
+    - DEC    # Decision
+    - NOTICE
+
+federal_register:
+  base_url: "https://www.federalregister.gov/api/v1/documents.json"
+  default_doc_types:
+    - RULE
+    - PROPOSED_RULE
+    - NOTICE
+
+sec:
+  efts_url: "https://efts.sec.gov/LATEST/search-index"
+  edgar_base: "https://www.sec.gov"
+  # Form types to search for regulatory/policy documents
+  default_forms:
+    - RULE
+    - CONCEPT
+    - INTERP
+    - NO-ACTION
+    - 34-12G

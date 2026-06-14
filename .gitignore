@@ -1,9 +1,9 @@
-.env
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-dist/
-build/
+*.log
+*.zip
+current_logs/
 .DS_Store
+__pycache__/
+*.pyc
+.env
+.venv/
+node_modules/

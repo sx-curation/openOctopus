@@ -1,0 +1,19 @@
+openai>=1.0.0
+yfinance>=1.2.0
+pandas>=2.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+edgartools>=2.0.0
+rich>=13.0.0
+pydantic>=2.0.0
+flask>=3.0.0
+gunicorn>=21.0.0
+beautifulsoup4>=4.11.0
+selenium>=4.0.0
+duckdb>=0.10.0
+pandas-datareader>=0.10.0
+# A-share data sources
+pytdx>=1.72
+akshare>=1.12
+# Optional: required only when LLM_PROVIDER=free-claude (free-claude-code proxy path)
+# anthropic>=0.26.0

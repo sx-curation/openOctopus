@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>OpenOctopus - Select Market</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+  body {
+    background: linear-gradient(135deg, #000f27 0%, #0b2447 40%, #1a3a6b 70%, #2a5298 100%);
+    min-height: 100vh;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+</style>
+</head>
+<body class="font-body text-gray-900">
+
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-4xl">
+    <!-- Header -->
+    <div class="text-center mb-16">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#ffffff,#e0e0e0);">
+          <span class="material-symbols-outlined fill-icon text-black" style="font-size:28px;">account_balance</span>
+        </div>
+        <h1 class="text-5xl font-bold text-white font-headline">OpenOctopus</h1>
+      </div>
+      <p class="text-white text-lg opacity-90">Investment Analysis Platform</p>
+      <p class="text-white text-sm opacity-75 mt-2">Select your market to get started</p>
+    </div>
+
+    <!-- Market Selection Cards -->
+    <div class="grid md:grid-cols-2 gap-8 mb-12">
+      <!-- US Stocks Card -->
+      <a href="/dashboard/us" class="card-hover">
+        <div class="bg-white rounded-2xl p-8 shadow-lg h-full flex flex-col">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-16 h-16 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1e40af,#1e3a8a);">
+              <span class="material-symbols-outlined fill-icon text-white" style="font-size:32px;">trending_up</span>
+            </div>
+            <div>
+              <h2 class="text-3xl font-bold text-gray-900">US Stocks</h2>
+              <p class="text-sm text-gray-500">American Market</p>
+            </div>
+          </div>
+
+          <p class="text-gray-700 mb-6 flex-1">
+            Comprehensive analysis of US equities with real-time data, earnings insights, and AI-powered recommendations.
+          </p>
+
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-blue-600" style="font-size:20px;">check_circle</span>
+              <span>Real-time price data from yfinance</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-blue-600" style="font-size:20px;">check_circle</span>
+              <span>SEC filings & earnings transcripts</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-blue-600" style="font-size:20px;">check_circle</span>
+              <span>Analyst estimates & consensus</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-blue-600" style="font-size:20px;">check_circle</span>
+              <span>Technical analysis & signals</span>
+            </div>
+          </div>
+
+          <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+            Enter US Dashboard
+            <span class="material-symbols-outlined ml-2 align-middle" style="font-size:20px;">arrow_forward</span>
+          </button>
+        </div>
+      </a>
+
+      <!-- Taiwan Stocks Card -->
+      <a href="/dashboard/tw" class="card-hover">
+        <div class="bg-white rounded-2xl p-8 shadow-lg h-full flex flex-col">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-16 h-16 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#0b6b3d,#064e3b);">
+              <span class="material-symbols-outlined fill-icon text-white" style="font-size:32px;">public</span>
+            </div>
+            <div>
+              <h2 class="text-3xl font-bold text-gray-900">Taiwan Stocks</h2>
+              <p class="text-sm text-gray-500">Taiwan Market</p>
+            </div>
+          </div>
+
+          <p class="text-gray-700 mb-6 flex-1">
+            Analysis of Taiwan equities with TWSE data, financial metrics, and technical indicators for informed investing.
+          </p>
+
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-green-600" style="font-size:20px;">check_circle</span>
+              <span>TWSE official API data</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-green-600" style="font-size:20px;">check_circle</span>
+              <span>Real-time stock prices & indices</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-green-600" style="font-size:20px;">check_circle</span>
+              <span>Financial ratios & metrics</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <span class="material-symbols-outlined text-green-600" style="font-size:20px;">check_circle</span>
+              <span>Latest news from CNYES</span>
+            </div>
+          </div>
+
+          <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition">
+            Enter Taiwan Dashboard
+            <span class="material-symbols-outlined ml-2 align-middle" style="font-size:20px;">arrow_forward</span>
+          </button>
+        </div>
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-white opacity-75">
+      <p class="text-sm">Powered by OpenOctopus Investment Analysis Engine</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

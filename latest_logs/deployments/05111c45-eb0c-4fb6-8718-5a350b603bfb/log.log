@@ -1,0 +1,73 @@
+2026-04-28T16:47:00.4989020Z,Updating submodules.,7ff68c87-b039-4f0b-98e8-0d515cd93f72,0
+2026-04-28T16:47:02.6527804Z,Preparing deployment for commit id '05111c45-e'.,6f3df6f4-6570-4fd3-b317-554c6c7b719b,0
+2026-04-28T16:47:05.9305634Z,PreDeployment: context.CleanOutputPath False,718ccda0-3b55-4797-859e-5c591232e034,0
+2026-04-28T16:47:06.2187654Z,PreDeployment: context.OutputPath /home/site/wwwroot,99885c6d-aa21-4ef0-8de3-cc4c20be0a58,0
+2026-04-28T16:47:06.7487480Z,Repository path is /tmp/zipdeploy/extracted,47955897-ccbc-46c6-934a-416e1c3ab679,0
+2026-04-28T16:47:07.0973409Z,Running oryx build...,d0953008-6173-4664-8f35-7ff0af5c743e,0
+	2026-04-28T16:47:07.1184961Z,Command: oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.11 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8dea545c79115dd --compress-destination-dir | tee /tmp/oryx-build.log,,0
+	2026-04-28T16:47:40.2350561Z,Operation performed by Microsoft Oryx&comma; https://github.com/Microsoft/Oryx,,0
+	2026-04-28T16:47:40.3131640Z,You can report issues at https://github.com/Microsoft/Oryx/issues,,0
+	2026-04-28T16:47:40.3650972Z,,,0
+	2026-04-28T16:47:40.4343588Z,Oryx Version: 0.2.20260420.1+83c04e9ee1882dc90d279b63348824daedbd3c96&comma; Commit: 83c04e9ee1882dc90d279b63348824daedbd3c96&comma; ReleaseTagName: 20260420.1,,0
+	2026-04-28T16:47:40.5029085Z,,,0
+	2026-04-28T16:47:40.5728237Z,Build Operation ID: d9c7b3e4748388d3,,0
+	2026-04-28T16:47:40.6130702Z,Repository Commit : 05111c45-eb0c-4fb6-8718-5a350b603bfb,,0
+	2026-04-28T16:47:40.7924195Z,OS Type           : bullseye,,0
+	2026-04-28T16:47:40.8852110Z,Image Type        : githubactions,,0
+	2026-04-28T16:47:40.9752875Z,,,0
+	2026-04-28T16:47:41.0850718Z,Primary SDK Storage URL: https://oryx-cdn.microsoft.io,,0
+	2026-04-28T16:47:41.1846098Z,Backup SDK Storage URL: ,,0
+	2026-04-28T16:47:41.2357289Z,ACR SDK Registry URL: (not set),,0
+	2026-04-28T16:47:41.3346372Z,SDK provider status:,,0
+	2026-04-28T16:47:41.6242935Z,  External ACR SDK provider: Disabled,,0
+	2026-04-28T16:47:41.6550711Z,  External SDK provider: Enabled,,0
+	2026-04-28T16:47:41.7149415Z,  Direct ACR SDK provider: Disabled,,0
+	2026-04-28T16:47:41.7859729Z,  Blob SDK provider: Enabled,,0
+	2026-04-28T16:47:41.9373009Z,Detecting platforms...,,0
+	2026-04-28T16:47:42.5977270Z,Requesting metadata for platform python from external SDK provider,,0
+	2026-04-28T16:47:47.7832503Z,Requesting metadata for platform python from external SDK provider,,0
+	2026-04-28T16:47:48.4944422Z,Version resolved using external SDK provider.,,0
+	2026-04-28T16:47:49.0045322Z,Detected following platforms:,,0
+	2026-04-28T16:47:49.0627213Z,  python: 3.11.15,,0
+	2026-04-28T16:47:49.2858841Z,Requesting metadata for platform python from external SDK provider,,0
+	2026-04-28T16:48:00.5636445Z,SDK for 'python' version '3.11.15' fetched via external SDK provider.,,0
+	2026-04-28T16:48:00.6510842Z,Version '3.11.15' of platform 'python' is not installed. Generating script to install it...,,0
+	2026-04-28T16:48:05.7712161Z,,,0
+	2026-04-28T16:48:07.3258189Z,Using intermediate directory '/tmp/8dea545c79115dd'.,,0
+	2026-04-28T16:48:07.4964635Z,,,0
+	2026-04-28T16:48:07.5574627Z,Copying files to the intermediate directory...,,0
+	2026-04-28T16:48:09.1832548Z,Copying files to intermediate directory done in 1 sec(s).,,0
+	2026-04-28T16:48:09.2342898Z,,,0
+	2026-04-28T16:48:09.4144850Z,Source directory     : /tmp/8dea545c79115dd,,0
+	2026-04-28T16:48:09.4861599Z,Destination directory: /home/site/wwwroot,,0
+	2026-04-28T16:48:09.5843176Z,,,0
+	2026-04-28T16:48:09.6859959Z,Installing platform...,,0
+	2026-04-28T16:48:09.8277284Z,,,0
+	2026-04-28T16:48:10.0975180Z,Downloading and extracting 'python' version '3.11.15' to '/tmp/oryx/platforms/python/3.11.15'...,,0
+	2026-04-28T16:48:10.1779938Z,Detected image debian flavor: bullseye.,,0
+	2026-04-28T16:48:10.2866262Z,SDK binary download was skipped. Looking for cached tarball...,,0
+	2026-04-28T16:48:10.3589695Z,Found tarball at /var/OryxSdks/python/python-bullseye-3.11.15.tar.gz,,0
+	2026-04-28T16:49:28.2295661Z,Successfully extracted python version 3.11.15 from cached tarball.,,0
+	2026-04-28T16:49:28.3515900Z,,,0
+	2026-04-28T16:49:28.3918770Z,image detector file exists&comma; platform is python..,,0
+	2026-04-28T16:49:28.4701104Z,OS detector file exists&comma; OS is bullseye..,,0
+	2026-04-28T16:49:28.4997925Z,Platform installation done in 80 sec(s).,,0
+	2026-04-28T16:49:28.7919916Z,Running build script snippets...,,0
+	2026-04-28T16:49:28.8490896Z,Python Version: /tmp/oryx/platforms/python/3.11.15/bin/python3.11,,0
+	2026-04-28T16:49:28.8789449Z,Creating directory for command manifest file if it does not exist,,0
+	2026-04-28T16:49:28.9106147Z,Removing existing manifest file,,0
+	2026-04-28T16:49:28.9277119Z,Python Virtual Environment: antenv,,0
+	2026-04-28T16:49:28.9400509Z,Creating virtual environment...,,0
+	2026-04-28T16:49:28.9578443Z,Executing: /tmp/oryx/platforms/python/3.11.15/bin/python3.11 -m venv antenv --copies --system-site-packages,,0
+	2026-04-28T16:49:49.2909713Z,Activating virtual environment...,,0
+	2026-04-28T16:49:49.3324577Z,Fast build is enabled,,0
+	2026-04-28T16:49:49.3728724Z,Installing uv...,,0
+	2026-04-28T16:49:53.4752748Z,Collecting uv,,0
+	2026-04-28T16:49:53.5757281Z,  Using cached uv-0.11.8-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB),,0
+	2026-04-28T16:49:53.7166863Z,Using cached uv-0.11.8-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (24.8 MB),,0
+	2026-04-28T16:49:54.6819910Z,Installing collected packages: uv,,0
+	2026-04-28T16:49:56.6611172Z,Successfully installed uv-0.11.8,,0
+	2026-04-28T16:49:57.1523074Z,,,1
+	2026-04-28T16:49:57.1629080Z,[notice] A new release of pip is available: 24.0 -> 26.1,,1
+	2026-04-28T16:49:57.1739125Z,[notice] To update&comma; run: pip install --upgrade pip,,1
+	2026-04-28T16:49:58.1657990Z,Running uv pip install...,,0

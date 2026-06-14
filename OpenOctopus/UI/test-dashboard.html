@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenOctopus - US/TW Dashboard Test</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <style>
+    .market-btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 2px solid #000f27;
+      background: white;
+      color: #000f27;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 12px;
+    }
+    .market-btn.active {
+      background: #000f27;
+      color: white;
+    }
+    .dashboard-section {
+      display: none;
+    }
+    .dashboard-section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <div class="max-w-6xl mx-auto p-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold mb-2">OpenOctopus Dashboard Test</h1>
+      <p class="text-gray-600">Test US & Taiwan stock data integration</p>
+    </div>
+
+    <!-- Market Switcher -->
+    <div class="mb-8 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-bold mb-4">Select Market</h2>
+      <div class="flex">
+        <button class="market-btn active" onclick="switchMarket('us')">📊 US Stocks</button>
+        <button class="market-btn" onclick="switchMarket('tw')">🏙️ Taiwan Stocks</button>
+      </div>
+    </div>
+
+    <!-- Ticker Input -->
+    <div class="mb-8 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-bold mb-4">Enter Ticker</h2>
+      <div class="flex gap-2">
+        <input
+          type="text"
+          id="ticker-input"
+          placeholder="e.g., AAPL or 2330"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button
+          onclick="loadData()"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
+        >
+          Load
+        </button>
+      </div>
+    </div>
+
+    <!-- US Dashboard -->
+    <div id="us-dashboard" class="dashboard-section active">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold mb-6">📊 US Stock Dashboard</h2>
+        <div id="us-content" class="space-y-6">
+          <p class="text-gray-500">Enter a ticker above to load data...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Taiwan Dashboard -->
+    <div id="tw-dashboard" class="dashboard-section">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-2xl font-bold mb-6">🏙️ Taiwan Stock Dashboard</h2>
+        <div id="tw-content" class="space-y-6">
+          <p class="text-gray-500">Enter a ticker above to load data...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentMarket = 'us';
+    let currentTicker = 'AAPL';
+
+    function switchMarket(market) {
+      currentMarket = market;
+
+      // Update buttons
+      document.querySelectorAll('.market-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update dashboards
+      document.querySelectorAll('.dashboard-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(market + '-dashboard').classList.add('active');
+
+      // Reset content
+      document.getElementById(market + '-content').innerHTML = '<p class="text-gray-500">Enter a ticker above to load data...</p>';
+
+      // Update ticker hint
+      const hint = market === 'us' ? 'e.g., AAPL' : 'e.g., 2330';
+      document.getElementById('ticker-input').placeholder = hint;
+    }
+
+    function loadData() {
+      const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+      if (!ticker) {
+        alert('Please enter a ticker');
+        return;
+      }
+
+      currentTicker = ticker;
+      const endpoint = currentMarket === 'us'
+        ? `/api/dashboard/summary?ticker=${ticker}`
+        : `/api/tw/dashboard/summary?ticker=${ticker}`;
+
+      const contentDiv = document.getElementById(currentMarket + '-content');
+      contentDiv.innerHTML = '<p class="text-gray-500">Loading...</p>';
+
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => renderDashboard(data))
+        .catch(error => {
+          contentDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+        });
+    }
+
+    function renderDashboard(data) {
+      const contentDiv = document.getElementById(currentMarket + '-content');
+      let html = '';
+
+      // Price Info
+      const priceData = data.summary?.price_data || data.price_data;
+      if (priceData && !priceData.error) {
+        html += `
+          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <p class="text-sm text-gray-600">Current Price</p>
+            <p class="text-4xl font-bold text-blue-900">${priceData.price}</p>
+            <p class="text-lg ${priceData.change_pct >= 0 ? 'text-green-600' : 'text-red-600'}">
+              ${priceData.change_pct >= 0 ? '📈 +' : '📉 '}${priceData.change_pct}%
+            </p>
+          </div>
+        `;
+      } else if (priceData?.error) {
+        html += `<p class="text-red-600">Price data error: ${priceData.error}</p>`;
+      }
+
+      // Financials
+      const financials = data.summary?.financials || data.financials;
+      if (financials && !financials.error) {
+        html += `
+          <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h3 class="font-bold mb-3">📊 Key Financials</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <p class="text-gray-600">P/E Ratio</p>
+                <p class="text-lg font-bold">${(financials.pe_ratio_trailing || 'N/A').toFixed(1)}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">ROE</p>
+                <p class="text-lg font-bold">${(financials.return_on_equity_pct || 'N/A').toFixed(2)}%</p>
+              </div>
+              <div>
+                <p class="text-gray-600">Debt/Equity</p>
+                <p class="text-lg font-bold">${(financials.debt_to_equity || 'N/A').toFixed(2)}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">Div Yield</p>
+                <p class="text-lg font-bold">${(financials.dividend_yield_pct || 'N/A').toFixed(2)}%</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Technical Analysis
+      const technicals = data.summary?.technicals;
+      if (technicals && !technicals.error) {
+        html += `
+          <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h3 class="font-bold mb-3">📈 Technical Signals</h3>
+            <p><strong>Signal:</strong> ${technicals.signal}</p>
+            <p><strong>MA50:</strong> ${technicals.ma50} | <strong>MA120:</strong> ${technicals.ma120}</p>
+            <p><strong>vs MA50:</strong> ${technicals.price_vs_ma50_pct}% | <strong>vs MA120:</strong> ${technicals.price_vs_ma120_pct}%</p>
+          </div>
+        `;
+      }
+
+      // News
+      const news = data.summary?.recent_news;
+      if (news && news.length > 0) {
+        html += `
+          <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h3 class="font-bold mb-3">📰 Recent News</h3>
+            <ul class="space-y-2">
+        `;
+        news.slice(0, 5).forEach(item => {
+          const title = item.title || item.headline || 'No title';
+          html += `<li class="text-sm"><a href="${item.url || '#'}" target="_blank" class="text-blue-600 hover:underline">• ${title}</a></li>`;
+        });
+        html += `
+            </ul>
+          </div>
+        `;
+      }
+
+      // Raw Data (for debugging)
+      html += `
+        <details class="bg-gray-100 p-4 rounded-lg">
+          <summary class="cursor-pointer font-bold">Raw JSON Data</summary>
+          <pre class="mt-2 text-xs overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
+        </details>
+      `;
+
+      contentDiv.innerHTML = html || '<p class="text-gray-500">No data available</p>';
+    }
+
+    // Load default data on startup
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('ticker-input').value = 'AAPL';
+      loadData();
+    });
+
+    // Allow Enter key to load data
+    document.getElementById('ticker-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadData();
+    });
+  </script>
+</body>
+</html>
