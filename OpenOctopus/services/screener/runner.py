@@ -25,13 +25,13 @@ from typing import Any
 
 from .price_fetcher import (
     MARKET_SP500, MARKET_NDX, MARKET_DAX, MARKET_TW50,
-    MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM,
+    MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM, MARKET_CN_STAR,
     RateLimitError,
     fetch_prices, compute_metrics, check_conditions,
 )
 from .ticker_sources import (
     get_sp500_tickers, get_nasdaq100_tickers, get_dax40_tickers, get_tw50_tickers,
-    get_cn_csi300_tickers, get_cn_sz100_tickers, get_cn_gem_tickers,
+    get_cn_csi300_tickers, get_cn_sz100_tickers, get_cn_gem_tickers, get_cn_star50_tickers,
 )
 
 # ---------------------------------------------------------------------------
@@ -47,14 +47,44 @@ _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 _SCREENER_STATE: dict[str, dict[str, Any]] = {}
 _STATE_LOCK = threading.Lock()
 
-_CN_MARKETS = (MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM)
+_CN_MARKETS = (MARKET_CN_CSI300, MARKET_CN_SZ100, MARKET_CN_GEM, MARKET_CN_STAR)
 _VALID_MARKETS = (MARKET_SP500, MARKET_NDX, MARKET_DAX, MARKET_TW50) + _CN_MARKETS
+
+_cn_name_cache: dict | None = None
+
+def _get_cn_name(ticker: str) -> str | None:
+    """Lazy-load CN name map; return Chinese name or None."""
+    global _cn_name_cache
+    if _cn_name_cache is None:
+        try:
+            from services.ashare.names import get_cn_name_map
+            _cn_name_cache = get_cn_name_map()
+        except Exception:
+            _cn_name_cache = {}
+    return _cn_name_cache.get(ticker)
+
+
+_tw_name_cache: dict | None = None
+
+def _get_tw_name(ticker: str) -> str | None:
+    """Lazy-load TW name map; return Chinese name or None.
+    TW map keys are bare 4-digit codes (e.g. '2330'); strip '.TW' suffix before lookup.
+    """
+    global _tw_name_cache
+    if _tw_name_cache is None:
+        try:
+            from services.tw.names import get_tw_name_map
+            _tw_name_cache = get_tw_name_map()
+        except Exception:
+            _tw_name_cache = {}
+    code = ticker.split('.')[0] if '.' in ticker else ticker
+    return _tw_name_cache.get(code)
 
 
 def _batch_size_for(market: str) -> int:
     sizes = {
         MARKET_SP500: 50, MARKET_NDX: 10, MARKET_DAX: 5, MARKET_TW50: 10,
-        MARKET_CN_CSI300: 30, MARKET_CN_SZ100: 30, MARKET_CN_GEM: 30,
+        MARKET_CN_CSI300: 30, MARKET_CN_SZ100: 30, MARKET_CN_GEM: 30, MARKET_CN_STAR: 30,
     }
     return sizes.get(market, 10)
 
@@ -273,6 +303,8 @@ def _run(job_id: str, market: str, force: bool) -> None:  # noqa: ARG001
             tickers, _ = get_cn_sz100_tickers()
         elif market == MARKET_CN_GEM:
             tickers, _ = get_cn_gem_tickers()
+        elif market == MARKET_CN_STAR:
+            tickers, _ = get_cn_star50_tickers()
         else:
             tickers, _ = get_dax40_tickers()
     except Exception as exc:
@@ -320,7 +352,9 @@ def _run(job_id: str, market: str, force: bool) -> None:  # noqa: ARG001
                     if rl_src in current_priority:
                         current_priority.remove(rl_src)
 
-                if series is None or len(series) < 50:
+                if series is not None and getattr(series, "attrs", {}).get("is_suspended"):
+                    scan_entry.update({"status": "skipped", "note": "suspended"})
+                elif series is None or len(series) < 50:
                     scan_entry.update({"status": "error", "note": "insufficient data"})
                 else:
                     metrics = compute_metrics(series)
@@ -347,6 +381,9 @@ def _run(job_id: str, market: str, force: bool) -> None:  # noqa: ARG001
                             "above30_low": round(metrics["above30_low"], 2) if pd.notna(metrics.get("above30_low", float("nan"))) else None,
                             "within25_high": round(metrics["within25_high"], 2) if pd.notna(metrics.get("within25_high", float("nan"))) else None,
                             "source": src_used,
+                            "name_cn": _get_cn_name(ticker) if market in _CN_MARKETS else (
+                                _get_tw_name(ticker) if market == MARKET_TW50 else None
+                            ),
                         }
                         with _STATE_LOCK:
                             _SCREENER_STATE[job_id]["passing"].append(passing_entry)

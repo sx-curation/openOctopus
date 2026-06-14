@@ -64,6 +64,15 @@ from agent.llm_client import get_llm_client as _init_llm  # noqa: E402
 _init_llm()
 del _init_llm
 
+# Pre-warm A-share industry map in the background so it's ready before the
+# user first opens the Backlog page (build takes ~2-3 min on first run).
+try:
+    from services.ashare.industry import get_industry as _prewarm_industry
+    _prewarm_industry("")   # triggers background build / reads disk cache
+    del _prewarm_industry
+except Exception:
+    pass
+
 UI_DIR = Path(__file__).parent / "UI"
 _policy_agent = PolicyMonitoringAgent()
 
@@ -391,7 +400,7 @@ def analyze_status(job_id: str) -> Response:
 
 from services.screener import runner as _screener_runner  # noqa: E402
 
-_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50", "CN_CSI300", "CN_SZ100", "CN_GEM"}
+_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50", "CN_CSI300", "CN_SZ100", "CN_GEM", "CN_STAR"}
 
 
 @app.route("/api/screener/start", methods=["POST"])
@@ -643,24 +652,42 @@ def _sanitize_nan(obj):
 
 _fx_cache: dict = {}
 
+# (symbol, invert, key): if invert=True, rate = 1/raw; key is cache/response key
+_FX_PAIRS = [
+    ('EURUSD=X',  True,  'EURUSD'),   # raw = USD per EUR → invert to get USD→EUR
+    ('USDTWD=X',  False, 'USDTWD'),   # raw = TWD per USD
+    ('USDCNY=X',  False, 'USDCNY'),   # raw = CNY per USD
+]
+
 
 @app.route("/api/exchange-rate")
 def exchange_rate() -> Response:
-    """Return USD→EUR rate via yfinance. Cached 10 min."""
+    """Return exchange rates (USD→EUR, USD→TWD, USD→CNY) via yfinance. Cached 10 min."""
     import yfinance as yf
     import time as _t
-    cached = _fx_cache.get('EURUSD')
-    if cached and (_t.time() - cached['at']) < 600:
-        return jsonify(cached['payload'])
-    try:
-        info = yf.Ticker('EURUSD=X').fast_info
-        eurusd = float(info.get('lastPrice') or info.get('last_price') or 1.0)
-        # EURUSD=X = how many USD per 1 EUR; invert to get USD→EUR multiplier
-        rate = 1.0 / eurusd if eurusd else 1.0
-    except Exception:
-        rate = (_fx_cache.get('EURUSD') or {}).get('payload', {}).get('rate', 1.0)
-    payload = {'base': 'USD', 'quote': 'EUR', 'rate': round(rate, 6)}
-    _fx_cache['EURUSD'] = {'payload': payload, 'at': _t.time()}
+
+    now = _t.time()
+    pairs: dict = {}
+
+    for yf_sym, invert, key in _FX_PAIRS:
+        cached = _fx_cache.get(key)
+        if cached and (now - cached['at']) < 600:
+            pairs[key] = cached['rate']
+            continue
+        try:
+            info = yf.Ticker(yf_sym).fast_info
+            raw = float(info.get('lastPrice') or info.get('last_price') or 0)
+            rate = (1.0 / raw if raw else 1.0) if invert else (raw or 1.0)
+        except Exception:
+            rate = (_fx_cache.get(key) or {}).get('rate', 1.0)
+        _fx_cache[key] = {'rate': rate, 'at': now}
+        pairs[key] = rate
+
+    payload = {
+        'pairs': {k: round(v, 6) for k, v in pairs.items()},
+        # backward-compat: keep top-level 'rate' = EURUSD rate
+        'base': 'USD', 'quote': 'EUR', 'rate': round(pairs.get('EURUSD', 1.0), 6),
+    }
     return jsonify(payload)
 
 
@@ -693,6 +720,16 @@ def financial_health_data() -> Response:
     scoring = score_financial_health(raw["fundamentals"])
     year_scores = score_financial_health_multiyear(raw["fundamentals"], raw["years"])
 
+    # Deduplicate year_scores: keep only the first entry per year (newest quarter).
+    # Prevents duplicate year labels when quarterly CN data slips through.
+    _seen_years: set = set()
+    year_scores_deduped = []
+    for ys in year_scores:
+        yr = ys.get("year")
+        if yr not in _seen_years:
+            _seen_years.add(yr)
+            year_scores_deduped.append(ys)
+
     payload = {
         "ticker":       raw["ticker"],
         "years":        raw["years"],
@@ -701,7 +738,7 @@ def financial_health_data() -> Response:
         "scores":       scoring["indicator_scores"],
         "group_scores": scoring["group_scores"],
         "weighted_100": scoring["weighted_100"],
-        "year_scores":  year_scores[:5],
+        "year_scores":  year_scores_deduped[:5],
         "data_source":  raw.get("data_source", "yfinance"),
         "cached":       False,
     }
@@ -1015,6 +1052,11 @@ def llm_status() -> Response:
 @app.route("/api/chips/summary/<ticker>")
 def chips_summary(ticker: str) -> Response:
     """Level 1 fast data: volume (RVOL/VWAP) + short interest."""
+    from services.ashare import is_cn
+    if is_cn(ticker):
+        from services.ashare.chips.dispatcher import fetch_cn_chips_summary
+        return jsonify(fetch_cn_chips_summary(ticker)), 200
+
     from services.chips.volume import fetch_volume_data
     from services.chips.short_interest import fetch_short_interest
 
@@ -1026,14 +1068,25 @@ def chips_summary(ticker: str) -> Response:
 @app.route("/api/chips/options/<ticker>")
 def chips_options(ticker: str) -> Response:
     """Level 2 options flow: PCR, Max Pain, OI distribution."""
-    from services.chips.options_flow import fetch_options_flow
+    from services.ashare import is_cn
+    if is_cn(ticker):
+        return jsonify({
+            "ticker": ticker.upper(), "market": "CN_A",
+            "available": False, "reason": "no_options_market",
+        }), 200
 
+    from services.chips.options_flow import fetch_options_flow
     return jsonify(fetch_options_flow(ticker)), 200
 
 
 @app.route("/api/chips/institutional/<ticker>")
 def chips_institutional(ticker: str) -> Response:
     """Level 2-3 institutional data: 13F holders, Form 4 insider trades, ETF holders."""
+    from services.ashare import is_cn
+    if is_cn(ticker):
+        from services.ashare.chips.dispatcher import fetch_cn_chips_institutional
+        return jsonify(fetch_cn_chips_institutional(ticker)), 200
+
     from concurrent.futures import ThreadPoolExecutor, as_completed
     from services.chips.institutional import fetch_institutional
     from services.chips.insider import fetch_insider

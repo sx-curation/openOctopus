@@ -3,11 +3,12 @@ from data_sources.market.service import get_market_quote, get_market_history
 _HISTORY_PERIOD = "45d"   # fetch extra calendar days to guarantee ~30 trading days
 _SPARKLINE_BARS = 30
 
-# Only S&P 500, NASDAQ, VIX — 10-Yr Yield excluded per design
+# S&P 500, NASDAQ, VIX, TAIEX — 10-Yr Yield excluded per design
 DEFAULT_MARKET_CARDS = [
     {"id": "sp500",  "label": "S&P 500", "symbol": "^GSPC"},
     {"id": "nasdaq", "label": "NASDAQ",  "symbol": "^IXIC"},
     {"id": "vix",    "label": "VIX",     "symbol": "^VIX"},
+    {"id": "taiex",  "label": "TAIEX",   "symbol": "^TWII", "currency": "TWD"},
 ]
 
 

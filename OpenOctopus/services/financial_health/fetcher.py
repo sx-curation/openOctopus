@@ -522,11 +522,18 @@ def fetch_financial_health(ticker: str) -> Dict[str, Any]:
           years: [2024, 2023, ...],
           fundamentals: {metric: [v0, v1, v2, ...]},
           info: {beta, trailingPE, returnOnEquity, marketCap, debtToEquity_raw, ...},
-          data_source: "fmp" | "yfinance",
+          data_source: "fmp" | "yfinance" | "akshare+pytdx",
           error: None | str
         }
     """
     t = ticker.upper().strip()
+
+    # ── A-share routing ─────────────────────────────────────────────────────────
+    from services.ashare import is_cn
+    if is_cn(t):
+        from services.ashare.financials.cn_fetcher import fetch_cn_financial_health
+        return fetch_cn_financial_health(t)
+    # ── US / non-CN path (unchanged) ────────────────────────────────────────────
     try:
         years, raw, info_scalars, precomputed, source = _fetch_primary(t)
         result = _build_result(t, years, raw, info_scalars, precomputed)

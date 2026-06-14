@@ -41,8 +41,12 @@ def fetch_prices_tencent(ticker: str, count: int = 320) -> pd.Series | None:
         return None
 
 
-def fetch_prices_tdx(ticker: str, count: int = 320) -> pd.Series | None:
-    """Fetch daily close prices via pytdx. Falls back silently on timeout."""
+def fetch_prices_tdx(ticker: str, count: int = 320) -> dict | None:
+    """Fetch daily close prices via pytdx with suspension detection.
+
+    Returns {"prices": pd.Series, "is_suspended": bool} or None on failure.
+    Suspension: last 5 bars all have vol == 0.
+    """
     try:
         from .tdx_client import get_api, reset_api
         code = strip_suffix(ticker)
@@ -63,6 +67,10 @@ def fetch_prices_tdx(ticker: str, count: int = 320) -> pd.Series | None:
         df["date"] = pd.to_datetime(df["datetime"]).dt.normalize()
         df = df.sort_values("date").set_index("date")
         s = df["close"].astype(float).rename(ticker)
-        return s if len(s) >= 10 else None
+        if len(s) < 10:
+            return None
+        recent = bars[-5:] if len(bars) >= 5 else bars
+        is_suspended = bool(recent) and all(b.get("vol", 0) == 0 for b in recent)
+        return {"prices": s, "is_suspended": is_suspended}
     except Exception:
         return None

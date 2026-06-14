@@ -72,6 +72,7 @@ MARKET_CN_A    = "CN_A"       # kept for backwards compat; not exposed in UI
 MARKET_CN_CSI300 = "CN_CSI300"  # 沪深300
 MARKET_CN_SZ100  = "CN_SZ100"   # 深证100
 MARKET_CN_GEM    = "CN_GEM"     # 创业板 ChiNext
+MARKET_CN_STAR   = "CN_STAR"    # 科创板 STAR Market 50
 
 _US_MARKETS = (MARKET_SP500, MARKET_NDX)
 
@@ -315,7 +316,13 @@ def _fetch_tencent(ticker: str, market: str) -> pd.Series | None:  # noqa: ARG00
 
 def _fetch_tdx(ticker: str, market: str) -> pd.Series | None:  # noqa: ARG001
     from ..ashare.price_fetcher import fetch_prices_tdx
-    return fetch_prices_tdx(ticker)
+    result = fetch_prices_tdx(ticker)
+    if result is None:
+        return None
+    s = result.get("prices")
+    if s is not None:
+        s.attrs["is_suspended"] = result.get("is_suspended", False)
+    return s
 
 _SOURCE_FUNCS["tencent"] = _fetch_tencent
 _SOURCE_FUNCS["tdx"] = _fetch_tdx

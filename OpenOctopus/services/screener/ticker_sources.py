@@ -715,6 +715,7 @@ def _make_cn_getter(cache_key: str, akshare_symbol: str, min_count: int = 50):
 get_cn_csi300_tickers = _make_cn_getter("CN_CSI300", "000300", min_count=200)
 get_cn_sz100_tickers  = _make_cn_getter("CN_SZ100",  "399004", min_count=80)
 get_cn_gem_tickers    = _make_cn_getter("CN_GEM",    "399006", min_count=50)
+get_cn_star50_tickers = _make_cn_getter("CN_STAR",   "000688", min_count=40)
 
 
 def get_cn_a_tickers() -> tuple[list[str], str]:

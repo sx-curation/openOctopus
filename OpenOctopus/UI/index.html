@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <script src="/static/i18n.js?v=20260509c"></script>
-<script src="/static/market-switcher.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script id="tailwind-config">
   tailwind.config = {
@@ -173,32 +172,51 @@
   #chips-tip-popup .tip-thresh { color: #94a3b8; }
 
   /* Backlog table header group tints — thead only, not tbody */
-  #backlog-table thead th.blcol-g-info   { background-color: rgba(224,242,254,0.55); } /* sky-100  */
+  #backlog-table thead th.blcol-g-info   { background-color: rgba(224,242,254,0.55); } /* sky-100    */
+  #backlog-table thead th.blcol-g-ashare { background-color: rgba(254,226,226,0.55); } /* red-100   */
   #backlog-table thead th.blcol-g-scores { background-color: rgba(237,233,254,0.55); } /* violet-100 */
   #backlog-table thead th.blcol-g-chips  { background-color: rgba(254,243,199,0.55); } /* amber-100 */
+  #backlog-table thead th.blcol-g-price  { background-color: rgba(255,251,235,0.55); } /* yellow-50 */
   #backlog-table thead th.blcol-g-val    { background-color: rgba(209,250,229,0.55); } /* emerald-100 */
   #backlog-table thead th.blcol-g-stats  { background-color: rgba(226,232,240,0.55); } /* slate-200 */
+  #backlog-table thead th.blcol-g-trend  { background-color: rgba(204,251,241,0.55); } /* teal-100  */
+
+  /* Backlog column resize */
+  #backlog-table { table-layout: fixed; }
+  #backlog-table th { position: relative; overflow: hidden; }
+  #backlog-table td { overflow: hidden; text-overflow: ellipsis; }
+  .bl-rh {
+    position: absolute; right: 0; top: 0;
+    width: 5px; height: 100%;
+    cursor: col-resize; user-select: none;
+    background: transparent; z-index: 1;
+  }
+  .bl-rh:hover, .bl-rh.bl-rh-active { background: rgba(99,102,241,0.45); border-radius: 2px; }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
 </head>
 <body class="bg-surface font-body text-on-surface flex min-h-screen">
 
 <!-- ───────────────────────── SIDEBAR ───────────────────────── -->
-<aside id="sidebar" class="fixed left-0 top-0 h-full flex flex-col py-6 z-50 w-60" style="background:#f5f3f6;">
+<aside id="sidebar" class="fixed left-0 top-0 h-full flex flex-col py-6 z-50 w-60 overflow-hidden transition-[width] duration-200" style="background:#f5f3f6;">
 
-  <!-- Logo -->
-  <div class="px-6 mb-10 flex items-center gap-3">
-    <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#000f27,#0b2447);">
+  <!-- Logo + collapse toggle -->
+  <div class="px-6 mb-10 flex items-center gap-3 min-w-[240px]">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#000f27,#0b2447);">
       <span class="material-symbols-outlined fill-icon text-white" style="font-size:18px;">account_balance</span>
     </div>
-    <div>
+    <div class="flex-1 min-w-0">
       <p class="font-headline font-bold text-primary leading-tight text-sm" data-i18n="brand.title">Advisor Terminal</p>
       <p class="font-label text-[9px] uppercase tracking-widest text-slate-400" data-i18n="brand.subtitle">Institutional Grade</p>
     </div>
+    <button id="sidebar-toggle" title="Collapse sidebar"
+      class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-surface-container-high text-slate-400 hover:text-primary transition-colors ml-auto">
+      <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
+    </button>
   </div>
 
   <!-- Navigation -->
-  <nav class="flex-1 space-y-0.5 pr-4" id="main-nav">
+  <nav class="flex-1 space-y-0.5 pr-4 min-w-[240px]" id="main-nav">
     <a class="nav-link nav-active flex items-center px-6 py-3 cursor-pointer" data-page="dashboard">
       <span class="material-symbols-outlined mr-3 text-primary">dashboard</span>
       <span class="font-label text-[11px] uppercase tracking-widest font-bold" data-i18n="nav.dashboard">US Dashboard</span>
@@ -242,7 +260,7 @@
   </nav>
 
   <!-- Bottom links -->
-  <div class="px-6 space-y-3">
+  <div class="px-6 space-y-3 min-w-[240px]">
     <a class="flex items-center gap-2 text-slate-400 hover:text-primary cursor-pointer">
       <span class="material-symbols-outlined" style="font-size:16px;">help_outline</span>
       <span class="font-label text-[10px] uppercase tracking-widest" data-i18n="nav.support">Support</span>
@@ -254,8 +272,16 @@
   </div>
 </aside>
 
+<!-- 側邊欄收起後的展開 Tab（僅收起時可見）-->
+<button id="sidebar-expand-tab"
+  class="hidden fixed left-0 top-1/2 -translate-y-1/2 z-50 w-5 h-10 flex items-center justify-center rounded-r-lg text-slate-400 hover:text-primary transition-colors shadow-sm"
+  style="background:#f5f3f6; border:1px solid rgba(196,198,207,0.4); border-left:none;"
+  title="Expand sidebar">
+  <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
+</button>
+
 <!-- ───────────────────────── MAIN CONTENT ───────────────────────── -->
-<main class="ml-60 flex-1 flex flex-col min-w-0">
+<main id="main-content" class="ml-60 flex-1 flex flex-col min-w-0 transition-[margin-left] duration-200">
 
   <!-- Header -->
   <header class="flex justify-between items-center px-8 h-14 sticky top-0 z-40" style="background:#faf9fc; border-bottom:1px solid rgba(196,198,207,0.15);">
@@ -280,7 +306,10 @@
           style="background:transparent;color:#8d9198;">DE</button>
         <button id="lang-btn-zh" onclick="I18N.setLang('zh'); if(window._ooRerenderAll) window._ooRerenderAll();"
           class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
-          style="background:transparent;color:#8d9198;">中文</button>
+          style="background:transparent;color:#8d9198;">繁體</button>
+        <button id="lang-btn-zh-cn" onclick="I18N.setLang('zh-cn'); if(window._ooRerenderAll) window._ooRerenderAll();"
+          class="px-2 py-1 rounded text-[10px] font-label font-bold uppercase tracking-widest transition-colors"
+          style="background:transparent;color:#8d9198;">简体</button>
       </div>
       <!-- Search -->
       <div class="relative">
@@ -477,6 +506,17 @@
           <div class="mt-1" id="market-nasdaq-sparkline"></div>
         </div>
 
+        <!-- TAIEX -->
+        <div class="bg-surface-container-lowest rounded-lg p-3 ambient-shadow">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">TAIEX</p>
+            <span class="text-[8px] text-on-surface-variant font-label">NT$</span>
+          </div>
+          <p class="font-headline text-lg font-bold tabular-nums" id="market-taiex-value">—</p>
+          <p class="text-[10px] mt-0.5" id="market-taiex-change">—</p>
+          <div class="mt-1" id="market-taiex-sparkline"></div>
+        </div>
+
         <!-- Market Sentiment -->
         <div class="bg-surface-container-lowest rounded-lg p-3 ambient-shadow">
           <div class="flex items-center justify-between mb-1">
@@ -666,6 +706,10 @@
           <span data-i18n="screener.market.cn_gem">创业板</span>
           <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
         </button>
+        <button class="screener-market-tab flex items-center gap-1.5 px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest bg-surface-container-high text-on-surface-variant" data-market="CN_STAR">
+          <span data-i18n="screener.market.cn_star">科创50</span>
+          <span class="screener-tab-badge text-[8px] font-normal opacity-80"></span>
+        </button>
       </div>
 
       <!-- Control Row -->
@@ -832,23 +876,62 @@
             class="h-8 w-8 rounded bg-surface-container-high text-on-surface-variant text-sm hover:bg-surface-container-low transition-colors flex items-center justify-center"
             title="Customize visible columns">⚙</button>
           <div id="backlog-cols-panel" class="hidden absolute left-0 top-full mt-1 z-50 bg-surface-container border border-outline-variant rounded-lg shadow-xl p-3 min-w-[190px]">
-            <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2">Column Groups</div>
-            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-sky-100/50 text-sky-800 hover:bg-sky-200/60">
-              <input type="checkbox" class="blcol-toggle accent-sky-500" data-group="info" checked> 基本資訊
-            </label>
-            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-violet-100/50 text-violet-800 hover:bg-violet-200/60">
-              <input type="checkbox" class="blcol-toggle accent-violet-500" data-group="scores" checked> 財務得分
-            </label>
-            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-amber-100/50 text-amber-800 hover:bg-amber-200/60">
-              <input type="checkbox" class="blcol-toggle accent-amber-500" data-group="chips" checked> 籌碼面
-            </label>
-            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-emerald-100/50 text-emerald-800 hover:bg-emerald-200/60">
-              <input type="checkbox" class="blcol-toggle accent-emerald-500" data-group="val" checked> 估值模型
-            </label>
-            <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-slate-200/60 text-slate-700 hover:bg-slate-300/60">
-              <input type="checkbox" class="blcol-toggle accent-slate-500" data-group="stats" checked> 技術走勢
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[9px] uppercase tracking-widest text-on-surface-variant/60">Column Groups</span>
+              <span class="text-[9px] text-on-surface-variant/30">drag ⠿</span>
+            </div>
+            <div id="backlog-cols-sortable">
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-sky-100/50 text-sky-800 hover:bg-sky-200/60" data-drag-group="info">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-sky-500" data-group="info" checked> 基本資訊
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-red-100/50 text-red-800 hover:bg-red-200/60" data-drag-group="ashare">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-red-500" data-group="ashare" checked> A股行業信息
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-violet-100/50 text-violet-800 hover:bg-violet-200/60" data-drag-group="scores">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-violet-500" data-group="scores" checked> 財務得分
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-amber-100/50 text-amber-800 hover:bg-amber-200/60" data-drag-group="chips">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-amber-500" data-group="chips" checked> 籌碼面
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-yellow-50/80 text-yellow-800 hover:bg-yellow-100/80" data-drag-group="price">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-yellow-600" data-group="price" checked> 最新股價
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-emerald-100/50 text-emerald-800 hover:bg-emerald-200/60" data-drag-group="val">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-emerald-500" data-group="val" checked> 估值模型
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-slate-200/60 text-slate-700 hover:bg-slate-300/60" data-drag-group="stats">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-slate-500" data-group="stats" checked> 年度統計
+              </label>
+              <label class="flex items-center gap-2 text-[11px] cursor-pointer py-1 px-2 rounded mb-0.5 bg-teal-100/60 text-teal-800 hover:bg-teal-200/60" data-drag-group="trend">
+                <span class="bl-drag-handle text-on-surface-variant/30 cursor-grab select-none text-base leading-none">⠿</span>
+                <input type="checkbox" class="blcol-toggle accent-teal-500" data-group="trend" checked> 技術走勢
+              </label>
+            </div>
+            <div class="mt-2 pt-2 border-t border-outline-variant/30">
+              <button id="bl-reset-widths-btn"
+                class="w-full text-[9px] px-2 py-1 rounded border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-primary/50 transition-colors"
+                data-i18n="backlog.col.reset_widths">Reset Widths</button>
+            </div>
           </div>
+        </div>
+        <!-- Market filter -->
+        <div class="flex items-center gap-1.5 ml-2">
+          <span class="text-[9px] uppercase tracking-widest text-on-surface-variant/60" data-i18n="backlog.market.label">Market</span>
+          <select id="backlog-market-filter"
+            class="h-8 px-2 min-w-[5.5rem] rounded border border-outline-variant bg-surface-container text-[10px] text-on-surface focus:outline-none focus:border-primary cursor-pointer">
+            <option value="all" data-i18n="backlog.market.all">All</option>
+            <option value="cn" data-i18n="backlog.market.cn">A-Share</option>
+            <option value="us" data-i18n="backlog.market.us">US</option>
+            <option value="tw" data-i18n="backlog.market.tw">Taiwan</option>
+            <option value="eu" data-i18n="backlog.market.eu">Europe</option>
+          </select>
         </div>
         <span id="backlog-count-badge" class="text-[10px] text-on-surface-variant/70 ml-1"></span>
         <span id="backlog-status" class="text-[10px] text-on-surface-variant/60 ml-1 italic"></span>
@@ -857,35 +940,44 @@
       <!-- Table -->
       <div class="overflow-x-auto">
         <table id="backlog-table" class="w-full text-[10px] border-collapse">
+          <colgroup id="backlog-colgroup">
+            <!-- widths applied by JS (_blApplyColWidths); default: [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36] -->
+            <col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+            <col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+          </colgroup>
           <thead>
             <tr class="text-left text-[9px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
-              <th class="pr-2 py-2 w-6"><input type="checkbox" id="backlog-select-all" class="cursor-pointer accent-primary" title="Select all"></th>
-              <th class="backlog-sortable sticky left-0 z-10 bg-surface-container-low pr-3 py-2 cursor-pointer select-none whitespace-nowrap border-r border-outline-variant/30" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name</th>
-              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector</th>
-              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.tags">Tags</th>
-              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_score" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_growth" data-i18n="backlog.col.growth" title="Growth sub-score (0–100): revenue growth, EPS growth, FCF growth, operating cash flow quality. Higher = stronger growth trajectory.">Growth <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_health" data-i18n="backlog.col.health" title="Health sub-score (0–100): current ratio, interest coverage, leverage, receivables/inventory turnover. Higher = stronger balance sheet.">Health <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_rvol" data-i18n="backlog.col.rvol">RVOL <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.rvol" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vwap" data-i18n="backlog.col.vwap">Δ VWAP <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.vwap" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_dtc" data-i18n="backlog.col.dtc">Short DTC <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.dtc" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_pcr" data-i18n="backlog.col.pcr">PCR <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.pcr" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.eps" title="Trailing Twelve Months EPS (Diluted). Source: yfinance trailingEps.">EPS</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.pe" title="Trailing Twelve Months Price/Earnings ratio. Source: yfinance trailingPE.">PE</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.bear" title="e_price = TTM PE × TTM EPS&#10;e×0.8 = e_price × 0.8 (bear case, 20% margin of safety)">e×0.8</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.bull" title="e_price = TTM PE × TTM EPS&#10;e×1.2 = e_price × 1.2 (bull case, 20% premium)">e×1.2</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.ecal" title="e_price_cal = e_price × (1 + g + r) / (1 + MOS)&#10;e_price = TTM PE × TTM EPS&#10;g = 10% (forecast growth)&#10;r = 6% (min required return)&#10;MOS = 25% (margin of safety)">e_cal</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.avg" title="a_price = mean(e_cal, e_2u, e×0.8)&#10;e_2u = EPS × (pe_min + pe_step×2)&#10;pe_step = (pe_max − pe_min) / 5&#10;pe_min/max from 5-year annual PE history">avg</th>
-              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.davg" title="(a_price − latest price) / latest price × 100&#10;Positive = stock trades below model avg (potential upside)&#10;Negative = stock trades above model avg (overvalued vs model)">Δ avg</th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low" title="Lowest price in the past 52 weeks. A stock near this level may be near a support zone.">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma10" data-i18n="backlog.col.ma10" title="10-day Moving Average. A short-term trend indicator. Price above MA10 suggests recent momentum.&#10;Δ = (price − MA10) / MA10 × 100">MA10 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="ma50" data-i18n="backlog.col.ma50" title="50-day Moving Average. A medium-term trend indicator. Price above MA50 generally indicates an uptrend.&#10;Δ = (price − MA50) / MA50 × 100">MA50 <span class="backlog-sort-arrow text-[8px]">↕</span></th>
-              <th class="py-2 w-8"></th>
+              <th class="pr-2 py-2"><input type="checkbox" id="backlog-select-all" class="cursor-pointer accent-primary" title="Select all"></th>
+              <th class="backlog-sortable sticky left-0 z-10 bg-surface-container-low pr-3 py-2 cursor-pointer select-none whitespace-nowrap border-r border-outline-variant/30" data-sortkey="ticker" data-i18n="backlog.col.ticker">Ticker <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="1"></span></th>
+              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.name">Name<span class="bl-rh" data-colidx="2"></span></th>
+              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.sector">Sector<span class="bl-rh" data-colidx="3"></span></th>
+              <th class="blcol-g-info pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.tags">Tags<span class="bl-rh" data-colidx="4"></span></th>
+              <th class="blcol-g-ashare backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="industry_sub" data-i18n="backlog.col.industry" title="行業子類（東方財富行業分類）&#10;基於行業成份股反查建表，每7天更新。&#10;非申萬官方分類，但覆蓋範圍廣、即時性高。&#10;A股專用；其他市場顯示 —。">行業 <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.industry" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="5"></span></th>
+              <th class="blcol-g-ashare pr-3 py-2 whitespace-nowrap" data-i18n="backlog.col.pulse" title="行業景氣燈（新浪財經行業漲跌幅）&#10;🟢 景氣：當日漲跌幅 > +1.5%&#10;🟡 中性：-1.5% 至 +1.5%&#10;🔴 偏弱：當日漲跌幅 < -1.5%&#10;數據每60分鐘更新。僅供行業趨勢參考。">景氣 <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.pulse" onclick="event.stopPropagation()">ⓘ</button><span class="bl-rh" data-colidx="6"></span></th>
+              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_score" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="7"></span></th>
+              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_growth" data-i18n="backlog.col.growth" title="Growth sub-score (0–100): revenue growth, EPS growth, FCF growth, operating cash flow quality. Higher = stronger growth trajectory.">Growth <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="8"></span></th>
+              <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_health" data-i18n="backlog.col.health" title="Health sub-score (0–100): current ratio, interest coverage, leverage, receivables/inventory turnover. Higher = stronger balance sheet.">Health <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="9"></span></th>
+              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_rvol" data-i18n="backlog.col.rvol">RVOL <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.rvol" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="10"></span></th>
+              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vwap" data-i18n="backlog.col.vwap">Δ VWAP <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.vwap" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="11"></span></th>
+              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_dtc" data-i18n="backlog.col.dtc">Short DTC <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.dtc" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="12"></span></th>
+              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_pcr" data-i18n="backlog.col.pcr">PCR <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.pcr" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="13"></span></th>
+              <th class="blcol-g-price backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="14"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.eps" title="Trailing Twelve Months EPS (Diluted). Source: yfinance trailingEps.">EPS<span class="bl-rh" data-colidx="15"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.pe" title="Trailing Twelve Months Price/Earnings ratio. Source: yfinance trailingPE.">PE<span class="bl-rh" data-colidx="16"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.bear" title="e_price = TTM PE × TTM EPS&#10;e×0.8 = e_price × 0.8 (bear case, 20% margin of safety)">e×0.8<span class="bl-rh" data-colidx="17"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.bull" title="e_price = TTM PE × TTM EPS&#10;e×1.2 = e_price × 1.2 (bull case, 20% premium)">e×1.2<span class="bl-rh" data-colidx="18"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.ecal" title="e_price_cal = e_price × (1 + g + r) / (1 + MOS)&#10;e_price = TTM PE × TTM EPS&#10;g = 10% (forecast growth)&#10;r = 6% (min required return)&#10;MOS = 25% (margin of safety)">e_cal<span class="bl-rh" data-colidx="19"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.avg" title="a_price = mean(e_cal, e_2u, e×0.8)&#10;e_2u = EPS × (pe_min + pe_step×2)&#10;pe_step = (pe_max − pe_min) / 5&#10;pe_min/max from 5-year annual PE history">avg<span class="bl-rh" data-colidx="20"></span></th>
+              <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.davg" title="(a_price − latest price) / latest price × 100&#10;Positive = stock trades below model avg (potential upside)&#10;Negative = stock trades above model avg (overvalued vs model)">Δ avg<span class="bl-rh" data-colidx="21"></span></th>
+              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="vs_52w_low" data-i18n="backlog.col.vs52low" title="How far (%) the current price is above its 52-week low. Low value = near the annual bottom.">vs 52W Low <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="22"></span></th>
+              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_chg_pct" data-i18n="backlog.col.w52chg" title="Price change % over the past 52 weeks (1 year). Positive = stock has risen year-over-year.">52W Chg% <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="23"></span></th>
+              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_high" data-i18n="backlog.col.w52high" title="Highest price in the past 52 weeks. Compare to current price to gauge distance from peak.">52W High <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="24"></span></th>
+              <th class="blcol-g-stats backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="w52_low" data-i18n="backlog.col.w52low" title="Lowest price in the past 52 weeks. A stock near this level may be near a support zone.">52W Low <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="25"></span></th>
+              <th class="blcol-g-trend backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="dma10" data-i18n="backlog.col.dma10" title="Price distance from 10-day MA (weekly trend).&#10;(price − MA10) / MA10 × 100&#10;Green = price above MA10 (short-term momentum positive).">Δ MA10 <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="26"></span></th>
+              <th class="blcol-g-trend backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="dma20" data-i18n="backlog.col.dma20" title="Price distance from 20-day MA (monthly trend).&#10;(price − MA20) / MA20 × 100&#10;Green = price above MA20 (monthly trend positive).">Δ MA20 <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="27"></span></th>
+              <th class="blcol-g-trend backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="dma120" data-i18n="backlog.col.dma120" title="Price distance from 120-day MA (half-year trend).&#10;(price − MA120) / MA120 × 100&#10;Green = price in a medium-term uptrend.">Δ MA120 <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="28"></span></th>
+              <th class="blcol-g-trend backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="dma250" data-i18n="backlog.col.dma250" title="Price distance from 250-day MA (annual trend).&#10;(price − MA250) / MA250 × 100&#10;Green = price in a long-term uptrend. Source: 1-year daily history via yfinance.">Δ MA250 <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="29"></span></th>
+              <th class="py-2"></th>
             </tr>
           </thead>
           <tbody id="backlog-tbody"></tbody>
@@ -1794,6 +1886,15 @@
     d = (d != null) ? d : 2;
     return window._OOC.symbol + window._cvt(v).toFixed(d);
   };
+  // Per-item price formatter: CNY/TWD items always show their native currency symbol
+  // and bypass the USD/EUR converter; US/EU items follow the global switcher.
+  window._prcItem = (item, v, d) => {
+    if (v == null || (typeof v === 'number' && isNaN(v))) return '—';
+    d = (d != null) ? d : 2;
+    if (item && item.currency === 'CNY') return '¥' + Number(v).toFixed(d);
+    if (item && item.currency === 'TWD') return 'NT$' + Number(v).toFixed(d);
+    return window._OOC.symbol + window._cvt(v).toFixed(d);
+  };
 
   function _setCurrency(code) {
     const isEur = code === 'EUR';
@@ -1815,7 +1916,11 @@
   document.addEventListener('DOMContentLoaded', async function _currencyInit() {
     try {
       const res = await fetch('/api/exchange-rate');
-      if (res.ok) { const d = await res.json(); window._OOC._eurRate = d.rate; }
+      if (res.ok) {
+        const d = await res.json();
+        // Support both new {pairs:{EURUSD:...}} and legacy {rate:...} formats
+        window._OOC._eurRate = (d.pairs && d.pairs.EURUSD) || d.rate;
+      }
     } catch(e) {}
     const saved = localStorage.getItem('oo_currency') || 'USD';
     _setCurrency(saved);
@@ -2645,7 +2750,12 @@
     (data.cards || []).forEach(card => {
       const quote = card.quote || {};
       const id = card.id;
-      setText(`market-${id}-value`, quote.price != null ? formatNumber(_cvt(quote.price), 2) : 'N/A');
+      // Non-USD cards (e.g. TAIEX/TWD) skip currency conversion and show raw value
+      const isForeignCcy = card.currency && card.currency !== 'USD';
+      const displayVal = quote.price != null
+        ? (isForeignCcy ? Math.round(quote.price).toLocaleString() : formatNumber(_cvt(quote.price), 2))
+        : 'N/A';
+      setText(`market-${id}-value`, displayVal);
       const changeEl = document.getElementById(`market-${id}-change`);
       const changePct = quote.change_pct;
       if (changeEl) {
@@ -3546,7 +3656,7 @@
 
   // ─── Per-market state store ─────────────────────────────────────────────────
   // Each market independently tracks its own job, rendering state, and selection.
-  const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50', 'CN_CSI300', 'CN_SZ100', 'CN_GEM'];
+  const MARKETS = ['SP500', 'NASDAQ100', 'DAX40', 'TW50', 'CN_CSI300', 'CN_SZ100', 'CN_GEM', 'CN_STAR'];
 
   // ── FH score fetch queue (max 5 concurrent, prevents yfinance 429) ────────
   const _fhQueue = [];
@@ -3558,13 +3668,15 @@
     return new Promise(function(resolve) {
       const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
 
-      // 24h TTL cache — skip fetch if fresh score exists
+      // 6h TTL cache — skip fetch if fresh score exists
+      // Cache key includes _v1 suffix; bump version string here when scoring logic changes.
+      const _FH_CACHE_KEY = 'oo_fh_v1_' + ticker;
       try {
-        const raw = localStorage.getItem('oo_fh_' + ticker);
+        const raw = localStorage.getItem(_FH_CACHE_KEY);
         if (raw) {
           const d = JSON.parse(raw);
           const ageH = d._cached_at ? (Date.now() - d._cached_at) / 3600000 : 999;
-          if (d && d.weighted_100 != null && ageH < 24) {
+          if (d && d.weighted_100 != null && ageH < 6) {
             const liveCell = document.getElementById('bscore-' + safeId);
             if (liveCell) _updateScoreCell(liveCell, d);
             _applyGroupScores(safeId, null, d);
@@ -3582,7 +3694,7 @@
         .then(function(d) {
           const liveCell = document.getElementById('bscore-' + safeId);
           if (!d || d.error) { if (liveCell) liveCell.textContent = '—'; return; }
-          try { localStorage.setItem('oo_fh_' + ticker, JSON.stringify({...d, _cached_at: Date.now()})); } catch(e) {}
+          try { localStorage.setItem(_FH_CACHE_KEY, JSON.stringify({...d, _cached_at: Date.now()})); } catch(e) {}
           if (d.weighted_100 != null) {
             const now = new Date().toISOString();
             const gPct = d.group_scores?.growth?.pct ?? null;
@@ -3891,14 +4003,20 @@
         icon = '✕'; rowCls = 'opacity-50'; labelCls = 'text-on-surface-variant';
       } else if (item.status === 'error') {
         icon = '⚠'; rowCls = ''; labelCls = 'text-amber-500';
+      } else if (item.status === 'skipped') {
+        icon = '⏸'; rowCls = 'opacity-40'; labelCls = 'text-on-surface-variant';
       } else {
         icon = '⟳'; rowCls = ''; labelCls = 'text-slate-400';
       }
+      const _isCNTicker = item.ticker && (item.ticker.endsWith('.SH') || item.ticker.endsWith('.SZ'));
+      const currSym = _isCNTicker ? '¥' : '$';
       let metricStr = '';
       if (item.status === 'pass' && item.change_pct != null) {
         metricStr = ` — <span class="text-green-600 font-bold">+${Number(item.change_pct).toFixed(1)}%</span>`;
       } else if (item.status === 'fail' && item.price != null) {
-        metricStr = ` — <span class="text-on-surface-variant/60">$${item.price}</span>`;
+        metricStr = ` — <span class="text-on-surface-variant/60">${currSym}${item.price}</span>`;
+      } else if (item.status === 'skipped') {
+        metricStr = ` — <span class="text-on-surface-variant/50 text-[9px]">停牌</span>`;
       }
       return `<div class="flex items-center gap-1.5 py-0.5 ${rowCls}">
         <span class="text-[10px] w-4 text-center shrink-0">${icon}</span>
@@ -3942,14 +4060,24 @@
       const w52ChgHtml = w52ChgVal != null ? `${w52ChgVal.toFixed(1)}%` : '—';
       // E-4: Watchlist star
       const starred = wl.has(item.ticker);
+      const _isCNRow = item.ticker && (item.ticker.endsWith('.SH') || item.ticker.endsWith('.SZ'));
+      const _isTWRow = item.ticker && item.ticker.endsWith('.TW');
+      const _zhMode = typeof I18N !== 'undefined' && (I18N.currentLang() === 'zh' || I18N.currentLang() === 'zh-cn');
+      const _nameSubHtml = (_isCNRow || _isTWRow) && item.name_cn
+        ? `<br><span class="font-normal text-[9px] text-on-surface-variant/70">${item.name_cn}</span>`
+        : '';
+      const _priceFmt = (v) => {
+        if (v == null) return '—';
+        return (_isCNRow ? '¥' : '$') + Number(v).toFixed(2);
+      };
       tr.innerHTML = `
         <td class="${densityCls} pr-2">
           <input type="checkbox" class="screener-row-cb w-3 h-3 rounded accent-primary cursor-pointer"
             data-ticker="${item.ticker}" ${checked ? 'checked' : ''}>
         </td>
-        <td class="${densityCls} pr-3 font-bold text-primary cursor-pointer hover:underline"
-          data-action="navigate" data-ticker="${item.ticker}">${item.ticker}</td>
-        <td class="${densityCls} pr-3 text-right ${priceColorCls}">${_prc(item.price)}</td>
+        <td class="${densityCls} pr-3 font-bold text-primary cursor-pointer hover:underline leading-tight"
+          data-action="navigate" data-ticker="${item.ticker}">${item.ticker}${_nameSubHtml}</td>
+        <td class="${densityCls} pr-3 text-right ${priceColorCls}">${_priceFmt(item.price)}</td>
         <td class="${densityCls} pr-3 text-right tabular-nums">${chgPctHtml}</td>
         <td class="${densityCls} pr-3 text-right tabular-nums text-on-surface-variant">${w52ChgHtml}</td>
         <td class="${densityCls} pr-3 text-right text-on-surface-variant">${_prc(item.ma50, 1)}</td>
@@ -3961,7 +4089,7 @@
         <td class="${densityCls} text-center">
           <button class="screener-star text-[11px] leading-none cursor-pointer hover:scale-110 transition-transform"
             data-ticker="${item.ticker}" data-action="star"
-            title="${starred ? 'Remove from watchlist' : 'Add to watchlist'}"
+            title="${starred ? (I18N ? I18N.t('screener.watchlist.remove') : 'Remove from watchlist') : (I18N ? I18N.t('screener.watchlist.add') : 'Add to watchlist')}"
           >${starred ? '★' : '☆'}</button>
         </td>
       `;
@@ -4142,7 +4270,7 @@
     // Update all star buttons for this ticker in the DOM
     document.querySelectorAll(`.screener-star[data-ticker="${ticker}"]`).forEach(btn => {
       btn.textContent = wl.has(ticker) ? '★' : '☆';
-      btn.title = wl.has(ticker) ? 'Remove from watchlist' : 'Add to watchlist';
+      btn.title = wl.has(ticker) ? (I18N ? I18N.t('screener.watchlist.remove') : 'Remove from watchlist') : (I18N ? I18N.t('screener.watchlist.add') : 'Add to watchlist');
     });
   };
 
@@ -4393,12 +4521,14 @@
 
   // ─── Ticker click → Dashboard ─────────────────────────────────────────────────
   window._onResultTickerClick = function (ticker) {
-    if (typeof showPage === 'function') showPage('dashboard');
+    const t = ticker.toUpperCase();
+    if (typeof showPage === 'function') showPage('financial-health');
     setTimeout(() => {
-      const input = document.getElementById('ticker-input');
+      const input = document.getElementById('fh-ticker-input');
       if (input) {
-        input.value = ticker.toUpperCase();
-        if (typeof loadDashboardData === 'function') loadDashboardData(ticker.toUpperCase());
+        input.value = t;
+        const btn = document.getElementById('fh-analyze-btn');
+        if (btn) btn.click();
       }
     }, 80);
   };
@@ -4556,7 +4686,9 @@
     const placeholders = _mergeBacklogMeta(items.map(x => ({
       ticker: x.ticker, name: '⟳', sector: '⟳',
       price: null, vs_52w_low: null, w52_chg_pct: null,
-      w52_high: null, w52_low: null, ma10: null, ma50: null,
+      w52_high: null, w52_low: null, ma10: null, ma20: null, ma50: null, ma120: null, ma250: null,
+      dma10: null, dma20: null, dma120: null, dma250: null,
+      industry_sub: null, sector_pulse: null,
       chips_rvol: null, chips_vwap: null, chips_dtc: null, chips_pcr: null,
       error: null, _loading: true,
     })));
@@ -4587,7 +4719,17 @@
     if (statusEl) statusEl.textContent = '';
   }
 
+  function _detectBacklogMarket(ticker) {
+    const t = (ticker || '').toUpperCase();
+    if (/\.(SS|SZ)$/.test(t)) return 'cn';
+    if (/\.TW$/.test(t)) return 'tw';
+    if (/\.(DE|PA|AS|MI|MC|L|VI|BR|SW|CO|HE|OL|ST|IS|LS|AX|TO|HK)$/.test(t)) return 'eu';
+    return 'us';
+  }
+
   function renderBacklogTable(items) {
+    // Keep a snapshot so column reorder can re-render even when _ooBacklogData is cleared
+    if (items && items.length) window._ooBacklogDisplayData = items;
     const tbody = document.getElementById('backlog-tbody');
     const emptyEl = document.getElementById('backlog-empty-state');
     const tableEl = document.getElementById('backlog-table');
@@ -4607,13 +4749,16 @@
     if (tableEl) tableEl.classList.remove('hidden');
     if (emptyEl) emptyEl.classList.add('hidden');
 
-    // Apply search filter (ticker / name / tags)
+    // Apply search + market filter
     const q = (document.getElementById('backlog-unified-search')?.value || '').toLowerCase().trim();
-    const filteredItems = q ? items.filter(x =>
-      x.ticker.toLowerCase().includes(q) ||
-      (x.name || '').toLowerCase().includes(q) ||
-      (x.tags || []).some(t => t.toLowerCase().includes(q))
-    ) : items;
+    const mktFilter = (document.getElementById('backlog-market-filter')?.value || 'all');
+    const filteredItems = (q || mktFilter !== 'all') ? items.filter(x => {
+      const mktOk = mktFilter === 'all' || _detectBacklogMarket(x.ticker) === mktFilter;
+      const textOk = !q || x.ticker.toLowerCase().includes(q) ||
+        (x.name || '').toLowerCase().includes(q) ||
+        (x.tags || []).some(t => t.toLowerCase().includes(q));
+      return mktOk && textOk;
+    }) : items;
 
     // Sort
     const sorted = [...filteredItems].sort((a, b) => {
@@ -4643,6 +4788,11 @@
     const fmtPct = v => {
       if (v == null) return '—';
       const cls = v >= 0 ? 'text-green-600' : 'text-red-500';
+      return `<span class="${cls}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+    };
+    const _fmtDma = v => {
+      if (v == null) return '<span class="text-on-surface-variant/30">—</span>';
+      const cls = v >= 0 ? 'text-green-600 font-medium' : 'text-red-500';
       return `<span class="${cls}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
     };
     const loadingCell = '<span class="text-on-surface-variant/40 animate-pulse">⟳</span>';
@@ -4681,37 +4831,53 @@
       const tickerCls = fromScreener
         ? 'font-extrabold cursor-pointer hover:underline px-1 rounded bg-yellow-200/70 text-yellow-900 dark:bg-yellow-400/20 dark:text-yellow-300'
         : 'font-extrabold text-primary cursor-pointer hover:underline';
-      const _zhMode = typeof I18N !== 'undefined' && I18N.currentLang() === 'zh';
+      const _zhMode = typeof I18N !== 'undefined' && (I18N.currentLang() === 'zh' || I18N.currentLang() === 'zh-cn');
       const displayName = (_zhMode && item.name_cn) ? item.name_cn : (item.name || '—');
       const _SECTOR_ZH = {'Technology':'信息技术','Financial Services':'金融','Consumer Defensive':'消费必需品','Consumer Cyclical':'非必需消费品','Healthcare':'医疗保健','Energy':'能源','Industrials':'工业','Basic Materials':'原材料','Utilities':'公用事业','Communication Services':'通信服务','Real Estate':'房地产','Industrials':'工业'};
       const displaySector = (_zhMode && item.sector && _SECTOR_ZH[item.sector]) ? _SECTOR_ZH[item.sector] : (item.sector || '—');
+      const _g = {
+        info:
+          `<td class="blcol-g-info pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(displayName)}">${_esc(displayName)}</td>` +
+          `<td class="blcol-g-info pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(displaySector)}">${_esc(displaySector)}</td>` +
+          `<td id="btags-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-info btags-cell pr-3 py-2 cursor-pointer max-w-[160px]">${tagsDisplay}</td>`,
+        ashare:
+          `<td class="blcol-g-ashare pr-3 py-2 text-on-surface-variant max-w-[100px] truncate text-[10px]" title="${_esc(item.industry_sub || '')}">${_esc(item.industry_sub || '—')}</td>` +
+          `<td class="blcol-g-ashare pr-3 py-2 text-center whitespace-nowrap text-[13px]">${(() => { const sp = item.sector_pulse; if (!sp) return '<span class="text-on-surface-variant/30 text-[10px]">—</span>'; const dot = sp.grade === 'green' ? '🟢' : sp.grade === 'red' ? '🔴' : '🟡'; return `<span title="漲跌幅${sp.net_pct >= 0 ? '+' : ''}${sp.net_pct}% | 排名第${sp.rank} | ${sp.updated_at}更新">${dot}</span>`; })()}</td>`,
+        scores:
+          `<td id="bscore-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bgrowth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bhealth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>`,
+        chips:
+          `<td id="bchips-rvol-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-vwap-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-short-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-pcr-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>`,
+        price:
+          `<td class="blcol-g-price pr-3 py-2 font-mono text-right whitespace-nowrap">${_prcItem(item, item.price)}</td>`,
+        val:
+          `<td id="bval-eps-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-pe-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-08-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-12-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-cal-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-avg-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bval-delta-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>`,
+        stats:
+          `<td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>` +
+          `<td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>` +
+          `<td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prcItem(item, item.w52_high)}</td>` +
+          `<td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prcItem(item, item.w52_low)}</td>`,
+        trend:
+          `<td class="blcol-g-trend pr-3 py-2 font-mono text-right whitespace-nowrap">${_fmtDma(item.dma10)}</td>` +
+          `<td class="blcol-g-trend pr-3 py-2 font-mono text-right whitespace-nowrap">${_fmtDma(item.dma20)}</td>` +
+          `<td class="blcol-g-trend pr-3 py-2 font-mono text-right whitespace-nowrap">${_fmtDma(item.dma120)}</td>` +
+          `<td class="blcol-g-trend pr-3 py-2 font-mono text-right whitespace-nowrap">${_fmtDma(item.dma250)}</td>`,
+      };
+      const _groupCells = (window._BL_GROUP_ORDER || ['info','scores','chips','price','val','stats','trend']).map(g => _g[g] || '').join('');
       return `<tr class="group border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
         <td class="pr-2 py-2"><input type="checkbox" class="backlog-row-check cursor-pointer accent-primary" data-ticker="${_esc(item.ticker)}"></td>
         <td class="sticky left-0 z-10 bg-surface group-hover:bg-surface-container-low/50 border-r border-outline-variant/30 pr-3 py-2 whitespace-nowrap transition-colors"><span class="${tickerCls}" data-fhnav="${_esc(item.ticker)}">${_esc(item.ticker)}</span></td>
-        <td class="blcol-g-info pr-3 py-2 text-on-surface max-w-[140px] truncate" title="${_esc(displayName)}">${_esc(displayName)}</td>
-        <td class="blcol-g-info pr-3 py-2 text-on-surface-variant max-w-[100px] truncate" title="${_esc(displaySector)}">${_esc(displaySector)}</td>
-        <td id="btags-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-info btags-cell pr-3 py-2 cursor-pointer max-w-[160px]">${tagsDisplay}</td>
-        <td id="bscore-${safeId}" data-ticker="${_esc(item.ticker)}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bgrowth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bhealth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bchips-rvol-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bchips-vwap-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bchips-short-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bchips-pcr-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td class="pr-3 py-2 font-mono text-right whitespace-nowrap">${_prc(item.price)}</td>
-        <td id="bval-eps-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-pe-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-08-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-12-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-cal-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-avg-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td id="bval-delta-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.vs_52w_low)}</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${fmtPct(item.w52_chg_pct)}</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prc(item.w52_high)}</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prc(item.w52_low)}</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prc(item.ma10)}${(item.price != null && item.ma10 != null && item.ma10 > 0) ? (() => { const p = (item.price - item.ma10) / item.ma10 * 100; const s = p >= 0 ? '+' : ''; const c = p >= 0 ? 'text-green-500' : 'text-red-400'; return `<br><span class="${c} text-[9px]">${s}${p.toFixed(1)}%</span>`; })() : ''}</td>
-        <td class="blcol-g-stats pr-3 py-2 font-mono text-right whitespace-nowrap">${_prc(item.ma50)}${(item.price != null && item.ma50 != null && item.ma50 > 0) ? (() => { const p = (item.price - item.ma50) / item.ma50 * 100; const s = p >= 0 ? '+' : ''; const c = p >= 0 ? 'text-green-500' : 'text-red-400'; return `<br><span class="${c} text-[9px]">${s}${p.toFixed(1)}%</span>`; })() : ''}</td>
+        ${_groupCells}
         <td class="py-2 text-center">
           <button class="backlog-delete-btn text-on-surface-variant/40 hover:text-red-400 transition-colors" data-ticker="${_esc(item.ticker)}" title="Remove">
             <span class="material-symbols-outlined text-[14px]">delete</span>
@@ -4861,15 +5027,15 @@
         const deltaHtml = delta != null
           ? `<br><span class="text-[9px] ${delta >= 0 ? 'text-green-600' : 'text-red-500'}" title="vs 52-week low">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span>`
           : '';
-        el.innerHTML = `${_prc(val)}${deltaHtml}`;
+        el.innerHTML = `${_prcItem(_bItemVal, val)}${deltaHtml}`;
       }
 
       // EPS and PE (raw inputs)
       const epsEl = document.getElementById('bval-eps-' + safeId);
       if (epsEl) {
         if (d.eps_latest != null) {
-          epsEl.textContent = d.eps_latest.toFixed(2);
-          epsEl.title = `TTM EPS (Diluted): $${d.eps_latest.toFixed(2)}`;
+          epsEl.textContent = _prcItem(_bItemVal, d.eps_latest);
+          epsEl.title = `TTM EPS (Diluted): ${_prcItem(_bItemVal, d.eps_latest)}`;
         } else {
           epsEl.innerHTML = '<span class="text-on-surface-variant/30">—</span>';
         }
@@ -4892,7 +5058,7 @@
       // Cell-level tooltips with formula details
       const _pe = d.pe_ttm != null ? d.pe_ttm.toFixed(1) : '?';
       const _eps = d.eps_latest != null ? d.eps_latest.toFixed(2) : '?';
-      const _ep = d.e_price != null ? _prc(d.e_price) : '?';
+      const _ep = d.e_price != null ? _prcItem(_bItemVal, d.e_price) : '?';
       const e08El = document.getElementById('bval-08-' + safeId);
       if (e08El) e08El.title = `e_price = pe_ttm × eps_ttm = ${_pe} × ${_eps} = ${_ep}\ne×0.8 = e_price × 0.8 (bear case, 20% margin of safety)`;
       const calEl = document.getElementById('bval-cal-' + safeId);
@@ -4902,7 +5068,7 @@
         const peMinStr = d.pe_min != null ? d.pe_min.toFixed(1) : '?';
         const peMaxStr = d.pe_max != null ? d.pe_max.toFixed(1) : '?';
         const peStepStr = d.pe_step != null ? d.pe_step.toFixed(2) : '?';
-        const e2uStr = d.e_price_2u != null ? _prc(d.e_price_2u) : 'n/a';
+        const e2uStr = d.e_price_2u != null ? _prcItem(_bItemVal, d.e_price_2u) : 'n/a';
         const missing = d.missing_components || [];
         const missingNote = missing.length > 0
           ? `\nmissing: ${missing.join(', ')} → avg from ${d.a_price_count} component(s)`
@@ -4921,7 +5087,7 @@
           const pct = (d.a_price - latestPrice) / latestPrice * 100;
           const sign = pct >= 0 ? '+' : '';
           const color = pct >= 0 ? 'text-green-500' : 'text-red-400';
-          deltaEl.innerHTML = `<span class="${color}" title="a_price $${d.a_price.toFixed(2)} vs price $${latestPrice.toFixed(2)}">${sign}${pct.toFixed(1)}%</span>`;
+          deltaEl.innerHTML = `<span class="${color}" title="a_price ${_prcItem(_bItemVal, d.a_price)} vs price ${_prcItem(_bItemVal, latestPrice)}">${sign}${pct.toFixed(1)}%</span>`;
         } else {
           deltaEl.innerHTML = '<span class="text-on-surface-variant/30">—</span>';
         }
@@ -5270,7 +5436,9 @@
       const placeholder = {
         ticker: t, name: '⟳', sector: '⟳',
         price: null, vs_52w_low: null, w52_chg_pct: null,
-        w52_high: null, w52_low: null, ma10: null, ma50: null,
+        w52_high: null, w52_low: null, ma10: null, ma20: null, ma50: null, ma120: null, ma250: null,
+        dma10: null, dma20: null, dma120: null, dma250: null,
+        industry_sub: null, sector_pulse: null,
         error: null, _loading: true,
       };
       window._ooBacklogData = _mergeBacklogMeta([...(existingData || []), placeholder]);
@@ -5331,8 +5499,8 @@
 
   // Bind backlog controls after DOM ready
   // ── Column group visibility ───────────────────────────────────────────────
-  const _COL_GROUPS = ['info', 'scores', 'chips', 'val', 'stats'];
-  let _colGroupVisible = { info: true, scores: true, chips: true, val: true, stats: true };
+  const _COL_GROUPS = ['info', 'ashare', 'scores', 'chips', 'price', 'val', 'stats', 'trend'];
+  let _colGroupVisible = { info: true, ashare: true, scores: true, chips: true, price: true, val: true, stats: true, trend: true };
 
   function _loadColVisibility() {
     try {
@@ -5365,6 +5533,21 @@
     const clearBtn = document.getElementById('backlog-clear-btn');
 
     if (addBtn) addBtn.addEventListener('click', () => _handleBacklogAdd());
+
+    const mktFilterEl = document.getElementById('backlog-market-filter');
+    if (mktFilterEl) {
+      mktFilterEl.addEventListener('change', () => {
+        const mkt = mktFilterEl.value;
+        // Show A股行業信息 group only when A股 is selected; hide for other markets
+        _colGroupVisible.ashare = (mkt === 'cn');
+        _applyColVisibility();
+        // Sync panel checkbox
+        const ashareCb = document.querySelector('.blcol-toggle[data-group="ashare"]');
+        if (ashareCb) ashareCb.checked = _colGroupVisible.ashare;
+        renderBacklogTable(window._ooBacklogData || window._ooBacklogDisplayData || []);
+      });
+    }
+
     if (unifiedInp) {
       unifiedInp.addEventListener('keydown', e => { if (e.key === 'Enter') _handleBacklogAdd(); });
       unifiedInp.addEventListener('input', () => {
@@ -5909,8 +6092,9 @@
       const _indFallback = ind.name.replace(/_r$/, '').replace(/_bonus$/, ' ★').replace(/_/g, ' ');
       const indDisplay = _t('fh.ind.' + ind.name, _indFallback);
       const indTip = _escFH(_IND_TOOLTIPS[ind.name] || ind.name);
+      const tipKey = 'fh.ind.tip.' + ind.name;
       return `<tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
-        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${catPrefix}${_escFH(indDisplay)}</td>
+        <td class="px-3 py-2 text-[11px] min-w-[160px] text-on-surface-variant capitalize whitespace-nowrap cursor-help" title="${indTip}">${catPrefix}${_escFH(indDisplay)}<button class="chips-tip ml-1 align-middle" data-tip="${tipKey}" onclick="event.stopPropagation()">ⓘ</button></td>
         ${tdCells}
       </tr>`;
     }
@@ -6283,14 +6467,20 @@
       const placeholder = sel.querySelector('option[value=""]');
       sel.innerHTML = '';
       if (placeholder) sel.appendChild(placeholder);
+      const _zhMode = typeof I18N !== 'undefined' && (I18N.currentLang() === 'zh' || I18N.currentLang() === 'zh-cn');
       items.forEach(item => {
         const ticker = typeof item === 'string' ? item : (item.ticker || '');
         if (!ticker) return;
         const opt = document.createElement('option');
         opt.value = ticker;
-        // Show ticker + sector if available, for clarity
-        const sector = (typeof item === 'object' && item.sector) ? ` · ${item.sector}` : '';
-        opt.textContent = `${ticker}${sector}`;
+        const _isCN = ticker.endsWith('.SH') || ticker.endsWith('.SZ') || ticker.endsWith('.BJ');
+        if (_isCN && _zhMode && typeof item === 'object' && item.name_cn) {
+          opt.textContent = `${item.name_cn} (${ticker})`;
+        } else {
+          // Show ticker + sector if available, for clarity
+          const sector = (typeof item === 'object' && item.sector) ? ` · ${item.sector}` : '';
+          opt.textContent = `${ticker}${sector}`;
+        }
         sel.appendChild(opt);
       });
     } catch (e) { sel.classList.add('hidden'); }
@@ -7830,7 +8020,7 @@
       popup.style.visibility = 'visible';
     }
 
-    ['page-chips', 'page-backlog'].forEach(pageId => {
+    ['page-chips', 'page-backlog', 'page-financial-health'].forEach(pageId => {
       const page = document.getElementById(pageId);
       if (!page) return;
       page.addEventListener('mouseover', function (e) {
@@ -7842,7 +8032,236 @@
     });
   })();
 
+  // ── Backlog column resize ──────────────────────────────────────────────────
+  (function () {
+    const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36];
+    const _MIN = 32;
+    const _KEY = 'oo_backlog_col_widths';
+
+    function _load() {
+      try {
+        const v = JSON.parse(localStorage.getItem(_KEY));
+        return Array.isArray(v) && v.length === _DEF.length ? v : [..._DEF];
+      } catch { return [..._DEF]; }
+    }
+    function _save(w) { try { localStorage.setItem(_KEY, JSON.stringify(w)); } catch {} }
+
+    function _apply(widths) {
+      const cols = document.querySelectorAll('#backlog-colgroup col');
+      const ths  = document.querySelectorAll('#backlog-table thead th');
+      cols.forEach((c, i) => {
+        const rh  = ths[i] && ths[i].querySelector('.bl-rh');
+        const idx = rh ? +rh.dataset.colidx : i;
+        c.style.width = (widths[idx] || 60) + 'px';
+      });
+    }
+
+    function _reset() { _apply([..._DEF]); _save([..._DEF]); }
+
+    // Wire drag on each .bl-rh handle
+    document.querySelectorAll('#backlog-table .bl-rh').forEach(handle => {
+      handle.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = +this.dataset.colidx;
+        const widths = _load();
+        const startX = e.clientX;
+        const startW = widths[idx] || _DEF[idx] || 60;
+        handle.classList.add('bl-rh-active');
+
+        const onMove = ev => {
+          widths[idx] = Math.max(_MIN, startW + ev.clientX - startX);
+          _apply(widths);
+        };
+        const onUp = () => {
+          _save(widths);
+          handle.classList.remove('bl-rh-active');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    });
+
+    const resetBtn = document.getElementById('bl-reset-widths-btn');
+    if (resetBtn) resetBtn.addEventListener('click', _reset);
+
+    // Init: apply saved or default widths on page load
+    _apply(_load());
+  })();
+
+  // ── N6: Column group drag-to-reorder ─────────────────────────────────────
+  (function () {
+    'use strict';
+
+    const _LS_KEY  = 'oo_bl_group_order';
+    const _DEFAULT = ['info','ashare','scores','chips','price','val','stats','trend'];
+    const _PANEL   = ['info','ashare','scores','chips','price','val','stats','trend'];
+
+    // Expose as window global so renderBacklogTable row render can read it
+    window._BL_GROUP_ORDER = [..._DEFAULT];
+
+    function _load() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(_LS_KEY));
+        if (!Array.isArray(raw)) return;
+        const panel = raw.filter(g => _PANEL.includes(g));
+        _PANEL.forEach(g => { if (!panel.includes(g)) panel.push(g); });
+        window._BL_GROUP_ORDER = panel;
+      } catch {}
+    }
+
+    function _save(panelOrder) {
+      try { localStorage.setItem(_LS_KEY, JSON.stringify(panelOrder)); } catch {}
+    }
+
+    // Tag <th> elements with data-group based on their colidx bl-rh value
+    function _tagThs() {
+      const MAP = {
+        2:'info', 3:'info', 4:'info',
+        5:'ashare', 6:'ashare',
+        7:'scores', 8:'scores', 9:'scores',
+        10:'chips', 11:'chips', 12:'chips', 13:'chips',
+        14:'price',
+        15:'val', 16:'val', 17:'val', 18:'val', 19:'val', 20:'val', 21:'val',
+        22:'stats', 23:'stats', 24:'stats', 25:'stats',
+        26:'trend', 27:'trend', 28:'trend', 29:'trend',
+      };
+      document.querySelectorAll('#backlog-table thead th').forEach(th => {
+        const rh = th.querySelector('.bl-rh');
+        if (rh) { const g = MAP[+rh.dataset.colidx]; if (g) th.dataset.group = g; }
+      });
+    }
+
+    // Physically reorder <th> and <col> DOM elements to match groupOrder
+    function _applyGroupOrder(groupOrder) {
+      const thead = document.querySelector('#backlog-table thead tr');
+      const cg    = document.getElementById('backlog-colgroup');
+      if (!thead || !cg) return;
+
+      const thEls  = Array.from(thead.querySelectorAll('th'));
+      const colEls = Array.from(cg.querySelectorAll('col'));
+      const pairs  = thEls.map((th, i) => ({ th, col: colEls[i], group: th.dataset.group }));
+
+      const byGroup = {};
+      const fixed   = [];
+      pairs.forEach(p => {
+        if (p.group) { (byGroup[p.group] = byGroup[p.group] || []).push(p); }
+        else         { fixed.push(p); }
+      });
+      // fixed[0],[1] = checkbox, ticker (prefix); fixed[2] = delete (suffix)
+      const prefix = fixed.slice(0, 2);
+      const suffix = fixed.slice(2);
+
+      const ordered = [...prefix];
+      groupOrder.forEach(g => (byGroup[g] || []).forEach(p => ordered.push(p)));
+      suffix.forEach(p => ordered.push(p));
+
+      ordered.forEach(p => thead.appendChild(p.th));
+      ordered.forEach(p => { if (p.col) cg.appendChild(p.col); });
+
+      // Re-apply widths using colidx mapping (survives reorder)
+      try {
+        const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36];
+        const v = JSON.parse(localStorage.getItem('oo_backlog_col_widths'));
+        const w = Array.isArray(v) && v.length === _DEF.length ? v : _DEF;
+        const cols = document.querySelectorAll('#backlog-colgroup col');
+        const ths  = document.querySelectorAll('#backlog-table thead th');
+        cols.forEach((c, i) => {
+          const rh  = ths[i] && ths[i].querySelector('.bl-rh');
+          const idx = rh ? +rh.dataset.colidx : i;
+          c.style.width = (w[idx] || 60) + 'px';
+        });
+      } catch {}
+    }
+
+    // Sync panel label DOM order to match saved order
+    function _syncPanelOrder(panelOrder) {
+      const el = document.getElementById('backlog-cols-sortable');
+      if (!el) return;
+      panelOrder.forEach(g => {
+        const lbl = el.querySelector(`label[data-drag-group="${g}"]`);
+        if (lbl) el.appendChild(lbl);
+      });
+    }
+
+    // Init SortableJS on panel (retries if library not yet loaded)
+    function _initSortable() {
+      const el = document.getElementById('backlog-cols-sortable');
+      if (!el) return;
+      if (typeof Sortable === 'undefined') { setTimeout(_initSortable, 400); return; }
+      Sortable.create(el, {
+        animation: 150,
+        handle: '.bl-drag-handle',
+        ghostClass: 'opacity-40',
+        onEnd: function () {
+          const labels = el.querySelectorAll('label[data-drag-group]');
+          const panelOrder = Array.from(labels).map(l => l.dataset.dragGroup);
+          window._BL_GROUP_ORDER = panelOrder;
+          _save(panelOrder);
+          _applyGroupOrder(panelOrder);
+          const _renderData = window._ooBacklogData || window._ooBacklogDisplayData;
+          if (typeof renderBacklogTable === 'function' && _renderData) {
+            renderBacklogTable(_renderData);
+          }
+        },
+      });
+    }
+
+    function _init() {
+      _load();
+      _tagThs();
+      const savedPanel = window._BL_GROUP_ORDER.filter(g => _PANEL.includes(g));
+      if (savedPanel.join(',') !== _PANEL.join(',')) {
+        _syncPanelOrder(savedPanel);
+        _applyGroupOrder(window._BL_GROUP_ORDER);
+      }
+      _initSortable();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _init);
+    } else {
+      _init();
+    }
+  })();
+
+  // ── Sidebar collapse ──────────────────────────────────────────────────────
+  (function () {
+    const _LS_KEY = 'oo_sidebar_collapsed';
+    const sidebar = document.getElementById('sidebar');
+    const main    = document.getElementById('main-content');
+    const btn     = document.getElementById('sidebar-toggle');
+    if (!sidebar || !main || !btn) return;
+
+    function _setCollapsed(collapsed) {
+      sidebar.style.width = collapsed ? '0' : '';
+      main.style.marginLeft = collapsed ? '0' : '';
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = collapsed ? 'chevron_right' : 'chevron_left';
+      btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      const expandTab = document.getElementById('sidebar-expand-tab');
+      if (expandTab) expandTab.classList.toggle('hidden', !collapsed);
+      try { localStorage.setItem(_LS_KEY, collapsed ? '1' : '0'); } catch {}
+    }
+
+    btn.addEventListener('click', () => {
+      const collapsed = sidebar.style.width === '0px' || sidebar.style.width === '0';
+      _setCollapsed(!collapsed);
+    });
+
+    const expandTab = document.getElementById('sidebar-expand-tab');
+    if (expandTab) expandTab.addEventListener('click', () => _setCollapsed(false));
+
+    // Restore saved state
+    try {
+      if (localStorage.getItem(_LS_KEY) === '1') _setCollapsed(true);
+    } catch {}
+  })();
+
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js" crossorigin="anonymous"></script>
 </body>
 </html>
