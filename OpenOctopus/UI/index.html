@@ -941,9 +941,9 @@
       <div class="overflow-x-auto">
         <table id="backlog-table" class="w-full text-[10px] border-collapse">
           <colgroup id="backlog-colgroup">
-            <!-- widths applied by JS (_blApplyColWidths); default: [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36] -->
+            <!-- widths applied by JS (_blApplyColWidths); default: [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36,60,60,60,68,60,80] -->
             <col><col><col><col><col><col><col><col><col><col><col><col><col><col>
-            <col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+            <col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col><col>
           </colgroup>
           <thead>
             <tr class="text-left text-[9px] uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
@@ -957,10 +957,17 @@
               <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_score" data-i18n="backlog.col.score" title="Financial Health Score (0–100) from our proprietary scoring model. Click a score to view full analysis. Green ≥70, Amber ≥45, Red &lt;45.">Score <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="7"></span></th>
               <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_growth" data-i18n="backlog.col.growth" title="Growth sub-score (0–100): revenue growth, EPS growth, FCF growth, operating cash flow quality. Higher = stronger growth trajectory.">Growth <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="8"></span></th>
               <th class="blcol-g-scores backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="fh_health" data-i18n="backlog.col.health" title="Health sub-score (0–100): current ratio, interest coverage, leverage, receivables/inventory turnover. Higher = stronger balance sheet.">Health <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="9"></span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_rvol" data-i18n="backlog.col.rvol">RVOL <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.rvol" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="10"></span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vwap" data-i18n="backlog.col.vwap">Δ VWAP <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.vwap" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="11"></span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_dtc" data-i18n="backlog.col.dtc">Short DTC <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.dtc" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="12"></span></th>
-              <th class="blcol-g-chips backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_pcr" data-i18n="backlog.col.pcr">PCR <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.pcr" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="13"></span></th>
+              <th class="blcol-g-chips blcol-chips-us backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_rvol" data-i18n="backlog.col.rvol">RVOL <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.rvol" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="10"></span></th>
+              <th class="blcol-g-chips blcol-chips-us backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vwap" data-i18n="backlog.col.vwap">Δ VWAP <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.vwap" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="11"></span></th>
+              <th class="blcol-g-chips blcol-chips-us backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_dtc" data-i18n="backlog.col.dtc">Short DTC <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.dtc" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="12"></span></th>
+              <th class="blcol-g-chips blcol-chips-us backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_pcr" data-i18n="backlog.col.pcr">PCR <button class="chips-tip ml-0.5 align-middle" data-tip="chips.tip.pcr" onclick="event.stopPropagation()">ⓘ</button><span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="13"></span></th>
+              <th class="blcol-g-chips blcol-chips-cn backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vol1d" title="A股前一交易日成交量（手）">昨量(手) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="30"></span></th>
+              <th class="blcol-g-chips blcol-chips-cn backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_vol3d" title="A股最近3個交易日成交量均量（手）">3日均量(手) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="31"></span></th>
+              <th class="blcol-g-chips blcol-chips-cn backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_flow1d" title="A股昨日主力資金净流入（萬元）&#10;正值=净買入；負值=净賣出。">昨淨流(萬) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="32"></span></th>
+              <th class="blcol-g-chips blcol-chips-cn backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_flow3d" title="A股最近3日主力資金净流入均值（萬元）&#10;正值=持續淨買入；負值=持續净賣出。">3日淨流(萬) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="33"></span></th>
+              <th class="blcol-g-chips blcol-chips-tw backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_foreign1d" title="台股昨日外資买超（張）&#10;正值=外資净買入；負值=外資净賣出。">外資昨買(張) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="34"></span></th>
+              <th class="blcol-g-chips blcol-chips-tw backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="chips_foreign3d" title="台股最近3日外資买超均值（張）&#10;正值=持續外資淨買入；負值=持續淨賣出。">3日外資(張) <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="35"></span></th>
+              <th class="blcol-g-chips blcol-chips-cn pr-3 py-2 whitespace-nowrap" title="A股過去1個月（約22個交易日）每日成交量柱形圖（手）&#10;最後一根柱（昨日）若大於近3日均量則顯示綠色。">量走勢<span class="bl-rh" data-colidx="36"></span></th>
               <th class="blcol-g-price backlog-sortable pr-3 py-2 cursor-pointer select-none whitespace-nowrap" data-sortkey="price" data-i18n="backlog.col.price">Price <span class="backlog-sort-arrow text-[8px]">↕</span><span class="bl-rh" data-colidx="14"></span></th>
               <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.eps" title="Trailing Twelve Months EPS (Diluted). Source: yfinance trailingEps.">EPS<span class="bl-rh" data-colidx="15"></span></th>
               <th class="blcol-g-val pr-3 py-2 whitespace-nowrap text-right" data-i18n="backlog.col.pe" title="Trailing Twelve Months Price/Earnings ratio. Source: yfinance trailingPE.">PE<span class="bl-rh" data-colidx="16"></span></th>
@@ -1002,7 +1009,7 @@
           class="h-8 px-3 text-[11px] bg-surface-container border border-outline-variant rounded-lg w-36 focus:outline-none focus:ring-1 focus:ring-primary"
           data-i18n-placeholder="fh.input.placeholder" placeholder="e.g. AAPL, MSFT">
         <select id="fh-backlog-select"
-          class="h-9 min-w-[160px] px-2 text-[11px] bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary hidden" style="line-height:1.6">
+          class="h-9 min-w-[280px] px-2 text-[11px] bg-surface-container border border-outline-variant rounded-lg focus:outline-none focus:ring-1 focus:ring-primary hidden" style="line-height:1.6">
           <option value="" data-i18n="fh.select.placeholder">— Select from Watchlist —</option>
         </select>
         <button id="fh-analyze-btn"
@@ -1050,6 +1057,40 @@
         <div id="fh-year-trend" class="hidden mt-4 pt-3 border-t border-outline-variant/30">
           <div class="font-label text-[9px] uppercase tracking-widest text-on-surface-variant/60 mb-2" data-i18n="fh.trend.title">5-Year Score Trend</div>
           <div id="fh-year-trend-bars" class="flex items-end gap-2 h-12"></div>
+        </div>
+      </div>
+
+      <!-- ADR Cross-Market Premium Card (only visible for TW stocks with ADR) -->
+      <div id="fh-adr-card" class="hidden mb-4 p-4 bg-surface-container rounded-xl border border-outline-variant/20">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-primary">compare_arrows</span>
+            <span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant/70" data-i18n="tw.adr.title">ADR 跨市溢價</span>
+            <span id="fh-adr-ticker" class="text-[11px] font-semibold text-on-surface ml-1"></span>
+          </div>
+          <div class="flex items-center gap-4 flex-wrap text-[11px]">
+            <div class="flex flex-col items-center gap-0.5">
+              <span class="text-on-surface-variant/60 text-[9px]" data-i18n="tw.adr.ratio">換算比例</span>
+              <span id="fh-adr-ratio" class="font-semibold text-on-surface"></span>
+            </div>
+            <div class="flex flex-col items-center gap-0.5">
+              <span class="text-on-surface-variant/60 text-[9px]" data-i18n="tw.adr.adr_price">ADR (USD)</span>
+              <span id="fh-adr-price-usd" class="font-semibold text-on-surface"></span>
+            </div>
+            <div class="flex flex-col items-center gap-0.5">
+              <span class="text-on-surface-variant/60 text-[9px]" data-i18n="tw.adr.adr_equiv">ADR 換算 (TWD)</span>
+              <span id="fh-adr-equiv-twd" class="font-semibold text-on-surface"></span>
+            </div>
+            <div class="flex flex-col items-center gap-0.5">
+              <span class="text-on-surface-variant/60 text-[9px]" data-i18n="tw.adr.tw_price">台股現價</span>
+              <span id="fh-adr-tw-price" class="font-semibold text-on-surface"></span>
+            </div>
+            <div id="fh-adr-premium-badge" class="px-2.5 py-1 rounded-lg text-[12px] font-bold"></div>
+          </div>
+        </div>
+        <div class="mt-2 text-[9px] text-on-surface-variant/50 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[10px]">info</span>
+          <span data-i18n="tw.adr.caveat">溢價 = (ADR 換算台幣 ÷ 換算比例 ÷ 台股現價 − 1) × 100%。正值代表 ADR 溢價；負值代表折價。匯率與股價每 15 分鐘更新。</span>
         </div>
       </div>
 
@@ -1688,8 +1729,250 @@
         <!-- RIGHT PANEL: Detail Sections (65%) -->
         <div class="flex-1 flex flex-col gap-4 pb-4 min-w-0">
 
+          <!-- TW Chips Matrix Section (only shown for .TW tickers) -->
+          <div id="chips-tw-matrix" class="hidden">
+
+            <!-- Loading state -->
+            <div id="chips-tw-loading" class="hidden py-8 text-center text-on-surface-variant/50 text-[11px]">
+              <span class="material-symbols-outlined animate-spin text-primary text-3xl block mb-2">progress_activity</span>
+              <span id="chips-tw-loading-text" data-i18n="tw.chips.loading">載入台股三大法人歷史數據中…（首次約需 1–2 分鐘）</span>
+            </div>
+
+            <!-- Matrix cards grid -->
+            <div id="chips-tw-matrix-content" class="hidden grid grid-cols-1 gap-3">
+
+              <!-- Card 1: 連續買超/賣超天數 -->
+              <details class="bg-surface-container rounded-xl overflow-hidden" open>
+                <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+                  <span class="material-symbols-outlined text-[16px] text-primary">repeat</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="tw.chips.sec.consecutive">連續買超動能</span>
+                  <span id="chips-tw-consec-badge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-outline-variant/40 text-on-surface-variant">—</span>
+                  <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <div class="flex gap-3 mb-3">
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.consec.days">連續天數</p>
+                      <p id="chips-tw-consec-days" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                      <p id="chips-tw-consec-dir" class="text-[10px] text-on-surface-variant/70 mt-1">—</p>
+                    </div>
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.consec.cohesion">籌碼凝聚力</p>
+                      <p id="chips-tw-cohesion" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                      <p class="text-[9px] text-on-surface-variant/50 mt-1" data-i18n="tw.chips.consec.cohesion.note">天數 × 淨買超/成交量</p>
+                    </div>
+                  </div>
+                  <div class="bg-surface rounded-lg p-3">
+                    <p class="text-[10px] text-on-surface-variant mb-2" data-i18n="tw.chips.sparkline.net">三大法人淨買超（30日，千股）</p>
+                    <svg id="chips-tw-net-svg" height="56" class="w-full block">
+                      <text x="50%" y="50%" text-anchor="middle" fill="#94a3b8" font-size="10" dominant-baseline="middle">—</text>
+                    </svg>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Card 2: 法人持股比率 ROC -->
+              <details class="bg-surface-container rounded-xl overflow-hidden" open>
+                <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+                  <span class="material-symbols-outlined text-[16px] text-primary">trending_up</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="tw.chips.sec.ownership">法人持股比率變化</span>
+                  <span id="chips-tw-roc-badge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-outline-variant/40 text-on-surface-variant">—</span>
+                  <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <div class="flex gap-3">
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.ownership.change">持倉淨變動</p>
+                      <p id="chips-tw-own-change" class="text-xl font-extrabold font-mono text-on-surface">—</p>
+                      <p class="text-[9px] text-on-surface-variant/50 mt-1" data-i18n="tw.chips.ownership.change.note">60日累積淨買超 / 流通股數</p>
+                    </div>
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.ownership.roc">ROC 增持速度</p>
+                      <p id="chips-tw-roc" class="text-xl font-extrabold font-mono text-on-surface">—</p>
+                      <p class="text-[9px] text-on-surface-variant/50 mt-1" data-i18n="tw.chips.ownership.roc.note">近30日 vs 前30日比率變化</p>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Card 3 + 4 + 5: Fund Layout / Cost Deviation / Concentration in a row -->
+              <div class="grid grid-cols-3 gap-3">
+
+                <!-- Card 3: 投信佈局率 -->
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="flex items-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-[14px] text-primary mr-1">precision_manufacturing</span>
+                    <span data-i18n="tw.chips.sec.fund">投信佈局率</span>
+                  </p>
+                  <p id="chips-tw-fund-rate" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <p id="chips-tw-fund-signal" class="text-[10px] mt-1 font-semibold">—</p>
+                  <p class="text-[9px] text-on-surface-variant/50 mt-2" data-i18n="tw.chips.fund.formula">投信淨買 / 成交量</p>
+                </div>
+
+                <!-- Card 4: 成本乖離率 -->
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="flex items-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-[14px] text-primary mr-1">price_check</span>
+                    <span data-i18n="tw.chips.sec.cost">成本乖離率</span>
+                  </p>
+                  <p id="chips-tw-deviation" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <p id="chips-tw-cost-note" class="text-[10px] text-on-surface-variant/60 mt-1">—</p>
+                  <p class="text-[9px] text-on-surface-variant/50 mt-2" data-i18n="tw.chips.cost.formula">(現價 – 法人均成本) / 均成本</p>
+                </div>
+
+                <!-- Card 5: 籌碼集中度 -->
+                <div class="bg-surface-container rounded-xl p-3">
+                  <p class="flex items-center text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                    <span class="material-symbols-outlined text-[14px] text-primary mr-1">compress</span>
+                    <span data-i18n="tw.chips.sec.concentration">籌碼集中度</span>
+                  </p>
+                  <p id="chips-tw-concentration" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                  <p id="chips-tw-conc-dir" class="text-[10px] mt-1 font-semibold">—</p>
+                  <p class="text-[9px] text-on-surface-variant/50 mt-2" data-i18n="tw.chips.conc.formula">Σ淨買 / Σ成交量 (20日)</p>
+                  <p id="chips-tw-vol-dominance" class="hidden text-[9px] font-semibold mt-2 px-1.5 py-0.5 rounded bg-primary/10 text-primary w-fit">—</p>
+                </div>
+              </div><!-- /grid -->
+
+              <!-- Card 6: 法人一致性 -->
+              <details class="bg-surface-container rounded-xl overflow-hidden" open>
+                <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+                  <span class="material-symbols-outlined text-[16px] text-primary">groups</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="tw.chips.sec.consensus">法人一致性分析</span>
+                  <span id="chips-tw-consensus-badge" class="ml-2 flex items-center gap-0.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-outline-variant/40" id="chips-tw-cscore-dot1"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-outline-variant/40" id="chips-tw-cscore-dot2"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-outline-variant/40" id="chips-tw-cscore-dot3"></span>
+                  </span>
+                  <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <div class="flex gap-3 mb-3">
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.consensus.score">即時共識分數</p>
+                      <p id="chips-tw-cscore" class="text-2xl font-extrabold font-mono text-on-surface">—<span class="text-base text-on-surface-variant/50">/3</span></p>
+                      <p class="text-[9px] text-on-surface-variant/50 mt-1">外資 / 投信 / 自營商</p>
+                    </div>
+                    <div class="flex-1 bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.chips.consensus.avg">近20日平均共識</p>
+                      <p id="chips-tw-cscore-avg" class="text-2xl font-extrabold font-mono text-on-surface">—</p>
+                      <p class="text-[9px] text-on-surface-variant/50 mt-1">0–3 scale</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <span class="flex items-center gap-1 text-[10px] bg-surface rounded-lg px-3 py-2">
+                      <span class="material-symbols-outlined text-[13px] text-amber-400">bolt</span>
+                      <span data-i18n="tw.chips.consensus.triple">三方同步連買</span>
+                      <span id="chips-tw-triple-streak" class="font-mono font-bold text-amber-400 ml-1">—</span>
+                      <span class="text-on-surface-variant/50">天</span>
+                    </span>
+                    <span class="flex items-center gap-1 text-[10px] bg-surface rounded-lg px-3 py-2">
+                      <span class="material-symbols-outlined text-[13px] text-blue-400">account_balance</span>
+                      <span data-i18n="tw.chips.consensus.fund">投信獨立連買</span>
+                      <span id="chips-tw-fund-streak" class="font-mono font-bold text-blue-400 ml-1">—</span>
+                      <span class="text-on-surface-variant/50">天</span>
+                    </span>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Card 7: 多週期成本線 -->
+              <details class="bg-surface-container rounded-xl overflow-hidden" open>
+                <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+                  <span class="material-symbols-outlined text-[16px] text-primary">price_check</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="tw.chips.sec.multicost">多週期法人成本線</span>
+                  <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <table class="w-full text-[11px]">
+                    <thead>
+                      <tr class="text-on-surface-variant/50 text-[9px] uppercase">
+                        <th class="text-left pb-2 font-normal">窗口</th>
+                        <th class="text-right pb-2 font-normal" data-i18n="tw.chips.cost.label">法人均成本</th>
+                        <th class="text-right pb-2 font-normal">乖離率</th>
+                        <th class="text-right pb-2 font-normal">狀態</th>
+                      </tr>
+                    </thead>
+                    <tbody id="chips-tw-multicost-tbody">
+                      <tr class="border-t border-outline-variant/20"><td class="py-2 text-on-surface-variant/60" data-i18n="tw.chips.cost.20d">20日</td><td class="py-2 text-right font-mono" id="chips-tw-cost-20d">—</td><td class="py-2 text-right font-mono" id="chips-tw-dev-20d">—</td><td class="py-2 text-right" id="chips-tw-cost-20d-status">—</td></tr>
+                      <tr class="border-t border-outline-variant/20"><td class="py-2 text-on-surface-variant/60" data-i18n="tw.chips.cost.60d">60日</td><td class="py-2 text-right font-mono" id="chips-tw-cost-60d">—</td><td class="py-2 text-right font-mono" id="chips-tw-dev-60d">—</td><td class="py-2 text-right" id="chips-tw-cost-60d-status">—</td></tr>
+                      <tr class="border-t border-outline-variant/20"><td class="py-2 text-on-surface-variant/60" data-i18n="tw.chips.cost.120d">120日</td><td class="py-2 text-right font-mono" id="chips-tw-cost-120d">—</td><td class="py-2 text-right font-mono" id="chips-tw-dev-120d">—</td><td class="py-2 text-right" id="chips-tw-cost-120d-status">—</td></tr>
+                    </tbody>
+                  </table>
+                  <p class="text-[9px] text-on-surface-variant/40 mt-3">現價 <span id="chips-tw-multicost-price" class="font-mono">—</span> TWD／綠色=現價高於法人成本（獲利區），紅色=低於（套牢區）</p>
+                </div>
+              </details>
+
+              <!-- Data source note -->
+              <div class="flex items-start gap-2 bg-surface-container rounded-lg px-3 py-2 text-[9px] text-on-surface-variant/50">
+                <span class="material-symbols-outlined text-[12px]">info</span>
+                <span data-i18n="tw.chips.source_note">數據來源：臺灣證券交易所 (TWSE) T86 三大法人買賣超日報。法人成本以收盤價近似；持股比率為流量估算值，非集保實際統計。</span>
+              </div>
+
+            </div><!-- /matrix-content -->
+
+            <!-- Margin / Short Divergence Section (loads independently) -->
+            <div id="chips-tw-margin-wrap" class="mt-3">
+              <div id="chips-tw-margin-loading" class="py-4 text-center text-on-surface-variant/40 text-[10px]">
+                <span class="material-symbols-outlined animate-spin text-primary/60 text-xl block mb-1">progress_activity</span>
+                <span data-i18n="tw.margin.loading">載入融資融券數據…</span>
+              </div>
+              <details id="chips-tw-margin-section" class="hidden bg-surface-container rounded-xl overflow-hidden">
+                <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
+                  <span class="material-symbols-outlined text-[16px] text-amber-400">warning</span>
+                  <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="tw.margin.title">融資融券背離訊號</span>
+                  <span id="chips-tw-margin-flag" class="ml-2 hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400" data-i18n="tw.margin.overheating">⚠ 融資過熱</span>
+                  <span class="ml-auto material-symbols-outlined text-[14px] text-on-surface-variant/50">expand_more</span>
+                </summary>
+                <div class="px-4 pb-4">
+                  <!-- Overheating alert banner -->
+                  <div id="chips-tw-margin-alert" class="hidden mb-3 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-[11px] text-amber-400 flex items-start gap-2">
+                    <span class="material-symbols-outlined text-[16px] mt-0.5">warning</span>
+                    <span data-i18n="tw.margin.overheating.desc">股價近20日高點 + 融資5日急增 + 法人淨賣超 — 籌碼過熱警訊</span>
+                  </div>
+                  <!-- Metrics grid -->
+                  <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.margin.margin_bal">融資餘額</p>
+                      <p id="chips-tw-margin-bal" class="text-xl font-extrabold font-mono text-on-surface">—</p>
+                      <p id="chips-tw-margin-chg" class="text-[10px] mt-1">—</p>
+                    </div>
+                    <div class="bg-surface rounded-lg p-3">
+                      <p class="text-[10px] text-on-surface-variant uppercase tracking-wider mb-1" data-i18n="tw.margin.short_bal">融券餘額</p>
+                      <p id="chips-tw-short-bal" class="text-xl font-extrabold font-mono text-on-surface">—</p>
+                      <p id="chips-tw-short-chg" class="text-[10px] mt-1">—</p>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+                    <div class="bg-surface rounded-lg p-2">
+                      <p class="text-[9px] text-on-surface-variant/60 mb-1" data-i18n="tw.margin.short_ratio">券資比</p>
+                      <p id="chips-tw-short-ratio" class="text-base font-bold font-mono">—</p>
+                    </div>
+                    <div class="bg-surface rounded-lg p-2">
+                      <p class="text-[9px] text-on-surface-variant/60 mb-1" data-i18n="tw.margin.price_5d">股價5日</p>
+                      <p id="chips-tw-margin-price5d" class="text-base font-bold font-mono">—</p>
+                    </div>
+                    <div class="bg-surface rounded-lg p-2">
+                      <p class="text-[9px] text-on-surface-variant/60 mb-1" data-i18n="tw.margin.price_20d_high">近20日高點</p>
+                      <p id="chips-tw-margin-20dhi" class="text-base font-bold font-mono">—</p>
+                    </div>
+                  </div>
+                  <!-- Margin / short sparkline -->
+                  <div class="bg-surface rounded-lg p-3">
+                    <p class="text-[9px] text-on-surface-variant/50 mb-2" data-i18n="tw.margin.sparkline">融資餘額（藍）vs 融券餘額（橙）30日走勢（張）</p>
+                    <svg id="chips-tw-margin-svg" height="56" class="w-full block">
+                      <text x="50%" y="50%" text-anchor="middle" fill="#94a3b8" font-size="10" dominant-baseline="middle">—</text>
+                    </svg>
+                  </div>
+                </div>
+              </details>
+              <!-- No-margin data notice -->
+              <div id="chips-tw-margin-none" class="hidden text-[10px] text-on-surface-variant/40 text-center py-2" data-i18n="tw.margin.no_data">此標的無融資融券資料（ETF 或不適用）</div>
+            </div><!-- /margin-wrap -->
+
+          </div><!-- /tw-matrix -->
+
           <!-- Section 1: Volume -->
-          <details class="bg-surface-container rounded-xl overflow-hidden" open>
+          <details class="chips-us-std-section bg-surface-container rounded-xl overflow-hidden" open>
             <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
               <span class="material-symbols-outlined text-[16px] text-primary">bar_chart</span>
               <span class="text-[11px] font-bold uppercase tracking-widest" data-i18n="chips.sec1.title">Volume &amp; VWAP</span>
@@ -1728,7 +2011,7 @@
           </details>
 
           <!-- Section 2: Short Interest -->
-          <details class="bg-surface-container rounded-xl overflow-hidden" open>
+          <details class="chips-us-std-section bg-surface-container rounded-xl overflow-hidden" open>
             <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
               <span class="material-symbols-outlined text-[16px] text-primary">trending_down</span>
               <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec2.title">Short Interest &amp; Float</span>
@@ -1766,7 +2049,7 @@
           </details>
 
           <!-- Section 3: Options Sentiment -->
-          <details class="bg-surface-container rounded-xl overflow-hidden">
+          <details class="chips-us-std-section bg-surface-container rounded-xl overflow-hidden">
             <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
               <span class="material-symbols-outlined text-[16px] text-primary">swap_vert</span>
               <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec3.title">Options Sentiment</span>
@@ -1812,7 +2095,7 @@
           </details>
 
           <!-- Section 4: Institutional Holdings -->
-          <details class="bg-surface-container rounded-xl overflow-hidden">
+          <details class="chips-us-std-section bg-surface-container rounded-xl overflow-hidden">
             <summary class="flex items-center gap-2 px-4 py-3 cursor-pointer select-none hover:bg-surface-container-high list-none">
               <span class="material-symbols-outlined text-[16px] text-primary">account_balance</span>
               <span class="text-[11px] font-bold uppercase tracking-wider" data-i18n="chips.sec4.title">Institutional Holdings</span>
@@ -3680,6 +3963,11 @@
             const liveCell = document.getElementById('bscore-' + safeId);
             if (liveCell) _updateScoreCell(liveCell, d);
             _applyGroupScores(safeId, null, d);
+            // Also sync fh_score to in-memory data so sort works without re-render
+            if (window._ooBacklogData) {
+              const _it = window._ooBacklogData.find(x => x.ticker === ticker);
+              if (_it) { _it.fh_score = d.weighted_100; _it.fh_growth = d.group_scores?.growth?.pct ?? null; _it.fh_health = d.group_scores?.health?.pct ?? null; }
+            }
             return resolve();  // must resolve — queue depends on this
           }
         }
@@ -4689,7 +4977,8 @@
       w52_high: null, w52_low: null, ma10: null, ma20: null, ma50: null, ma120: null, ma250: null,
       dma10: null, dma20: null, dma120: null, dma250: null,
       industry_sub: null, sector_pulse: null,
-      chips_rvol: null, chips_vwap: null, chips_dtc: null, chips_pcr: null,
+      chips_rvol: null, chips_vwap: null, chips_dtc: null, chips_pcr: null, chips_vol1d: null, chips_vol3d: null,
+      chips_flow1d: null, chips_flow3d: null, chips_foreign1d: null, chips_foreign3d: null,
       error: null, _loading: true,
     })));
     renderBacklogTable(placeholders);
@@ -4718,10 +5007,12 @@
     }
     if (statusEl) statusEl.textContent = '';
   }
+  // Expose so showPage() in IIFE 1 can call it (cross-IIFE navigation fix)
+  window.loadBacklogPage = loadBacklogPage;
 
   function _detectBacklogMarket(ticker) {
     const t = (ticker || '').toUpperCase();
-    if (/\.(SS|SZ)$/.test(t)) return 'cn';
+    if (/\.(SH|SS|SZ)$/.test(t)) return 'cn';
     if (/\.TW$/.test(t)) return 'tw';
     if (/\.(DE|PA|AS|MI|MC|L|VI|BR|SW|CO|HE|OL|ST|IS|LS|AX|TO|HK)$/.test(t)) return 'eu';
     return 'us';
@@ -4848,12 +5139,19 @@
           `<td id="bgrowth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
           `<td id="bhealth-${safeId}" class="blcol-g-scores pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>`,
         chips:
-          `<td id="bchips-rvol-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
-          `<td id="bchips-vwap-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
-          `<td id="bchips-short-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
-          `<td id="bchips-pcr-${safeId}" class="blcol-g-chips pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>`,
+          `<td id="bchips-rvol-${safeId}" class="blcol-g-chips blcol-chips-us pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-vwap-${safeId}" class="blcol-g-chips blcol-chips-us pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-short-${safeId}" class="blcol-g-chips blcol-chips-us pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-pcr-${safeId}" class="blcol-g-chips blcol-chips-us pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-vol1d-${safeId}" class="blcol-g-chips blcol-chips-cn pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-vol3d-${safeId}" class="blcol-g-chips blcol-chips-cn pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-flow1d-${safeId}" class="blcol-g-chips blcol-chips-cn pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-flow3d-${safeId}" class="blcol-g-chips blcol-chips-cn pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-foreign1d-${safeId}" class="blcol-g-chips blcol-chips-tw pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-foreign3d-${safeId}" class="blcol-g-chips blcol-chips-tw pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
+          `<td id="bchips-volspark-${safeId}" class="blcol-g-chips blcol-chips-cn pr-1 py-1 align-middle">—</td>`,
         price:
-          `<td class="blcol-g-price pr-3 py-2 font-mono text-right whitespace-nowrap">${_prcItem(item, item.price)}</td>`,
+          `<td class="blcol-g-price pr-3 py-2 font-mono text-right whitespace-nowrap">${_prcItem(item, item.price)}<span id="badr-pct-${safeId}" class="block text-[9px] mt-0.5"></span></td>`,
         val:
           `<td id="bval-eps-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
           `<td id="bval-pe-${safeId}" class="blcol-g-val pr-3 py-2 font-mono text-right whitespace-nowrap text-[10px]">—</td>` +
@@ -5248,15 +5546,45 @@
   }
 
   // ── Chips Data: RVOL / Δ VWAP / Short DTC / PCR ────────────────────────
+  function _buildVolBarSVG(bars) {
+    if (!bars || bars.length < 3) return '—';
+    const vols = bars.map(b => b.vol).filter(v => v > 0);
+    if (vols.length < 3) return '—';
+    const maxV = Math.max(...vols);
+    if (maxV === 0) return '—';
+    const W = 80, H = 24, n = vols.length;
+    const gap = 1;
+    const barW = Math.max(1, Math.floor((W - gap) / n) - gap);
+    const avg3 = (vols[n-1] + vols[n-2] + vols[n-3]) / 3;
+    const rects = vols.map((v, i) => {
+      const x = i * (barW + gap);
+      const h = Math.max(1, Math.round((v / maxV) * (H - 1)));
+      const y = H - h;
+      const isLast = i === n - 1;
+      const color = isLast ? (v > avg3 ? '#22c55e' : '#f59e0b') : 'rgba(148,163,184,0.55)';
+      return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" rx="0.5"/>`;
+    }).join('');
+    const lastFmt = vols[n-1] >= 10000 ? (vols[n-1]/10000).toFixed(1)+'萬' : vols[n-1].toLocaleString();
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:80px;height:24px;display:block" preserveAspectRatio="none" title="昨量 ${lastFmt}手 | 近3日均量 ${avg3>=10000?(avg3/10000).toFixed(1)+'萬':Math.round(avg3).toLocaleString()}手">${rects}</svg>`;
+  }
+
   function _applyChipsData(ticker, d) {
     const safeId = ticker.replace(/[^a-zA-Z0-9]/g, '_');
     const _isCN = ticker.toUpperCase().endsWith('.SH') || ticker.toUpperCase().endsWith('.SZ');
+    const _isTW = ticker.toUpperCase().endsWith('.TW');
     const item = (window._ooBacklogData || []).find(x => x.ticker === ticker);
     if (item) {
       item.chips_rvol = d.rvol ?? null;
       item.chips_vwap = d.price_vs_vwap_pct ?? null;
       item.chips_dtc  = d.days_to_cover ?? null;
       item.chips_pcr  = d.pcr_oi ?? null;
+      item.chips_vol1d = d.prev_day_vol ?? null;
+      item.chips_vol3d = d.vol_3d_total ?? null;
+      item.chips_flow1d = d.prev_day_net_inflow ?? null;
+      item.chips_flow3d = d.avg_3d_net_inflow ?? null;
+      item.chips_foreign1d = d.prev_day_foreign_net ?? null;
+      item.chips_foreign3d = d.avg_3d_foreign_net ?? null;
+      item.adr_premium_pct = d.adr_premium_pct ?? null;
     }
     // RVOL: ≥2x amber, 1-2x sky-blue, <1x muted
     const rvolEl = document.getElementById('bchips-rvol-' + safeId);
@@ -5304,6 +5632,101 @@
         pcrEl.innerHTML = `<span class="${c} font-semibold">${d.pcr_oi.toFixed(2)}</span>`;
       } else { pcrEl.textContent = '—'; }
     }
+    // 昨量 / 3日量: A股專用，格式化為萬手（≥1萬）或原始手數
+    function _fmtShou(v) {
+      if (v >= 10000) return (v / 10000).toFixed(1) + '萬';
+      return v.toLocaleString();
+    }
+    const vol1dEl = document.getElementById('bchips-vol1d-' + safeId);
+    if (vol1dEl) {
+      if (!_isCN) {
+        vol1dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.prev_day_vol != null) {
+        const _vol1dAbove3d = d.vol_3d_total != null && d.prev_day_vol > d.vol_3d_total;
+        vol1dEl.innerHTML = `<span class="${_vol1dAbove3d ? 'text-green-500 font-semibold' : ''}">${_fmtShou(d.prev_day_vol)}</span>`;
+      } else { vol1dEl.textContent = '—'; }
+    }
+    const vol3dEl = document.getElementById('bchips-vol3d-' + safeId);
+    if (vol3dEl) {
+      if (!_isCN) {
+        vol3dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.vol_3d_total != null) {
+        vol3dEl.textContent = _fmtShou(d.vol_3d_total);
+      } else { vol3dEl.textContent = '—'; }
+    }
+    // A股 主力資金净流入（元 → 萬元顯示）
+    function _fmtWan(v) {
+      const wan = v / 10000;
+      return (wan >= 0 ? '+' : '') + wan.toFixed(1) + '萬';
+    }
+    const flow1dEl = document.getElementById('bchips-flow1d-' + safeId);
+    if (flow1dEl) {
+      if (!_isCN) {
+        flow1dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.prev_day_net_inflow != null) {
+        const c = d.prev_day_net_inflow >= 0 ? 'text-green-500' : 'text-red-400';
+        flow1dEl.innerHTML = `<span class="${c} font-semibold">${_fmtWan(d.prev_day_net_inflow)}</span>`;
+      } else { flow1dEl.textContent = '—'; }
+    }
+    const flow3dEl = document.getElementById('bchips-flow3d-' + safeId);
+    if (flow3dEl) {
+      if (!_isCN) {
+        flow3dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.avg_3d_net_inflow != null) {
+        const c = d.avg_3d_net_inflow >= 0 ? 'text-green-500' : 'text-red-400';
+        flow3dEl.innerHTML = `<span class="${c} font-semibold">${_fmtWan(d.avg_3d_net_inflow)}</span>`;
+      } else { flow3dEl.textContent = '—'; }
+    }
+    // A股 量走勢縮略圖
+    const volSparkEl = document.getElementById('bchips-volspark-' + safeId);
+    if (volSparkEl) {
+      if (!_isCN) {
+        volSparkEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.vol_history && d.vol_history.length >= 3) {
+        volSparkEl.innerHTML = _buildVolBarSVG(d.vol_history);
+      } else {
+        volSparkEl.textContent = '—';
+      }
+    }
+    // 台股 外資净流入（張）
+    function _fmtZhang(v) {
+      return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString() + '張';
+    }
+    const foreign1dEl = document.getElementById('bchips-foreign1d-' + safeId);
+    if (foreign1dEl) {
+      if (!_isTW) {
+        foreign1dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.prev_day_foreign_net != null) {
+        const c = d.prev_day_foreign_net >= 0 ? 'text-green-500' : 'text-red-400';
+        foreign1dEl.innerHTML = `<span class="${c} font-semibold">${_fmtZhang(d.prev_day_foreign_net)}</span>`;
+      } else { foreign1dEl.textContent = '—'; }
+    }
+    const foreign3dEl = document.getElementById('bchips-foreign3d-' + safeId);
+    if (foreign3dEl) {
+      if (!_isTW) {
+        foreign3dEl.innerHTML = '<span class="text-on-surface-variant/40 text-[9px]">N/A</span>';
+      } else if (d.avg_3d_foreign_net != null) {
+        const c = d.avg_3d_foreign_net >= 0 ? 'text-green-500' : 'text-red-400';
+        foreign3dEl.innerHTML = `<span class="${c} font-semibold">${_fmtZhang(d.avg_3d_foreign_net)}</span>`;
+      } else { foreign3dEl.textContent = '—'; }
+    }
+    // 台股 ADR 溢價徽章（顯示於 Price 欄位內）
+    const adrBadgeEl = document.getElementById('badr-pct-' + safeId);
+    if (adrBadgeEl) {
+      if (_isTW && d.adr_premium_pct != null) {
+        const pct = d.adr_premium_pct;
+        const sign = pct >= 0 ? '+' : '';
+        if (Math.abs(pct) > 10) {
+          adrBadgeEl.innerHTML = `<span class="inline-block px-1 rounded bg-amber-500/15 text-amber-400 font-semibold">⚠ ADR ${sign}${pct.toFixed(1)}%</span>`;
+        } else if (pct >= 0) {
+          adrBadgeEl.innerHTML = `<span class="inline-block px-1 rounded bg-green-500/10 text-green-400 font-semibold">ADR +${pct.toFixed(1)}%</span>`;
+        } else {
+          adrBadgeEl.innerHTML = `<span class="inline-block px-1 rounded bg-red-500/10 text-red-400 font-semibold">ADR ${pct.toFixed(1)}%</span>`;
+        }
+      } else {
+        adrBadgeEl.textContent = '';
+      }
+    }
   }
 
   async function _loadBacklogChips() {
@@ -5331,11 +5754,12 @@
     const stale = [];
     tickers.forEach(t => {
       try {
-        const raw = localStorage.getItem('oo_chips_' + t);
+        const raw = localStorage.getItem('oo_chips3_' + t);
         if (raw) {
           const d = JSON.parse(raw);
           // Reject stale data from chips analysis page (different schema — missing rvol field)
-          if (d.rvol !== undefined && (now - (d._cached_at || 0)) < 3600000) {
+          // Also reject old cache missing vol fields (schema v2 adds prev_day_vol/vol_3d_total; schema v3 adds vol_history)
+          if (d.rvol !== undefined && d.prev_day_vol !== undefined && d.vol_history !== undefined && (now - (d._cached_at || 0)) < 3600000) {
             _applyChipsData(t, d); return;
           }
         }
@@ -5358,7 +5782,7 @@
           data.items.forEach(d => {
             if (!d || !d.ticker) return;
             d._cached_at = now;
-            try { localStorage.setItem('oo_chips_' + d.ticker, JSON.stringify(d)); } catch(e) {}
+            try { localStorage.setItem('oo_chips3_' + d.ticker, JSON.stringify(d)); } catch(e) {}
             _applyChipsData(d.ticker, d);
             if (!d.error) loaded++;
           });
@@ -5501,6 +5925,7 @@
   // ── Column group visibility ───────────────────────────────────────────────
   const _COL_GROUPS = ['info', 'ashare', 'scores', 'chips', 'price', 'val', 'stats', 'trend'];
   let _colGroupVisible = { info: true, ashare: true, scores: true, chips: true, price: true, val: true, stats: true, trend: true };
+  let _currentMktFilter = 'all';
 
   function _loadColVisibility() {
     try {
@@ -5523,6 +5948,17 @@
     document.querySelectorAll('.blcol-toggle').forEach(cb => {
       cb.checked = !!_colGroupVisible[cb.dataset.group];
     });
+    _applyChipsMarketFilter(_currentMktFilter);
+  }
+
+  function _applyChipsMarketFilter(mkt) {
+    const chipsOn = _colGroupVisible.chips !== false;
+    const showUs = chipsOn && (mkt === 'all' || mkt === 'us' || mkt === 'eu');
+    const showCn = chipsOn && (mkt === 'all' || mkt === 'cn');
+    const showTw = chipsOn && (mkt === 'all' || mkt === 'tw');
+    document.querySelectorAll('.blcol-chips-us').forEach(el => el.classList.toggle('hidden', !showUs));
+    document.querySelectorAll('.blcol-chips-cn').forEach(el => el.classList.toggle('hidden', !showCn));
+    document.querySelectorAll('.blcol-chips-tw').forEach(el => el.classList.toggle('hidden', !showTw));
   }
 
   (function _initBacklogControls() {
@@ -5536,8 +5972,10 @@
 
     const mktFilterEl = document.getElementById('backlog-market-filter');
     if (mktFilterEl) {
+      _currentMktFilter = mktFilterEl.value || 'all';
       mktFilterEl.addEventListener('change', () => {
         const mkt = mktFilterEl.value;
+        _currentMktFilter = mkt;
         // Show A股行業信息 group only when A股 is selected; hide for other markets
         _colGroupVisible.ashare = (mkt === 'cn');
         _applyColVisibility();
@@ -6276,6 +6714,7 @@
     _showHide('fh-summary-area', false);
     _showHide('fh-tabs-bar', false);
     _showHide('fh-score-card', false);
+    _showHide('fh-adr-card', false);
 
     const cached = _loadCached(ticker);
     if (cached) {
@@ -6315,6 +6754,7 @@
     try { renderScoreCard(data); } catch(e) { console.warn('renderScoreCard error:', e); }
     try { renderFundamentalsTable(data.fundamentals || {}, data.years || []); } catch(e) { console.warn('renderFundamentalsTable error:', e); }
     try { renderScoreGroups(data.group_scores || {}, data.year_scores || []); } catch(e) { console.warn('renderScoreGroups error:', e); }
+    if (data.ticker) _renderAdrCard(data.ticker);
 
     // Fetch transcript and cache into document library state (no display in FH panel)
     if (data.ticker) {
@@ -6335,6 +6775,47 @@
           }
         })
         .catch(() => {});
+    }
+  }
+
+  // ── ADR Cross-Market Card ───────────────────────────────────────────
+  async function _renderAdrCard(ticker) {
+    const card = document.getElementById('fh-adr-card');
+    if (!card) return;
+    // Only attempt for TW stocks (bare numeric or with .TW suffix)
+    const isTW = /^\d{4}(\.TW)?$/i.test(ticker.trim());
+    if (!isTW) { card.classList.add('hidden'); return; }
+    try {
+      const res = await fetch(`/api/tw/adr-premium?ticker=${encodeURIComponent(ticker)}`);
+      const d = await res.json();
+      if (!d.available) { card.classList.add('hidden'); return; }
+
+      const pct = d.premium_pct;
+      const isAbsHigh = Math.abs(pct) > 10;
+      const sign = pct >= 0 ? '+' : '';
+      const badgeEl = document.getElementById('fh-adr-premium-badge');
+      if (badgeEl) {
+        if (isAbsHigh) {
+          badgeEl.textContent = `⚠ ADR ${sign}${pct.toFixed(2)}%`;
+          badgeEl.className = 'px-2.5 py-1 rounded-lg text-[12px] font-bold bg-amber-500/15 text-amber-400';
+        } else if (pct >= 0) {
+          badgeEl.textContent = `ADR +${pct.toFixed(2)}%`;
+          badgeEl.className = 'px-2.5 py-1 rounded-lg text-[12px] font-bold bg-green-500/15 text-green-400';
+        } else {
+          badgeEl.textContent = `ADR ${pct.toFixed(2)}%`;
+          badgeEl.className = 'px-2.5 py-1 rounded-lg text-[12px] font-bold bg-red-500/15 text-red-400';
+        }
+      }
+      const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      _set('fh-adr-ticker', `${d.adr} (${d.exchange})`);
+      _set('fh-adr-ratio', `1 ADR = ${d.ratio} 股`);
+      _set('fh-adr-price-usd', `$${d.adr_price_usd.toFixed(2)}`);
+      _set('fh-adr-equiv-twd', `NT$${d.adr_twd_equiv.toFixed(1)}`);
+      _set('fh-adr-tw-price', `NT$${d.tw_price.toFixed(1)}`);
+
+      card.classList.remove('hidden');
+    } catch (e) {
+      card.classList.add('hidden');
     }
   }
 
@@ -6467,20 +6948,15 @@
       const placeholder = sel.querySelector('option[value=""]');
       sel.innerHTML = '';
       if (placeholder) sel.appendChild(placeholder);
-      const _zhMode = typeof I18N !== 'undefined' && (I18N.currentLang() === 'zh' || I18N.currentLang() === 'zh-cn');
       items.forEach(item => {
         const ticker = typeof item === 'string' ? item : (item.ticker || '');
         if (!ticker) return;
         const opt = document.createElement('option');
         opt.value = ticker;
-        const _isCN = ticker.endsWith('.SH') || ticker.endsWith('.SZ') || ticker.endsWith('.BJ');
-        if (_isCN && _zhMode && typeof item === 'object' && item.name_cn) {
-          opt.textContent = `${item.name_cn} (${ticker})`;
-        } else {
-          // Show ticker + sector if available, for clarity
-          const sector = (typeof item === 'object' && item.sector) ? ` · ${item.sector}` : '';
-          opt.textContent = `${ticker}${sector}`;
-        }
+        const displayName = typeof item === 'object'
+          ? (item.name_cn || item.name || '')
+          : '';
+        opt.textContent = displayName ? `${ticker}  ${displayName}` : ticker;
         sel.appendChild(opt);
       });
     } catch (e) { sel.classList.add('hidden'); }
@@ -7459,7 +7935,7 @@
 (function () {
   'use strict';
 
-  const CACHE_KEY_PREFIX = 'oo_chips_';
+  const CACHE_KEY_PREFIX = 'oo_chips2_';
   const CACHE_TTL_H = 4;
   let _chipsInited = false;
   let _chipsTicker = '';
@@ -7543,6 +8019,21 @@
     const tsEl = document.getElementById('chips-cache-ts');
     if (tsEl) tsEl.classList.add('hidden');
 
+    const isTW = /^\d{4}(\.TW)?$/i.test(ticker);
+
+    // Toggle TW matrix vs US/CN sections
+    const twMatrix = document.getElementById('chips-tw-matrix');
+    const usStdSections = document.querySelectorAll('.chips-us-std-section');
+    if (twMatrix) twMatrix.classList.toggle('hidden', !isTW);
+    usStdSections.forEach(el => el.classList.toggle('hidden', isTW));
+
+    if (isTW) {
+      _loadTwChipsMatrix(ticker);
+      _loadTwMarginSignals(ticker);
+      return;
+    }
+
+    // ── Standard US/CN path ──────────────────────────────────────────────────
     // Check cache first
     const cached = _getCached(ticker);
     if (cached) {
@@ -7597,6 +8088,355 @@
       tsEl.classList.remove('hidden');
     }
   };
+
+  // ── TW Chips Matrix ───────────────────────────────────────────────────────
+  async function _loadTwChipsMatrix(ticker) {
+    const loadingEl  = document.getElementById('chips-tw-loading');
+    const contentEl  = document.getElementById('chips-tw-matrix-content');
+    const loadTxtEl  = document.getElementById('chips-tw-loading-text');
+    const tsEl       = document.getElementById('chips-cache-ts');
+
+    if (loadingEl)  loadingEl.classList.remove('hidden');
+    if (contentEl)  contentEl.classList.add('hidden');
+    _setStatus('');
+
+    const twId = ticker.replace(/\.TW$/i, '');
+    const cacheKey = 'oo_tw_chips_' + twId;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj._ts < 3600000) {  // 1-hour client cache
+          if (loadingEl) loadingEl.classList.add('hidden');
+          _renderTwChipsMatrix(obj.data);
+          if (tsEl) { tsEl.textContent = 'Cached ' + new Date(obj._ts).toISOString().slice(0,16); tsEl.classList.remove('hidden'); }
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (loadTxtEl) loadTxtEl.textContent = '載入台股三大法人歷史數據中…首次可能需要 1–2 分鐘，請稍候。';
+
+    try {
+      const res = await fetch('/api/tw/chips/institutional?ticker=' + encodeURIComponent(ticker) + '&days=60');
+      const data = await res.json();
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (!data.available) {
+        _setStatus('TW institutional data not available: ' + (data.reason || 'unknown'));
+        return;
+      }
+      _renderTwChipsMatrix(data);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({ data, _ts: Date.now() }));
+      } catch (_) {}
+      if (tsEl) { tsEl.textContent = 'Updated ' + new Date().toISOString().slice(0,16); tsEl.classList.remove('hidden'); }
+    } catch (e) {
+      if (loadingEl) loadingEl.classList.add('hidden');
+      _setStatus('Error loading TW chips data: ' + e.message);
+    }
+  }
+
+  function _renderTwChipsMatrix(data) {
+    const contentEl = document.getElementById('chips-tw-matrix-content');
+    if (!contentEl) return;
+    contentEl.classList.remove('hidden');
+
+    const sig = data.signals || {};
+    const _set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    const _setHtml = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+    const _cls = (el, ...classes) => el && el.classList.add(...classes);
+
+    // ── 1. 連續買超/賣超天數 ────────────────────────────────────────────────
+    const consec = sig.consecutive || {};
+    const dir = consec.direction || 'neutral';
+    const days = consec.days || 0;
+    const dirLabel = dir === 'buy' ? '法人連續買超' : dir === 'sell' ? '法人連續賣超' : '無明顯方向';
+    const dirColor = dir === 'buy' ? 'text-green-400' : dir === 'sell' ? 'text-red-400' : 'text-on-surface-variant';
+    _set('chips-tw-consec-days', days + ' 天');
+    _setHtml('chips-tw-consec-dir', `<span class="${dirColor} font-semibold">${dirLabel}</span>`);
+    _set('chips-tw-cohesion', consec.cohesion != null ? consec.cohesion.toFixed(2) : '—');
+
+    // Signal badge
+    const consecBadge = document.getElementById('chips-tw-consec-badge');
+    if (consecBadge) {
+      if (consec.is_signal && dir === 'buy') {
+        consecBadge.textContent = '強勢吸籌 ▲'; consecBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/15 text-green-400';
+      } else if (consec.is_signal && dir === 'sell') {
+        consecBadge.textContent = '持續出貨 ▼'; consecBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/15 text-red-400';
+      } else {
+        consecBadge.textContent = days + ' 天'; consecBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-outline-variant/40 text-on-surface-variant';
+      }
+    }
+
+    // ── 2. 持股比率 ROC ──────────────────────────────────────────────────────
+    const own = sig.ownership_roc || {};
+    const roc = own.roc_pct;
+    const ownChg = own.ownership_change_pct;
+    const rocColor = roc == null ? '' : roc > 10 ? 'text-green-400' : roc < -10 ? 'text-red-400' : 'text-on-surface';
+    _setHtml('chips-tw-own-change', ownChg != null
+      ? `<span class="${ownChg >= 0 ? 'text-green-400' : 'text-red-400'} font-extrabold">${ownChg >= 0 ? '+' : ''}${ownChg.toFixed(3)}%</span>`
+      : '—');
+    _setHtml('chips-tw-roc', roc != null
+      ? `<span class="${rocColor} font-extrabold">${roc >= 0 ? '+' : ''}${roc.toFixed(1)}%</span>`
+      : '—');
+
+    const rocBadge = document.getElementById('chips-tw-roc-badge');
+    if (rocBadge) {
+      const trend = own.trend || 'flat';
+      if (trend === 'up')        { rocBadge.textContent = '增持加速 ↑'; rocBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/15 text-green-400'; }
+      else if (trend === 'down') { rocBadge.textContent = '減持加速 ↓'; rocBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/15 text-red-400'; }
+      else                       { rocBadge.textContent = '持平';       rocBadge.className = 'ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-outline-variant/40 text-on-surface-variant'; }
+    }
+
+    // ── 3. 投信佈局率 ────────────────────────────────────────────────────────
+    const fund = sig.fund_layout || {};
+    const flr = fund.layout_rate_pct;
+    const fundColor = fund.signal === 'high' ? 'text-green-400' : fund.signal === 'medium' ? 'text-amber-400' : 'text-on-surface-variant/60';
+    const fundLabel = fund.signal === 'high' ? '高度認養' : fund.signal === 'medium' ? '積極佈局' : '低度佈局';
+    _setHtml('chips-tw-fund-rate', flr != null ? `<span class="${fundColor}">${flr >= 0 ? '+' : ''}${(flr).toFixed(3)}%</span>` : '—');
+    _setHtml('chips-tw-fund-signal', `<span class="${fundColor}">${fundLabel}</span>`);
+
+    // ── 4. 成本乖離率 ────────────────────────────────────────────────────────
+    const cost = sig.cost_deviation || {};
+    const dev = cost.deviation_pct;
+    const devColor = dev == null ? '' : dev > 5 ? 'text-amber-400' : dev > 0 ? 'text-green-400' : 'text-red-400';
+    _setHtml('chips-tw-deviation', dev != null
+      ? `<span class="${devColor} font-extrabold">${dev >= 0 ? '+' : ''}${dev.toFixed(2)}%</span>`
+      : '—');
+    if (cost.institutional_cost && cost.current_price) {
+      _set('chips-tw-cost-note', `法人均成本 NT$${cost.institutional_cost.toFixed(1)} / 現價 NT$${cost.current_price.toFixed(1)}`);
+    }
+
+    // ── 5. 籌碼集中度 ────────────────────────────────────────────────────────
+    const conc = sig.concentration || {};
+    const concPct = conc.concentration_pct;
+    const concDir = conc.direction || 'neutral';
+    const concColor = concDir === 'buy' ? 'text-green-400' : concDir === 'sell' ? 'text-red-400' : 'text-on-surface-variant';
+    const concLabel = concDir === 'buy' ? `籌碼集中買入 (${conc.window_days}日)` : concDir === 'sell' ? `籌碼集中賣出 (${conc.window_days}日)` : '中性';
+    _setHtml('chips-tw-concentration', concPct != null
+      ? `<span class="${concColor} font-extrabold">${concPct >= 0 ? '+' : ''}${concPct.toFixed(3)}%</span>`
+      : '—');
+    _setHtml('chips-tw-conc-dir', `<span class="${concColor} font-semibold">${concLabel}</span>`);
+
+    // Vol dominance badge
+    const volDomEl = document.getElementById('chips-tw-vol-dominance');
+    if (volDomEl && conc.vol_dominance_pct != null) {
+      volDomEl.classList.remove('hidden');
+      volDomEl.textContent = `佔成交量 ${conc.vol_dominance_pct.toFixed(1)}%${conc.is_dominant ? ' ⚡法人主導' : ''}`;
+      volDomEl.className = `text-[9px] font-semibold mt-2 px-1.5 py-0.5 rounded w-fit ${conc.is_dominant ? 'bg-green-500/15 text-green-400' : 'bg-outline-variant/20 text-on-surface-variant/60'}`;
+    }
+
+    // ── 6. 法人一致性 ────────────────────────────────────────────────────────
+    const cs = sig.consensus || {};
+    const score = cs.latest_score ?? 0;
+    const dotColors = ['bg-outline-variant/40', 'bg-amber-400', 'bg-green-400'];
+    const activeColor = score === 3 ? 'bg-green-400' : score === 2 ? 'bg-lime-400' : score === 1 ? 'bg-amber-400' : 'bg-outline-variant/40';
+    [1, 2, 3].forEach(i => {
+      const dot = document.getElementById('chips-tw-cscore-dot' + i);
+      if (dot) dot.className = `w-2.5 h-2.5 rounded-full ${i <= score ? activeColor : 'bg-outline-variant/40'}`;
+    });
+    _set('chips-tw-cscore', score);
+    _set('chips-tw-cscore-avg', cs.avg_consensus_20d != null ? cs.avg_consensus_20d.toFixed(2) : '—');
+    _set('chips-tw-triple-streak', cs.triple_streak ?? 0);
+    _set('chips-tw-fund-streak', cs.fund_streak ?? 0);
+
+    // ── 7. 多週期成本線 ──────────────────────────────────────────────────────
+    const mc = sig.multi_cost || {};
+    _set('chips-tw-multicost-price', mc.current_price != null ? mc.current_price.toFixed(1) : '—');
+
+    const _renderCostRow = (costId, devId, statusId, cost, dev) => {
+      _set(costId, cost != null ? `NT$${cost.toFixed(1)}` : '—');
+      const devEl = document.getElementById(devId);
+      if (devEl) {
+        if (dev != null) {
+          const devColor = dev > 0 ? 'text-green-400' : 'text-red-400';
+          devEl.innerHTML = `<span class="${devColor} font-bold">${dev >= 0 ? '+' : ''}${dev.toFixed(2)}%</span>`;
+        } else {
+          devEl.textContent = '—';
+        }
+      }
+      const statusEl = document.getElementById(statusId);
+      if (statusEl) {
+        if (dev == null) {
+          statusEl.textContent = '—';
+        } else if (dev > 0) {
+          statusEl.innerHTML = '<span class="text-[9px] text-green-400/80 font-medium">獲利區 ✓</span>';
+        } else {
+          statusEl.innerHTML = '<span class="text-[9px] text-red-400/80 font-medium">套牢區 ⚠</span>';
+        }
+      }
+    };
+    _renderCostRow('chips-tw-cost-20d',  'chips-tw-dev-20d',  'chips-tw-cost-20d-status',  mc.cost_20d,  mc.dev_20d_pct);
+    _renderCostRow('chips-tw-cost-60d',  'chips-tw-dev-60d',  'chips-tw-cost-60d-status',  mc.cost_60d,  mc.dev_60d_pct);
+    _renderCostRow('chips-tw-cost-120d', 'chips-tw-dev-120d', 'chips-tw-cost-120d-status', mc.cost_120d, mc.dev_120d_pct);
+
+    // ── Left panel signal cards (TW mode) ────────────────────────────────────
+    const consec2 = sig.consecutive || {};
+    _setSignalCard('chips-signal-rvol',
+      consec2.is_signal && dir === 'buy' ? 'high' : consec2.is_signal && dir === 'sell' ? 'medium' : 'low',
+      (consec2.days || 0) + '天 ' + (dir === 'buy' ? '↑' : dir === 'sell' ? '↓' : '—'),
+      '連續' + (dir === 'buy' ? '買超' : dir === 'sell' ? '賣超' : '持平') + '天數'
+    );
+    _setSignalCard('chips-signal-short',
+      (conc.concentration_pct || 0) > 0.5 ? 'high' : (conc.concentration_pct || 0) > 0 ? 'medium' : 'low',
+      concPct != null ? (concPct >= 0 ? '+' : '') + concPct.toFixed(2) + '%' : '—',
+      '籌碼集中度 (' + (conc.window_days || 20) + '日)'
+    );
+    _setSignalCard('chips-signal-pcr',
+      own.trend === 'up' ? 'medium' : own.trend === 'down' ? 'high' : 'low',
+      roc != null ? (roc >= 0 ? '+' : '') + roc.toFixed(1) + '%' : '—',
+      '法人持股 ROC'
+    );
+    _setSignalCard('chips-signal-inst',
+      fund.signal === 'high' ? 'high' : fund.signal === 'medium' ? 'medium' : 'low',
+      flr != null ? (flr >= 0 ? '+' : '') + flr.toFixed(3) + '%' : '—',
+      '投信佈局率'
+    );
+    _setSignalCard('chips-signal-insider',
+      dev == null ? 'no_data' : dev > 5 ? 'medium' : dev > 0 ? 'low' : 'high',
+      dev != null ? (dev >= 0 ? '+' : '') + dev.toFixed(2) + '%' : '—',
+      '成本乖離率'
+    );
+
+    // ── Net buy sparkline ─────────────────────────────────────────────────────
+    _drawTwNetSparkline('chips-tw-net-svg', data.history || []);
+  }
+
+  function _drawTwNetSparkline(svgId, history) {
+    const svg = document.getElementById(svgId);
+    if (!svg || !history.length) return;
+    const W = svg.parentElement ? svg.parentElement.offsetWidth || 400 : 400;
+    const H = 56;
+    const PAD = 4;
+    const vals = history.map(r => (r.total_net || 0) / 1000);  // convert shares → 千股 (張)
+    const maxAbs = Math.max(...vals.map(Math.abs), 1);
+    const midY = H / 2;
+    const barW = Math.max(2, Math.floor((W - PAD * 2) / vals.length) - 1);
+
+    let bars = '';
+    vals.forEach((v, i) => {
+      const x = PAD + i * (barW + 1);
+      const barH = Math.max(1, Math.abs(v) / maxAbs * (midY - PAD));
+      const y = v >= 0 ? midY - barH : midY;
+      const color = v >= 0 ? '#4ade80' : '#f87171';
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}" opacity="0.85"/>`;
+    });
+
+    svg.setAttribute('width', W);
+    svg.innerHTML = `
+      <line x1="${PAD}" y1="${midY}" x2="${W - PAD}" y2="${midY}" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+      ${bars}
+    `;
+  }
+
+  // ── TW Margin / Short Divergence ──────────────────────────────────────────
+  async function _loadTwMarginSignals(ticker) {
+    const loadingEl = document.getElementById('chips-tw-margin-loading');
+    const sectionEl = document.getElementById('chips-tw-margin-section');
+    const noneEl    = document.getElementById('chips-tw-margin-none');
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (sectionEl) sectionEl.classList.add('hidden');
+    if (noneEl)    noneEl.classList.add('hidden');
+
+    const twId = ticker.replace(/\.TW$/i, '');
+    const cacheKey = 'oo_tw_margin_' + twId;
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj._ts < 3600000) {
+          if (loadingEl) loadingEl.classList.add('hidden');
+          _renderTwMarginSignals(obj.data);
+          return;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      const res = await fetch('/api/tw/chips/margin?ticker=' + encodeURIComponent(ticker));
+      const data = await res.json();
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (!data.available) {
+        if (data.reason === 'no_margin_trading' && noneEl) noneEl.classList.remove('hidden');
+        return;
+      }
+      _renderTwMarginSignals(data);
+      try { localStorage.setItem(cacheKey, JSON.stringify({ data, _ts: Date.now() })); } catch (_) {}
+    } catch (e) {
+      if (loadingEl) loadingEl.classList.add('hidden');
+    }
+  }
+
+  function _renderTwMarginSignals(data) {
+    const sectionEl = document.getElementById('chips-tw-margin-section');
+    if (!sectionEl) return;
+    sectionEl.classList.remove('hidden');
+
+    const sig = data.signals || {};
+    const _set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+    const _setHtml = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+
+    // Overheating banner
+    const alertEl = document.getElementById('chips-tw-margin-alert');
+    const flagEl  = document.getElementById('chips-tw-margin-flag');
+    const isHot = sig.divergence_flag === 'overheating';
+    if (alertEl) alertEl.classList.toggle('hidden', !isHot);
+    if (flagEl)  flagEl.classList.toggle('hidden', !isHot);
+
+    // Margin balance
+    const mbKg = sig.margin_balance != null ? Math.round(sig.margin_balance / 1000) : null;
+    _set('chips-tw-margin-bal', mbKg != null ? mbKg.toLocaleString() + '張' : '—');
+    const mc5 = sig.margin_5d_chg_pct;
+    if (mc5 != null) {
+      const mc5Color = mc5 > 10 ? 'text-amber-400 font-bold' : mc5 > 0 ? 'text-green-400' : 'text-red-400';
+      _setHtml('chips-tw-margin-chg', `<span class="${mc5Color}">5日 ${mc5 >= 0 ? '+' : ''}${mc5.toFixed(1)}%</span>`);
+    }
+
+    // Short balance
+    const sbKg = sig.short_balance != null ? Math.round(sig.short_balance / 1000) : null;
+    _set('chips-tw-short-bal', sbKg != null ? sbKg.toLocaleString() + '張' : '—');
+    const sc5 = sig.short_5d_chg_pct;
+    if (sc5 != null) {
+      const sc5Color = sc5 > 10 ? 'text-amber-400 font-bold' : sc5 > 0 ? 'text-red-400' : 'text-green-400';
+      _setHtml('chips-tw-short-chg', `<span class="${sc5Color}">5日 ${sc5 >= 0 ? '+' : ''}${sc5.toFixed(1)}%</span>`);
+    }
+
+    // Ratio & price stats
+    const smr = sig.short_margin_ratio;
+    const smrColor = smr != null ? (smr > 30 ? 'text-red-400 font-bold' : smr > 15 ? 'text-amber-400' : 'text-on-surface') : '';
+    _setHtml('chips-tw-short-ratio', smr != null ? `<span class="${smrColor}">${smr.toFixed(1)}%</span>` : '—');
+
+    const p5 = sig.price_5d_chg_pct;
+    _setHtml('chips-tw-margin-price5d', p5 != null ? `<span class="${p5 >= 0 ? 'text-green-400' : 'text-red-400'}">${p5 >= 0 ? '+' : ''}${p5.toFixed(2)}%</span>` : '—');
+    _setHtml('chips-tw-margin-20dhi', sig.price_at_20d_high
+      ? '<span class="text-amber-400 font-bold">是 ⚡</span>'
+      : '<span class="text-on-surface-variant/60">否</span>');
+
+    _drawMarginSparkline('chips-tw-margin-svg', data.history || []);
+  }
+
+  function _drawMarginSparkline(svgId, history) {
+    const svg = document.getElementById(svgId);
+    if (!svg || !history.length) return;
+    const W = svg.parentElement ? svg.parentElement.offsetWidth || 400 : 400;
+    const H = 56; const PAD = 4;
+
+    const mVals = history.map(r => (r.margin_balance || 0) / 1000);
+    const sVals = history.map(r => (r.short_balance  || 0) / 1000);
+    const maxV  = Math.max(...mVals, ...sVals, 1);
+    const n = history.length;
+    const step = (W - PAD * 2) / Math.max(n - 1, 1);
+
+    const toY = v => H - PAD - (v / maxV) * (H - PAD * 2);
+    const pts = (vals) => vals.map((v, i) => `${PAD + i * step},${toY(v)}`).join(' ');
+
+    svg.setAttribute('width', W);
+    svg.innerHTML = `
+      <polyline points="${pts(mVals)}" fill="none" stroke="#60a5fa" stroke-width="1.5" opacity="0.8"/>
+      <polyline points="${pts(sVals)}" fill="none" stroke="#fb923c" stroke-width="1.5" opacity="0.8"/>
+    `;
+  }
 
   function _renderAll(cached) {
     const { summary, options, institutional } = cached;
@@ -8034,7 +8874,7 @@
 
   // ── Backlog column resize ──────────────────────────────────────────────────
   (function () {
-    const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36];
+    const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36,60,60,60,68,60,80];
     const _MIN = 32;
     const _KEY = 'oo_backlog_col_widths';
 
@@ -8122,7 +8962,7 @@
         2:'info', 3:'info', 4:'info',
         5:'ashare', 6:'ashare',
         7:'scores', 8:'scores', 9:'scores',
-        10:'chips', 11:'chips', 12:'chips', 13:'chips',
+        10:'chips', 11:'chips', 12:'chips', 13:'chips', 30:'chips', 31:'chips', 32:'chips', 33:'chips', 34:'chips', 35:'chips', 36:'chips',
         14:'price',
         15:'val', 16:'val', 17:'val', 18:'val', 19:'val', 20:'val', 21:'val',
         22:'stats', 23:'stats', 24:'stats', 25:'stats',
@@ -8163,7 +9003,7 @@
 
       // Re-apply widths using colidx mapping (survives reorder)
       try {
-        const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36];
+        const _DEF = [28,72,140,90,90,90,50,56,60,60,56,60,68,52,72,60,48,64,64,64,64,64,72,68,68,68,56,56,56,56,36,60,60,60,68,60,80];
         const v = JSON.parse(localStorage.getItem('oo_backlog_col_widths'));
         const w = Array.isArray(v) && v.length === _DEF.length ? v : _DEF;
         const cols = document.querySelectorAll('#backlog-colgroup col');

@@ -26,12 +26,12 @@ def _exchange_prefix(ticker: str) -> str:
 
 
 def _try_akshare_tx(code: str, ticker: str) -> dict | None:
-    """Fetch 5-day history via stock_zh_a_hist_tx (Tencent backend)."""
+    """Fetch ~22-day history via stock_zh_a_hist_tx (Tencent backend)."""
     import akshare as ak
 
     symbol = _exchange_prefix(ticker) + code  # e.g. "sz002384"
     end    = date.today()
-    start  = end - timedelta(days=15)
+    start  = end - timedelta(days=35)  # ~22 trading days within 35 calendar days
     try:
         df = ak.stock_zh_a_hist_tx(
             symbol=symbol,
@@ -47,9 +47,23 @@ def _try_akshare_tx(code: str, ticker: str) -> dict | None:
         return None
 
     # Columns: date open close high low amount (amount in 手 = 100 shares)
-    recent = df.tail(5)
+    recent = df.tail(22)
     try:
-        avg_vol = float(recent["amount"].mean()) * 100  # convert 手 → shares
+        avg_vol      = float(recent["amount"].mean()) * 100  # convert 手 → shares
+        prev_day_vol = round(float(recent.iloc[-1]["amount"]))        # 手
+        vol_3d_avg   = round(float(recent.tail(3)["amount"].mean()))  # 手
+
+        vol_history: list[dict] = []
+        for idx, row in recent.iterrows():
+            try:
+                d_val = row.get("date", idx) if hasattr(row, "get") else idx
+                if hasattr(d_val, "strftime"):
+                    d_str = d_val.strftime("%Y-%m-%d")
+                else:
+                    d_str = str(d_val)[:10]
+                vol_history.append({"date": d_str, "vol": round(float(row["amount"]))})
+            except Exception:
+                pass
     except Exception:
         return None
 
@@ -57,6 +71,9 @@ def _try_akshare_tx(code: str, ticker: str) -> dict | None:
         "available":         True,
         "turnover_rate_pct": None,   # float shares not available
         "avg_volume_5d":     round(avg_vol),
+        "prev_day_vol":      prev_day_vol,
+        "vol_3d_avg":        vol_3d_avg,
+        "vol_history":       vol_history,
         "data_source":       "tencent_hist",
     }
 
@@ -74,10 +91,13 @@ def _try_tencent_direct(code: str, ticker: str) -> dict | None:
         day_list = stock_data.get("qfqday") or stock_data.get("day") or []
         if not day_list:
             return None
-        vols = []
+        vols      = []  # shares
+        vols_shou = []  # 手 (raw)
         for bar in day_list:
             try:
-                vols.append(float(bar[5]) * 100)  # index 5 = vol in 手
+                raw = float(bar[5])  # index 5 = vol in 手
+                vols.append(raw * 100)
+                vols_shou.append(raw)
             except (IndexError, TypeError, ValueError):
                 pass
         if not vols:
@@ -86,6 +106,9 @@ def _try_tencent_direct(code: str, ticker: str) -> dict | None:
             "available":         True,
             "turnover_rate_pct": None,
             "avg_volume_5d":     round(sum(vols) / len(vols)),
+            "prev_day_vol":      round(vols_shou[-1]) if vols_shou else None,
+            "vol_3d_avg":        round(sum(vols_shou[-3:]) / min(3, len(vols_shou))) if vols_shou else None,
+            "vol_history":       [],
             "data_source":       "tencent_direct",
         }
     except Exception as e:
@@ -109,5 +132,8 @@ def fetch_turnover(ticker: str) -> dict:
         "available":         False,
         "turnover_rate_pct": None,
         "avg_volume_5d":     None,
+        "prev_day_vol":      None,
+        "vol_3d_avg":        None,
+        "vol_history":       [],
         "data_source":       "none",
     }

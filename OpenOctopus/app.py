@@ -49,6 +49,7 @@ from services.market.sentiment import build_market_sentiment
 from services.portfolio.overview import build_portfolio_overview
 
 # Taiwan services
+from config.adr_mapping import TW_ADR_MAP
 from services.tw.dashboard.summary import build_dashboard_summary as tw_build_dashboard_summary
 from services.tw.dashboard.summary import build_market_overview as tw_build_market_overview
 from services.tw.dashboard.management import build_management_snapshot as tw_build_management_snapshot
@@ -309,6 +310,7 @@ def backlog_chips_batch() -> Response:
     from services.chips.options_flow import fetch_options_flow
     from concurrent.futures import ThreadPoolExecutor, as_completed
     from concurrent.futures import TimeoutError as FuturesTimeoutError
+    import threading
 
     body = request.get_json(silent=True) or {}
     tickers = body.get("tickers") or []
@@ -319,12 +321,37 @@ def backlog_chips_batch() -> Response:
         return jsonify({"items": []})
 
     results: dict = {}
+    # Limit concurrent East Money requests to 2 to avoid IP rate-limiting
+    _cn_sem = threading.Semaphore(2)
 
     def _fetch(t: str):
+        _is_cn = t.upper().endswith('.SH') or t.upper().endswith('.SZ')
+        _is_tw = t.upper().endswith('.TW')
+        if _is_cn:
+            from services.ashare.chips.turnover import fetch_turnover
+            from services.ashare.chips.fund_flow import fetch_fund_flow
+            with _cn_sem:
+                tv = fetch_turnover(t)
+                ff = fetch_fund_flow(t)
+            return t, {
+                "ticker": t,
+                "rvol": None,
+                "rvol_signal": None,
+                "price_vs_vwap_pct": None,
+                "days_to_cover": None,
+                "mom_change_pct": None,
+                "pcr_oi": None,
+                "prev_day_vol":       tv.get("prev_day_vol"),
+                "vol_3d_total":       tv.get("vol_3d_avg"),   # frontend key
+                "vol_history":        tv.get("vol_history") or [],
+                "prev_day_net_inflow": ff.get("prev_day_net_inflow"),
+                "avg_3d_net_inflow":   ff.get("avg_3d_net_inflow"),
+                "error": None if tv.get("available") else "cn_vol_unavailable",
+            }
         vol = fetch_volume_data(t)
         short = fetch_short_interest(t)
         opts = fetch_options_flow(t)
-        return t, {
+        result = {
             "ticker": t,
             "rvol": vol.get("rvol"),
             "rvol_signal": vol.get("rvol_signal"),
@@ -332,8 +359,36 @@ def backlog_chips_batch() -> Response:
             "days_to_cover": short.get("days_to_cover"),
             "mom_change_pct": short.get("mom_change_pct"),
             "pcr_oi": opts.get("pcr_oi"),
+            "prev_day_vol":        None,
+            "vol_3d_total":        None,
+            "prev_day_net_inflow": None,
+            "avg_3d_net_inflow":   None,
+            "adr_premium_pct":     None,
             "error": vol.get("error") or short.get("error") or opts.get("error"),
         }
+        if _is_tw:
+            tw_id = t.upper().removesuffix(".TW")
+            adr = _fetch_adr_premium(tw_id)
+            if adr.get("available"):
+                result["adr_premium_pct"] = adr["premium_pct"]
+            # Populate 外資流向 from DB (read-only, no network call)
+            try:
+                from pathlib import Path as _Path
+                from data_sources.tw.db import TaiwanStockDB as _TWDB
+                _db_path = str(_Path(__file__).parent / "tw_stock.db")
+                with _TWDB(_db_path) as _db_conn:
+                    _flow_rows = _db_conn.get_institutional_flow_with_prices(tw_id, days=5)
+                if _flow_rows:
+                    _flow_rows.sort(key=lambda r: r["date"])
+                    result["prev_day_foreign_net"] = _flow_rows[-1].get("foreign_net")
+                    _last3 = _flow_rows[-3:]
+                    result["avg_3d_foreign_net"] = (
+                        sum(r.get("foreign_net") or 0 for r in _last3) / len(_last3)
+                        if _last3 else None
+                    )
+            except Exception:
+                pass
+        return t, result
 
     with ThreadPoolExecutor(max_workers=6) as ex:
         futs = {ex.submit(_fetch, t): t for t in tickers}
@@ -618,6 +673,192 @@ def tw_annual_report() -> Response:
     result = build_annual_report_summary(ticker)
     status_code = 200 if "error" not in result else 502
     return jsonify(result), status_code
+
+
+_ADR_CACHE_TTL    = 900   # 15 minutes
+_TW_CHIPS_TTL     = 3600  # 1 hour — data updates once daily after market close
+
+
+def _fetch_adr_premium(tw_id: str) -> dict:
+    """Fetch ADR premium data for a Taiwan stock.
+
+    Returns a dict with available=True and price/premium fields, or
+    available=False with a reason string when data cannot be computed.
+    Caches results for _ADR_CACHE_TTL seconds using utils.cache.
+    """
+    import yfinance as yf
+    import time as _t
+    from utils.cache import get as _cache_get, set as _cache_set
+
+    cached = _cache_get("adr_premium", tw_id)
+    if cached is not None:
+        return cached
+
+    mapping = TW_ADR_MAP.get(tw_id)
+    if not mapping:
+        result = {"available": False, "reason": "no_adr_mapping"}
+        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
+        return result
+    if mapping["ratio"] is None:
+        result = {"available": False, "reason": "ratio_unconfirmed",
+                  "adr": mapping["adr"], "name": mapping["name"]}
+        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
+        return result
+
+    try:
+        adr_info   = yf.Ticker(mapping["adr"]).fast_info
+        tw_info    = yf.Ticker(f"{tw_id}.TW").fast_info
+        fx_info    = yf.Ticker("USDTWD=X").fast_info
+
+        adr_price  = adr_info.get("last_price") or adr_info.get("previousClose")
+        tw_price   = tw_info.get("last_price") or tw_info.get("previousClose")
+        usdtwd     = fx_info.get("last_price") or fx_info.get("previousClose")
+
+        if not all([adr_price, tw_price, usdtwd]):
+            result = {"available": False, "reason": "price_unavailable",
+                      "adr": mapping["adr"], "name": mapping["name"]}
+            _cache_set("adr_premium", tw_id, result, 60)  # short TTL on error
+            return result
+
+        ratio         = mapping["ratio"]
+        adr_twd_equiv = adr_price * usdtwd / ratio
+        premium_pct   = (adr_twd_equiv / tw_price - 1) * 100
+
+        result = {
+            "available":      True,
+            "tw_id":          tw_id,
+            "name":           mapping["name"],
+            "adr":            mapping["adr"],
+            "exchange":       mapping["exchange"],
+            "ratio":          ratio,
+            "adr_price_usd":  round(adr_price, 4),
+            "usdtwd":         round(usdtwd, 4),
+            "adr_twd_equiv":  round(adr_twd_equiv, 2),
+            "tw_price":       round(tw_price, 2),
+            "premium_pct":    round(premium_pct, 2),
+            "fetched_at":     int(_t.time()),
+        }
+        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
+        return result
+
+    except Exception as exc:
+        result = {"available": False, "reason": "fetch_error", "detail": str(exc),
+                  "adr": mapping.get("adr"), "name": mapping.get("name")}
+        _cache_set("adr_premium", tw_id, result, 60)
+        return result
+
+
+@app.route("/api/tw/adr-premium")
+def tw_adr_premium() -> Response:
+    """Return ADR premium/discount data for a Taiwan stock.
+
+    Query param: ticker — bare TW ticker (e.g. '2330') or with suffix ('2330.TW').
+    Response fields when available=True:
+      adr, exchange, ratio, adr_price_usd, usdtwd, adr_twd_equiv, tw_price,
+      premium_pct (positive = ADR trades at premium over TW share).
+    """
+    ticker = (request.args.get("ticker") or "").strip().upper()
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+    tw_id = ticker.removesuffix(".TW")
+    result = _sanitize_nan(_fetch_adr_premium(tw_id))
+    return jsonify(result)
+
+
+@app.route("/api/tw/chips/institutional")
+def tw_chips_institutional() -> Response:
+    """Return 籌碼訊號矩陣 for a Taiwan stock.
+
+    Query params:
+      ticker  — bare or .TW suffix (e.g. '2330' or '2330.TW')
+      days    — history window in trading days (default 60, max 90)
+      refresh — '1' to force re-fetch even if cache is warm
+
+    First call for a new stock triggers TWSE T86 historical fetch (~1 min).
+    Subsequent calls are served from SQLite cache.
+    """
+    from utils.cache import get as _cache_get, set as _cache_set
+    from services.tw.chips.institutional import (
+        ensure_institutional_data, compute_tw_chips_signals,
+    )
+
+    ticker  = (request.args.get("ticker") or "").strip().upper()
+    days    = min(int(request.args.get("days", 120)), 150)
+    refresh = request.args.get("refresh", "0") == "1"
+
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    tw_id = ticker.removesuffix(".TW")
+
+    # Check in-memory cache
+    cache_key = f"tw_chips_{tw_id}_{days}"
+    if not refresh:
+        cached = _cache_get("tw_chips_inst", cache_key)
+        if cached is not None:
+            return jsonify(_sanitize_nan(cached))
+
+    # Ensure enough data is in DB (may trigger TWSE fetch — first call ~120s)
+    ensure_result = ensure_institutional_data(tw_id, target_days=days, force_refresh=refresh)
+
+    if ensure_result.get("days_available", 0) < 3:
+        return jsonify({
+            "available": False,
+            "reason": "insufficient_data",
+            "days_available": ensure_result.get("days_available", 0),
+            "stock_id": tw_id,
+        }), 200
+
+    result = compute_tw_chips_signals(tw_id, days=days)
+    _cache_set("tw_chips_inst", cache_key, result, _TW_CHIPS_TTL)
+    return jsonify(_sanitize_nan(result))
+
+
+@app.route("/api/tw/chips/margin")
+def tw_chips_margin() -> Response:
+    """Return 融資融券背離訊號 for a Taiwan stock.
+
+    Query params:
+      ticker  — bare or .TW suffix (e.g. '2330' or '2330.TW')
+      days    — history window in trading days (default 60, max 120)
+      refresh — '1' to force re-fetch even if cache is warm
+
+    First call for a new stock triggers TWSE MI_MARGN historical fetch (~120s).
+    Subsequent calls served from SQLite cache (1-hour TTL).
+    """
+    from utils.cache import get as _cache_get, set as _cache_set
+    from services.tw.chips.margin import ensure_margin_data, compute_tw_margin_signals
+
+    ticker  = (request.args.get("ticker") or "").strip().upper()
+    days    = min(int(request.args.get("days", 60)), 120)
+    refresh = request.args.get("refresh", "0") == "1"
+
+    if not ticker:
+        return jsonify({"error": "ticker is required"}), 400
+
+    tw_id = ticker.removesuffix(".TW")
+    if not tw_id.isdigit():
+        return jsonify({"error": "invalid Taiwan ticker"}), 400
+
+    cache_key = f"tw_margin_{tw_id}_{days}"
+    if not refresh:
+        cached = _cache_get("tw_chips_margin", cache_key)
+        if cached is not None:
+            return jsonify(_sanitize_nan(cached))
+
+    ensure_result = ensure_margin_data(tw_id, target_days=120, force_refresh=refresh)
+
+    if ensure_result.get("days_available", 0) < 5:
+        return jsonify({
+            "available": False,
+            "reason": "insufficient_data",
+            "days_available": ensure_result.get("days_available", 0),
+            "stock_id": tw_id,
+        }), 200
+
+    result = compute_tw_margin_signals(tw_id, days=days)
+    _cache_set("tw_chips_margin", cache_key, result, _TW_CHIPS_TTL)
+    return jsonify(_sanitize_nan(result))
 
 
 # ── Financial Health ─────────────────────────────────────────────────────────
@@ -1049,6 +1290,10 @@ def llm_status() -> Response:
 
 # ── Chip Analysis ──────────────────────────────────────────────────────────────
 
+def _is_tw(ticker: str) -> bool:
+    return ticker.upper().endswith(".TW")
+
+
 @app.route("/api/chips/summary/<ticker>")
 def chips_summary(ticker: str) -> Response:
     """Level 1 fast data: volume (RVOL/VWAP) + short interest."""
@@ -1056,6 +1301,15 @@ def chips_summary(ticker: str) -> Response:
     if is_cn(ticker):
         from services.ashare.chips.dispatcher import fetch_cn_chips_summary
         return jsonify(fetch_cn_chips_summary(ticker)), 200
+
+    if _is_tw(ticker):
+        # TW stocks: volume/short from yfinance is unreliable; return market flag
+        return jsonify({
+            "ticker": ticker.upper(),
+            "market": "TW",
+            "volume": {"available": False, "reason": "tw_use_institutional_endpoint"},
+            "short":  {"available": False, "reason": "tw_no_short_market"},
+        }), 200
 
     from services.chips.volume import fetch_volume_data
     from services.chips.short_interest import fetch_short_interest
@@ -1086,6 +1340,16 @@ def chips_institutional(ticker: str) -> Response:
     if is_cn(ticker):
         from services.ashare.chips.dispatcher import fetch_cn_chips_institutional
         return jsonify(fetch_cn_chips_institutional(ticker)), 200
+
+    if _is_tw(ticker):
+        # TW stocks use /api/tw/chips/institutional — this endpoint returns a redirect hint
+        return jsonify({
+            "ticker": ticker.upper(),
+            "market": "TW",
+            "institutional": {"available": False, "reason": "use_tw_chips_endpoint"},
+            "insider":       {"available": False},
+            "etf":           {"available": False},
+        }), 200
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
     from services.chips.institutional import fetch_institutional

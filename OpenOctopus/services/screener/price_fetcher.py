@@ -18,6 +18,7 @@ Public API
 """
 from __future__ import annotations
 
+import concurrent.futures as _futures
 import os
 import random
 import time
@@ -46,6 +47,7 @@ except ImportError:
 
 FMP_API_KEY = os.getenv("FMP_API_KEY", "").strip()
 _REQUEST_TIMEOUT = 20
+_FETCH_TIMEOUT = 30   # per-attempt wall-clock timeout (covers stooq/yfinance hangs)
 _RETRY = 2
 _SLEEP_BETWEEN_RETRIES = (1.0, 2.0)
 _TIMESERIES_FMP = 900  # ≈ 900 trading-day window (>= 200 MA + 1yr + buffer)
@@ -337,13 +339,27 @@ def _try_fetch_with_retry(
     ticker: str,
     market: str,
 ) -> pd.Series | None:
-    """Call *func(ticker, market)* with up to _RETRY retries. Propagates RateLimitError."""
+    """Call *func(ticker, market)* with up to _RETRY retries. Propagates RateLimitError.
+
+    Each attempt is wrapped in a thread with a _FETCH_TIMEOUT deadline so that
+    stooq (pandas_datareader) and yfinance — which have no internal timeout —
+    cannot block the screener worker indefinitely.
+    """
     last_err: Exception | None = None
     for attempt in range(_RETRY + 1):
+        executor = _futures.ThreadPoolExecutor(max_workers=1)
+        fut = executor.submit(func, ticker, market)
+        executor.shutdown(wait=False)  # don't block when we move on
         try:
-            return func(ticker, market)
+            return fut.result(timeout=_FETCH_TIMEOUT)
         except RateLimitError:
             raise  # immediately bubble up; caller handles source switching
+        except _futures.TimeoutError:
+            last_err = TimeoutError(
+                f"{func.__name__}({ticker}) timed out after {_FETCH_TIMEOUT}s"
+            )
+            if attempt < _RETRY:
+                time.sleep(random.uniform(*_SLEEP_BETWEEN_RETRIES))
         except Exception as exc:  # noqa: BLE001
             last_err = exc
             if attempt < _RETRY:

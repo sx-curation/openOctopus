@@ -80,6 +80,44 @@ class TaiwanStockDB:
             );
         ''')
 
+        # Institutional flows table (三大法人買賣超)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tw_institutional_flows (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stock_id TEXT NOT NULL,
+                date DATE NOT NULL,
+                foreign_net INTEGER,
+                fund_net INTEGER,
+                dealer_net INTEGER,
+                total_net INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(stock_id, date)
+            );
+        ''')
+        cursor.execute(
+            'CREATE INDEX IF NOT EXISTS idx_tw_inst_stock_date ON tw_institutional_flows (stock_id, date);'
+        )
+
+        # Margin / short-selling data table (融資融券彙總)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tw_margin_trading (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stock_id TEXT NOT NULL,
+                date TEXT NOT NULL,
+                margin_balance INTEGER,
+                margin_buy     INTEGER,
+                margin_sell    INTEGER,
+                short_balance  INTEGER,
+                short_sell     INTEGER,
+                short_cover    INTEGER,
+                created_at TEXT DEFAULT (datetime('now')),
+                UNIQUE(stock_id, date)
+            );
+        ''')
+        cursor.execute(
+            'CREATE INDEX IF NOT EXISTS idx_tw_margin_stock_date ON tw_margin_trading (stock_id, date DESC);'
+        )
+
         self.conn.commit()
 
     def insert_daily_prices(self, stock_id: str, df: pd.DataFrame) -> int:
@@ -260,6 +298,135 @@ class TaiwanStockDB:
         except Exception as e:
             print(f'Error getting news: {e}')
             return []
+
+    def insert_institutional_flow(
+        self, stock_id: str, date: str,
+        foreign_net: int, fund_net: int, dealer_net: int, total_net: int,
+    ) -> bool:
+        """Insert or ignore a single day of 三大法人 flow data (shares, not 張)."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                INSERT OR IGNORE INTO tw_institutional_flows
+                (stock_id, date, foreign_net, fund_net, dealer_net, total_net)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (stock_id, date, foreign_net, fund_net, dealer_net, total_net))
+            self.conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f'Error inserting institutional flow: {e}')
+            return False
+
+    def get_institutional_flow_dates(self, stock_id: str, days: int = 90) -> set:
+        """Return set of dates already in tw_institutional_flows for this stock."""
+        cutoff = (dt.datetime.now() - dt.timedelta(days=days + 10)).strftime('%Y-%m-%d')
+        cursor = self.conn.cursor()
+        cursor.execute(
+            'SELECT date FROM tw_institutional_flows WHERE stock_id = ? AND date >= ?',
+            (stock_id, cutoff),
+        )
+        return {row[0] for row in cursor.fetchall()}
+
+    def get_institutional_flow_with_prices(
+        self, stock_id: str, days: int = 70
+    ) -> List[Dict[str, Any]]:
+        """Return institutional flow joined with close price & volume from daily_prices."""
+        cutoff = (dt.datetime.now() - dt.timedelta(days=days + 10)).strftime('%Y-%m-%d')
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT
+                f.date,
+                f.foreign_net,
+                f.fund_net,
+                f.dealer_net,
+                f.total_net,
+                p.close,
+                p.volume
+            FROM tw_institutional_flows f
+            LEFT JOIN daily_prices p
+                ON f.stock_id = p.stock_id AND f.date = p.date
+            WHERE f.stock_id = ? AND f.date >= ?
+            ORDER BY f.date ASC
+        ''', (stock_id, cutoff))
+        return [
+            {
+                'date':          row[0],
+                'foreign_net':   row[1],
+                'fund_net':      row[2],
+                'dealer_net':    row[3],
+                'total_net':     row[4],
+                'close_price':   row[5],
+                'volume_shares': row[6],   # shares (not 張)
+            }
+            for row in cursor.fetchall()
+        ]
+
+    def insert_margin_data(
+        self, stock_id: str, date: str,
+        margin_balance: int, margin_buy: int, margin_sell: int,
+        short_balance: int, short_sell: int, short_cover: int,
+    ) -> bool:
+        """Insert or ignore a single day of margin/short data."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                INSERT OR IGNORE INTO tw_margin_trading
+                (stock_id, date, margin_balance, margin_buy, margin_sell,
+                 short_balance, short_sell, short_cover)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (stock_id, date, margin_balance, margin_buy, margin_sell,
+                  short_balance, short_sell, short_cover))
+            self.conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f'Error inserting margin data: {e}')
+            return False
+
+    def get_margin_dates(self, stock_id: str, days: int = 150) -> set:
+        """Return set of dates already in tw_margin_trading for this stock."""
+        cutoff = (dt.datetime.now() - dt.timedelta(days=days + 10)).strftime('%Y-%m-%d')
+        cursor = self.conn.cursor()
+        cursor.execute(
+            'SELECT date FROM tw_margin_trading WHERE stock_id = ? AND date >= ?',
+            (stock_id, cutoff),
+        )
+        return {row[0] for row in cursor.fetchall()}
+
+    def get_margin_data(
+        self, stock_id: str, days: int = 70
+    ) -> List[Dict[str, Any]]:
+        """Return margin/short data joined with close price from daily_prices."""
+        cutoff = (dt.datetime.now() - dt.timedelta(days=days + 10)).strftime('%Y-%m-%d')
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT
+                m.date,
+                m.margin_balance,
+                m.margin_buy,
+                m.margin_sell,
+                m.short_balance,
+                m.short_sell,
+                m.short_cover,
+                p.close
+            FROM tw_margin_trading m
+            LEFT JOIN daily_prices p
+                ON m.stock_id = p.stock_id AND m.date = p.date
+            WHERE m.stock_id = ? AND m.date >= ?
+            ORDER BY m.date ASC
+        ''', (stock_id, cutoff))
+        return [
+            {
+                'date':           row[0],
+                'margin_balance': row[1],
+                'margin_buy':     row[2],
+                'margin_sell':    row[3],
+                'short_balance':  row[4],
+                'short_sell':     row[5],
+                'short_cover':    row[6],
+                'close_price':    row[7],
+            }
+            for row in cursor.fetchall()
+        ]
 
     def close(self):
         """Close database connection."""
