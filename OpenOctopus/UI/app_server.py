@@ -352,8 +352,8 @@ class UiApiHandler(SimpleHTTPRequestHandler):
 
 def run() -> None:
     port = 5501
-    server = ThreadingHTTPServer(("127.0.0.1", port), UiApiHandler)
-    print(f"UI + API server running at http://127.0.0.1:{port}/index.html")
+    server = ThreadingHTTPServer(("0.0.0.0", port), UiApiHandler)
+    print(f"UI + API server running at http://0.0.0.0:{port}/index.html")
     print("Endpoints: /api/policy-outlook, /api/sentiment-feed")
     try:
         server.serve_forever()
