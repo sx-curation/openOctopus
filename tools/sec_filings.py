@@ -3,6 +3,8 @@ Fetches MD&A and Risk Factors excerpts from the most recent 10-K or 10-Q
 via the edgartools library (free, uses SEC EDGAR directly).
 """
 from config import settings
+from tools.base import BaseTool
+from tools.resilience import retry_with_backoff, with_timeout
 
 # Maps keyword hints used by callers → candidate doc attribute names to probe.
 # Prevents _extract_section from checking irrelevant attrs (e.g. risk_factors
@@ -16,7 +18,38 @@ _KW_TO_ATTRS: dict[str, list[str]] = {
 }
 
 
+class SecFilingsTool(BaseTool):
+    """Fetch SEC 10-K/10-Q MD&A and Risk Factors via edgartools."""
+
+    name = "get_sec_filing_summary"
+    description = (
+        "Returns MD&A excerpt (~3000 chars) and Risk Factors excerpt (~2000 chars) "
+        "from the most recent 10-K or 10-Q for the given ticker."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = input.get("ticker", "")
+        filing_type = input.get("filing_type", "10-K")
+        if not ticker:
+            return {"error": "ticker_required"}
+        try:
+            return retry_with_backoff(
+                lambda: with_timeout(
+                    lambda: _fetch_sec_filing(ticker.upper(), filing_type), seconds=45
+                ),
+                max_retries=3,
+                backoff_base=1.0,
+            )
+        except Exception as exc:
+            return {"error": str(exc), "ticker": ticker.upper()}
+
+
 def get_sec_filing_summary(ticker: str, filing_type: str = "10-K") -> dict:
+    """Backward-compatible wrapper around SecFilingsTool.execute()."""
+    return _tool_filings.execute({"ticker": ticker, "filing_type": filing_type})
+
+
+def _fetch_sec_filing(ticker: str, filing_type: str = "10-K") -> dict:
     """
     Returns MD&A excerpt (~3000 chars) and Risk Factors excerpt (~2000 chars)
     from the most recent 10-K or 10-Q for the given ticker.
@@ -124,3 +157,7 @@ def _extract_section(doc, filing, keywords: list[str]) -> str:
         pass
 
     return ""
+
+
+# Module-level singleton (after class and _fetch_sec_filing are defined)
+_tool_filings = SecFilingsTool()

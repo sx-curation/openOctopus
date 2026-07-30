@@ -3,17 +3,38 @@ import yfinance as yf
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 from config import settings
+from tools.base import BaseTool
+from tools.resilience import retry_with_backoff, with_timeout
 
 
-def get_analyst_estimates(ticker: str) -> dict:
-    """
-    Returns last 4 quarters of EPS/revenue actuals vs. estimates (beat/miss),
-    plus the next earnings date.
+class EstimatesTool(BaseTool):
+    """Fetch analyst EPS/revenue estimates and actuals for a ticker."""
 
-    Primary EPS source: yfinance earnings_dates.
-    Revenue estimates: FMP API (falls back gracefully if key not set).
-    """
-    ticker = ticker.upper()
+    name = "get_analyst_estimates"
+    description = (
+        "Returns recent quarters of EPS/revenue actuals vs. estimates (beat/miss) "
+        "plus the next earnings date."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = input.get("ticker", "")
+        if not ticker:
+            return {"error": "ticker_required"}
+        try:
+            return retry_with_backoff(
+                lambda: with_timeout(lambda: _fetch_estimates(ticker.upper()), seconds=30),
+                max_retries=3,
+                backoff_base=1.0,
+            )
+        except Exception as exc:
+            return {"error": str(exc), "ticker": ticker.upper()}
+
+
+# ---------------------------------------------------------------------------
+# Core fetch logic
+# ---------------------------------------------------------------------------
+
+def _fetch_estimates(ticker: str) -> dict:
     result = {
         "ticker": ticker,
         "quarters": [],
@@ -26,7 +47,7 @@ def get_analyst_estimates(ticker: str) -> dict:
         ed = t.earnings_dates
         if ed is not None and not ed.empty:
             # earnings_dates index is DatetimeIndex; positive surprises = beat
-            past = ed[ed.index < pd.Timestamp.now(tz="UTC")].head(4)
+            past = ed[ed.index < pd.Timestamp.now(tz="UTC")].head(5)
             future = ed[ed.index >= pd.Timestamp.now(tz="UTC")]
             if not future.empty:
                 result["next_earnings_date"] = str(future.index[-1].date())
@@ -53,11 +74,11 @@ def get_analyst_estimates(ticker: str) -> dict:
     if settings.FMP_API_KEY:
         estimates_url = (
             f"{settings.FMP_BASE_URL}/api/v3/analyst-estimates/{ticker}"
-            f"?limit=4&apikey={settings.FMP_API_KEY}"
+            f"?limit=5&apikey={settings.FMP_API_KEY}"
         )
         income_url = (
             f"{settings.FMP_BASE_URL}/api/v3/income-statement/{ticker}"
-            f"?limit=4&apikey={settings.FMP_API_KEY}"
+            f"?limit=5&apikey={settings.FMP_API_KEY}"
         )
 
         with ThreadPoolExecutor(max_workers=2) as executor:
@@ -108,3 +129,14 @@ def get_analyst_estimates(ticker: str) -> dict:
         result["revenue_note"] = "FMP_API_KEY not set; revenue estimates unavailable."
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Module-level singleton + backward-compatible wrapper
+# ---------------------------------------------------------------------------
+_tool = EstimatesTool()
+
+
+def get_analyst_estimates(ticker: str) -> dict:
+    """Backward-compatible wrapper around EstimatesTool.execute()."""
+    return _tool.execute({"ticker": ticker})

@@ -7,6 +7,53 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "query_policy_updates",
+            "description": (
+                "Fetch recent policy, regulatory, and legislative events from official sources. "
+                "Supports EUR-Lex (EU regulations/directives), US Federal Register (rules/notices), "
+                "and SEC EDGAR (regulatory filings). Returns normalised events with source URLs, "
+                "published dates, jurisdiction, and keyword-based impact signals (opportunity/constraint). "
+                "Use this when the user asks about regulatory changes, policy risk, government actions, "
+                "or compliance-relevant news."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "jurisdiction": {
+                        "type": "string",
+                        "enum": ["EU", "US", "ALL"],
+                        "description": "Jurisdiction filter: 'EU' queries EUR-Lex; 'US' queries Federal Register and SEC; 'ALL' queries all sources.",
+                    },
+                    "keyword": {
+                        "type": "string",
+                        "description": "Search keyword or phrase, e.g. 'AI Act', 'tariff', 'crypto regulation'.",
+                    },
+                    "from_date": {
+                        "type": "string",
+                        "description": "Start date in YYYY-MM-DD format.",
+                    },
+                    "to_date": {
+                        "type": "string",
+                        "description": "End date in YYYY-MM-DD format.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum events per source (default 10).",
+                        "default": 10,
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["EUR_LEX", "FEDERAL_REGISTER", "SEC"]},
+                        "description": "Specific sources to query (optional; omit for all).",
+                    },
+                },
+                "required": ["jurisdiction", "keyword", "from_date", "to_date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_stock_price",
             "description": (
                 "Fetch the current stock price and basic market data for a ticker: "

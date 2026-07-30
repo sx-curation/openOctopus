@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-import agent.loop as agent
+from agent import investment_run_analysis
 
 console = Console()
 
@@ -38,7 +38,7 @@ def main() -> None:
 
         console.print("\n[dim]Analyzing… this may take 15–30 seconds[/dim]\n")
         try:
-            result = agent.run_analysis(user_input)
+            result = investment_run_analysis(user_input)
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}\n")
             continue

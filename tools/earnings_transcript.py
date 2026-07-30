@@ -1,15 +1,96 @@
 """
-Fetches earnings call content from two complementary sources:
-  1. EDGAR (primary)  — 8-K Item 2.02 earnings press release via edgartools (free, no key)
-  2. FMP (secondary)  — full call transcript text (requires FMP_API_KEY)
+Fetches earnings call content with a three-source fallback chain:
+  1. FMP API       — full call transcript (requires FMP_API_KEY)
+  2. HF cache      — per-ticker JSONL downloaded by hf_downloader
+  3. EDGAR         — 8-K Item 2.02 earnings press release (free, no key)
 
-Returns both where available so Claude can extract:
-  - Key operating metrics (from press release numbers)
-  - Management tone, guidance, competitive commentary (from transcript text)
+Returns a unified dict so callers can use whichever source provided data.
 """
+from datetime import date, datetime, timedelta, timezone
+
 import requests
 from config import settings
 from utils.formatting import parse_item_string
+from tools.base import BaseTool
+from data_sources.transcripts.hf_cache import get_cached_transcript
+
+
+class EarningsTranscriptTool(BaseTool):
+    """Fetch earnings transcript — FMP → HF cache → EDGAR fallback chain."""
+
+    name = "get_earnings_transcript"
+    description = (
+        "Returns earnings call transcript or press release for a ticker. "
+        "Tries FMP full transcript first, then HuggingFace cached JSONL, then EDGAR 8-K."
+    )
+
+    def execute(self, input: dict) -> dict:
+        ticker = (input.get("ticker") or "").upper()
+        year = input.get("year")
+        quarter = input.get("quarter")
+        if not ticker:
+            return {"error": "ticker_required"}
+
+        result: dict = {"ticker": ticker}
+
+        # --- 1. FMP full call transcript ---
+        if settings.FMP_API_KEY:
+            fmp_data = _get_fmp_transcript(ticker, year, quarter)
+            if "error" not in fmp_data:
+                result["transcript_excerpt"] = fmp_data.get("transcript_excerpt")
+                result["transcript_year"] = fmp_data.get("year")
+                result["transcript_quarter"] = fmp_data.get("quarter")
+                result["transcript_date"] = fmp_data.get("date")
+                result["transcript_full_chars"] = fmp_data.get("full_length_chars")
+                result["transcript_truncated"] = fmp_data.get("truncated")
+                result["available_quarters"] = fmp_data.get("available_quarters", [])
+            else:
+                result["transcript_error"] = fmp_data.get("error")
+        else:
+            result["transcript_error"] = (
+                "fmp_key_missing — set FMP_API_KEY in .env for full call transcript"
+            )
+
+        # --- 2. HF per-ticker JSONL cache (if FMP gave nothing) ---
+        if not result.get("transcript_excerpt"):
+            hf_data = get_cached_transcript(ticker, year=year, quarter=quarter)
+            if "error" not in hf_data:
+                result["transcript_excerpt"] = hf_data.get("content_excerpt")
+                result["transcript_year"] = hf_data.get("year")
+                result["transcript_quarter"] = hf_data.get("quarter")
+                result["transcript_date"] = hf_data.get("date")
+                result["hf_cache_used"] = True
+
+        # --- 3. EDGAR 8-K press release (always try for press-release excerpt) ---
+        if year is not None and quarter is not None:
+            after_date, before_date = _quarter_date_window(year, quarter)
+            edgar_data = _get_edgar_earnings_release(
+                ticker, after_date=after_date, before_date=before_date
+            )
+            if "edgar_error" not in edgar_data and edgar_data:
+                edgar_data["edgar_year"] = year
+                edgar_data["edgar_quarter"] = quarter
+        else:
+            edgar_data = _get_edgar_earnings_release(ticker)
+        result.update(edgar_data)
+
+        return result
+
+
+def _quarter_date_window(year: int, quarter: int) -> tuple[date, date]:
+    """Return (after_date, before_date) window to find earnings releases for a given quarter.
+
+    Companies typically file their 8-K earnings release 0–75 days after the quarter ends.
+    """
+    quarter_end_month = quarter * 3
+    # First day of the month after quarter-end
+    if quarter_end_month == 12:
+        period_end = date(year + 1, 1, 1)
+    else:
+        period_end = date(year, quarter_end_month + 1, 1)
+    after = period_end - timedelta(days=7)   # allow a few days early
+    before = period_end + timedelta(days=80)  # up to ~11 weeks after quarter end
+    return after, before
 
 
 def get_earnings_transcript(
@@ -17,40 +98,28 @@ def get_earnings_transcript(
     year: int | None = None,
     quarter: int | None = None,
 ) -> dict:
-    ticker = ticker.upper()
-    result: dict = {"ticker": ticker}
+    """Backward-compatible wrapper around EarningsTranscriptTool.execute()."""
+    return _tool.execute({"ticker": ticker, "year": year, "quarter": quarter})
 
-    # --- Primary: EDGAR 8-K earnings press release ---
-    edgar_data = _get_edgar_earnings_release(ticker)
-    result.update(edgar_data)
 
-    # --- Secondary: FMP full call transcript ---
-    if settings.FMP_API_KEY:
-        fmp_data = _get_fmp_transcript(ticker, year, quarter)
-        if "error" not in fmp_data:
-            result["transcript_excerpt"] = fmp_data.get("transcript_excerpt")
-            result["transcript_year"] = fmp_data.get("year")
-            result["transcript_quarter"] = fmp_data.get("quarter")
-            result["transcript_date"] = fmp_data.get("date")
-            result["transcript_full_chars"] = fmp_data.get("full_length_chars")
-            result["transcript_truncated"] = fmp_data.get("truncated")
-            result["available_quarters"] = fmp_data.get("available_quarters", [])
-        else:
-            result["transcript_error"] = fmp_data.get("error")
-    else:
-        result["transcript_error"] = "fmp_key_missing — set FMP_API_KEY in .env for full call transcript"
-
-    return result
+# Module-level singleton (defined here so the wrapper above can reference it)
+_tool = EarningsTranscriptTool()
 
 
 # ---------------------------------------------------------------------------
 # EDGAR helpers
 # ---------------------------------------------------------------------------
 
-def _get_edgar_earnings_release(ticker: str) -> dict:
+def _get_edgar_earnings_release(
+    ticker: str,
+    after_date: date | None = None,
+    before_date: date | None = None,
+) -> dict:
     """
     Scan recent 8-K filings for an earnings press release (Item 2.02).
     Uses edgartools CurrentReport API: doc.items (list of strings), doc.sections.get(key).text().
+
+    Optional date filters narrow the search to a specific earnings period.
     """
     try:
         from edgar import Company, set_identity
@@ -62,9 +131,26 @@ def _get_edgar_earnings_release(ticker: str) -> dict:
         if not filings_8k or len(filings_8k) == 0:
             return {"edgar_error": "no_8k_filings_found"}
 
-        for i, filing in enumerate(filings_8k):
-            if i >= 12:
+        checked = 0
+        for filing in filings_8k:
+            if checked >= 20:
                 break
+
+            # Apply date window filter when looking for a specific period
+            if after_date is not None or before_date is not None:
+                try:
+                    fd = filing.filing_date
+                    if isinstance(fd, str):
+                        fd = date.fromisoformat(fd)
+                    if after_date is not None and fd < after_date:
+                        continue
+                    if before_date is not None and fd > before_date:
+                        checked += 1
+                        continue
+                except Exception:
+                    pass
+
+            checked += 1
             try:
                 doc = filing.obj()
 
@@ -140,9 +226,9 @@ def _get_fmp_transcript(ticker: str, year, quarter) -> dict:
                 {"year": d.get("year"), "quarter": d.get("quarter"), "date": d.get("date")}
                 for d in dates_data
             ]
-            most_recent = dates_data[0]
-            year = most_recent.get("year")
-            quarter = most_recent.get("quarter")
+            selected = _select_nearest_transcript_date(dates_data)
+            year = selected.get("year")
+            quarter = selected.get("quarter")
         except Exception as e:
             return {"error": str(e)}
 
@@ -173,3 +259,35 @@ def _get_fmp_transcript(ticker: str, year, quarter) -> dict:
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+def _select_nearest_transcript_date(items: list[dict]) -> dict:
+    now = _current_utc()
+    ranked = []
+    for item in items:
+        parsed = _parse_transcript_datetime(item.get("date"))
+        if parsed is None:
+            ranked.append((float("inf"), False, float("-inf"), item))
+            continue
+        ranked.append((abs((parsed - now).total_seconds()), parsed <= now, parsed.timestamp(), item))
+    ranked.sort(key=lambda item: (item[0], not item[1], -item[2]))
+    return ranked[0][3]
+
+
+def _parse_transcript_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    normalized = value.strip().replace(" UTC", "+00:00").replace("Z", "+00:00")
+    for fmt in ("%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            parsed = datetime.strptime(normalized, fmt)
+            if parsed.tzinfo is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        except ValueError:
+            continue
+    return None
+
+
+def _current_utc() -> datetime:
+    return datetime.now(timezone.utc)
