@@ -288,9 +288,18 @@ def _build_sentiment_feed(events: list[dict[str, Any]]) -> dict[str, Any]:
     return {"items": feed, "updated_at": _now_utc().isoformat()}
 
 
+_SCREENER_JOBS: dict[str, dict[str, Any]] = {}
+
+
 class UiApiHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(UI_DIR), **kwargs)
+
+    def translate_path(self, path: str) -> str:
+        # Strip /static prefix so /static/i18n.js -> UI/i18n.js
+        if path.startswith("/static/"):
+            path = path[len("/static"):]
+        return super().translate_path(path)
 
     def _send_json(self, payload: dict[str, Any], status: int = 200) -> None:
         body = json.dumps(payload, ensure_ascii=True).encode("utf-8")
@@ -439,6 +448,16 @@ class UiApiHandler(SimpleHTTPRequestHandler):
             })
             return
 
+        # Screener status endpoint
+        if parsed.path.startswith("/api/screener/status/"):
+            job_id = parsed.path.split("/api/screener/status/", 1)[1]
+            job = _SCREENER_JOBS.get(job_id)
+            if not job:
+                self._send_json({"error": "Job not found"}, status=404)
+            else:
+                self._send_json(job)
+            return
+
         # Taiwan dashboard redirect
         if parsed.path == "/dashboard/tw":
             self._send_html("<html><head><title>Taiwan Dashboard</title></head><body>Taiwan Dashboard - Coming Soon</body></html>")
@@ -467,11 +486,20 @@ class UiApiHandler(SimpleHTTPRequestHandler):
 
         # Screener start endpoint
         if parsed.path == "/api/screener/start":
+            job_id = "scr_" + _now_utc().strftime("%Y%m%d%H%M%S%f")
+            market = payload.get("market", "SP500")
+            _SCREENER_JOBS[job_id] = {
+                "job_id": job_id,
+                "market": market,
+                "status": "done",
+                "results": [],
+                "created_at": _now_utc().isoformat(),
+            }
             self._send_json({
                 "status": "initiated",
-                "screener_id": "scr_" + _now_utc().isoformat(),
+                "job_id": job_id,
                 "message": "Screener analysis started",
-                "updated_at": _now_utc().isoformat()
+                "updated_at": _now_utc().isoformat(),
             })
             return
 
