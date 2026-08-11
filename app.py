@@ -7,1421 +7,502 @@ investment analysis agent (Azure / OpenAI-compatible).
 Usage:
     python app.py          # starts on http://localhost:5000
 """
+
+from __future__ import annotations
+
 import json
-import math
-import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-
-# Ensure the app root is on sys.path so local packages (agent, config, etc.)
-# are importable when gunicorn starts from a different working directory.
-_app_root = Path(__file__).parent
-if str(_app_root) not in sys.path:
-    sys.path.insert(0, str(_app_root))
-
-from flask import Flask, jsonify, request, send_file, send_from_directory
-from flask.wrappers import Response
-
-from agent import investment_run_analysis
-from agent.policy_monitoring import PolicyMonitoringAgent
-from config import settings
-from data_sources.transcripts import hf_downloader
-import utils.async_runner as async_runner
-from config.ui_data_contracts import get_ui_data_contracts
-from services.dashboard.earnings_cycle import build_earnings_cycle
-from services.dashboard.management import build_management_snapshot
-from services.dashboard.summary import build_dashboard_summary
-from services.documents.recent_filings import build_recent_filings
-from services.documents.library import build_document_library
-from services.documents.analyzer import analyze_transcript as analyze_doc_transcript
-from services.backlog.refresh import fetch_backlog_data
-from services.backlog.search import search_ticker as backlog_search_ticker
-from services.financial_health.fetcher import fetch_financial_health
-from services.financial_health.scorer import score_financial_health, score_financial_health_multiyear
-from services.financial_health.llm import health_summary as fh_health_summary, drilldown_analysis as fh_drilldown_analysis
-from services.supply_chain.graph import discover_supply_chain as sc_discover
-from services.supply_chain.analyzer import analyze_node as sc_analyze_node
-from services.market.overview import build_market_overview
-from services.market.commodities import build_market_commodities
-from services.market.sentiment import build_market_sentiment
-from services.portfolio.overview import build_portfolio_overview
-
-# Taiwan services
-from config.adr_mapping import TW_ADR_MAP
-from services.tw.dashboard.summary import build_dashboard_summary as tw_build_dashboard_summary
-from services.tw.dashboard.summary import build_market_overview as tw_build_market_overview
-from services.tw.dashboard.management import build_management_snapshot as tw_build_management_snapshot
-from services.tw.documents.recent_announcements import build_recent_announcements
-from services.tw.documents.financial_statements import build_financial_statements, build_annual_report_summary
-from services.tw.market.overview import build_market_overview as tw_build_market_index
-
-app = Flask(__name__, static_folder="UI", static_url_path="/static")
-
-# Eagerly initialize LLM client at startup so provider detection runs with
-# the correct env (avoids stale singleton from a previous process image).
-from agent.llm_client import get_llm_client as _init_llm  # noqa: E402
-_init_llm()
-del _init_llm
-
-# Pre-warm A-share industry map in the background so it's ready before the
-# user first opens the Backlog page (build takes ~2-3 min on first run).
-try:
-    from services.ashare.industry import get_industry as _prewarm_industry
-    _prewarm_industry("")   # triggers background build / reads disk cache
-    del _prewarm_industry
-except Exception:
-    pass
-
-UI_DIR = Path(__file__).parent / "UI"
-_policy_agent = PolicyMonitoringAgent()
-
-
-# ── UI ─────────────────────────────────────────────────────────────────────
-
-@app.route("/")
-def index() -> Response:
-    return send_from_directory(str(UI_DIR), "market-selector.html")
-
-
-@app.route("/dashboard/us")
-def dashboard_us() -> Response:
-    html_path = str(UI_DIR / "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-        }
-
-
-@app.route("/dashboard/tw")
-def dashboard_tw() -> Response:
-    html_path = str(UI_DIR / "dashboard-tw.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-        }
-
-
-@app.route("/test")
-def test_dashboard() -> Response:
-    """Test dashboard with US/TW switcher"""
-    html_path = str(UI_DIR / "test-dashboard.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return f.read(), 200, {"Content-Type": "text/html; charset=utf-8"}
-
-
-# ── Health ──────────────────────────────────────────────────────────────────
-
-@app.route("/api/health")
-def health() -> Response:
-    backend = "azure" if settings.AZURE_OPENAI_ENDPOINT else "openai-compatible"
-    return jsonify({
-        "status": "ok",
-        "backend": backend,
-        "model": settings.MODEL,
-        "base_url": settings.BASE_URL or "(default OpenAI)",
-    })
-
-
-# ── UI Data Contracts ────────────────────────────────────────────────────────
-
-@app.route("/api/contracts/ui-data-sources")
-def ui_data_sources() -> Response:
-    return jsonify(get_ui_data_contracts())
-
-
-# ── Dashboard Earnings Cycle ────────────────────────────────────────────────
-
-@app.route("/api/dashboard/earnings-cycle")
-def dashboard_earnings_cycle() -> Response:
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    limit = int(request.args.get("limit", "3"))
-    window_days = int(request.args.get("window_days", "5"))
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = build_earnings_cycle(ticker, limit=limit, window_days=window_days)
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/dashboard/management")
-def dashboard_management() -> Response:
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    year = request.args.get("year", type=int)
-    quarter = request.args.get("quarter", type=int)
-    lang = (request.args.get("lang") or "en").strip().lower()
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = build_management_snapshot(ticker, year=year, quarter=quarter, lang=lang)
-
-    # 6-2: Transcript download orchestration.
-    hf_error = result.get("cached_transcript_error")
-    if hf_error == "transcript_cache_missing":
-        # File is completely absent — kick off a background download and let the
-        # frontend know so it can poll /api/transcripts/status.
-        hf_downloader.trigger_background_download(ticker)
-        result["transcript_downloading"] = True
-    else:
-        # Transcript file exists but LLM couldn't score (content too short / missing
-        # previous quarter).  Not a download issue — surface to the UI differently.
-        llm_err = result.get("llm_commitment_analysis_error") or ""
-        if "insufficient" in llm_err or "missing" in llm_err:
-            result["transcript_insufficient"] = True
-
-    return jsonify(result)
-
-
-@app.route("/api/debug/transcript")
-def debug_transcript() -> Response:
-    """Debug endpoint: shows what transcript sources are available for a ticker."""
-    from pathlib import Path
-    from data_sources.transcripts.hf_cache import get_cached_transcript
-    from tools.earnings_transcript import get_earnings_transcript
-
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    hf_path = Path(settings.HF_TRANSCRIPTS_PATH)
-    hf_cache = get_cached_transcript(ticker)
-    edgar_fallback = get_earnings_transcript(ticker)
-
-    return jsonify({
-        "ticker": ticker,
-        "hf_cache_path": str(hf_path),
-        "hf_cache_file_exists": hf_path.exists(),
-        "hf_cache_file_size_mb": round(hf_path.stat().st_size / 1024 / 1024, 2) if hf_path.exists() else None,
-        "hf_result_status": "ok" if "error" not in hf_cache else hf_cache.get("error"),
-        "hf_content_chars": hf_cache.get("content_chars") if "error" not in hf_cache else 0,
-        "edgar_has_release": bool(edgar_fallback.get("earnings_release_excerpt")),
-        "edgar_release_chars": len(edgar_fallback.get("earnings_release_excerpt") or ""),
-        "fmp_has_transcript": bool(edgar_fallback.get("transcript_excerpt")),
-        "fmp_transcript_chars": len(edgar_fallback.get("transcript_excerpt") or ""),
-        "fmp_transcript_error": edgar_fallback.get("transcript_error"),
-        "fmp_key_set": bool(settings.FMP_API_KEY),
-    })
-
-
-@app.route("/api/transcripts/status")
-def transcript_status() -> Response:
-    """6-1: Poll the per-ticker HuggingFace transcript download status."""
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker required"}), 400
-    return jsonify(hf_downloader.get_download_status(ticker))
-
-
-@app.route("/api/dashboard/summary")
-def dashboard_summary() -> Response:
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    return jsonify(build_dashboard_summary(ticker))
-
-
-@app.route("/api/portfolio/overview")
-def portfolio_overview() -> Response:
-    return jsonify(build_portfolio_overview())
-
-
-@app.route("/api/market/overview")
-def market_overview() -> Response:
-    symbols = [
-        symbol.strip().upper()
-        for symbol in (request.args.get("symbols") or "").split(",")
-        if symbol.strip()
-    ]
-    return jsonify(build_market_overview(symbols or None))
-
-
-@app.route("/api/market/commodities")
-def market_commodities() -> Response:
-    return jsonify(build_market_commodities())
-
-
-@app.route("/api/market/sentiment")
-def market_sentiment() -> Response:
-    return jsonify(build_market_sentiment())
-
-
-@app.route("/api/documents/recent-filings")
-def documents_recent_filings() -> Response:
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    return jsonify(build_recent_filings(ticker))
-
-
-@app.route("/api/documents/library")
-def documents_library() -> Response:
-    """Return all locally cached transcript entries for the Document Library tab."""
-    return jsonify(build_document_library())
-
-
-@app.route("/api/documents/analyze", methods=["POST"])
-def documents_analyze() -> Response:
-    """Analyze a transcript with LLM and return positive/negative signals."""
-    body = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    lang = (body.get("lang") or "en").strip().lower()
-    if lang not in ("en", "de", "zh"):
-        lang = "en"
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-    try:
-        year = int(body["year"]) if body.get("year") is not None else None
-        quarter = int(body["quarter"]) if body.get("quarter") is not None else None
-    except (ValueError, TypeError):
-        return jsonify({"error": "year and quarter must be integers"}), 400
-    result = analyze_doc_transcript(ticker, year, quarter, lang)
-    return jsonify(result)
-
-
-# ── Backlog ─────────────────────────────────────────────────────────────────
-
-@app.route("/api/backlog/refresh", methods=["POST"])
-def backlog_refresh() -> Response:
-    """Fetch live yfinance data for a list of backlog tickers."""
-    body = request.get_json(silent=True) or {}
-    tickers = body.get("tickers") or []
-    # Validate: must be a list of non-empty strings, each ≤ 20 chars
-    if not isinstance(tickers, list):
-        return jsonify({"error": "tickers must be a list"}), 400
-    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:100]
-    if not tickers:
-        return jsonify({"items": []})
-    return jsonify({"items": fetch_backlog_data(tickers)})
-
-
-@app.route("/api/backlog/chips_batch", methods=["POST"])
-def backlog_chips_batch() -> Response:
-    """Fetch chips data (volume, short interest, options) for a list of backlog tickers."""
-    from services.chips.volume import fetch_volume_data
-    from services.chips.short_interest import fetch_short_interest
-    from services.chips.options_flow import fetch_options_flow
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-    from concurrent.futures import TimeoutError as FuturesTimeoutError
-    import threading
-
-    body = request.get_json(silent=True) or {}
-    tickers = body.get("tickers") or []
-    if not isinstance(tickers, list):
-        return jsonify({"error": "tickers must be a list"}), 400
-    tickers = [str(t).strip().upper() for t in tickers if str(t).strip()][:50]
-    if not tickers:
-        return jsonify({"items": []})
-
-    results: dict = {}
-    # Limit concurrent East Money requests to 2 to avoid IP rate-limiting
-    _cn_sem = threading.Semaphore(2)
-
-    def _fetch(t: str):
-        _is_cn = t.upper().endswith('.SH') or t.upper().endswith('.SZ')
-        _is_tw = t.upper().endswith('.TW')
-        if _is_cn:
-            from services.ashare.chips.turnover import fetch_turnover
-            from services.ashare.chips.fund_flow import fetch_fund_flow
-            with _cn_sem:
-                tv = fetch_turnover(t)
-                ff = fetch_fund_flow(t)
-            return t, {
-                "ticker": t,
-                "rvol": None,
-                "rvol_signal": None,
-                "price_vs_vwap_pct": None,
-                "days_to_cover": None,
-                "mom_change_pct": None,
-                "pcr_oi": None,
-                "prev_day_vol":       tv.get("prev_day_vol"),
-                "vol_3d_total":       tv.get("vol_3d_avg"),   # frontend key
-                "vol_history":        tv.get("vol_history") or [],
-                "prev_day_net_inflow": ff.get("prev_day_net_inflow"),
-                "avg_3d_net_inflow":   ff.get("avg_3d_net_inflow"),
-                "error": None if tv.get("available") else "cn_vol_unavailable",
-            }
-        vol = fetch_volume_data(t)
-        short = fetch_short_interest(t)
-        opts = fetch_options_flow(t)
-        result = {
-            "ticker": t,
-            "rvol": vol.get("rvol"),
-            "rvol_signal": vol.get("rvol_signal"),
-            "price_vs_vwap_pct": vol.get("price_vs_vwap_pct"),
-            "days_to_cover": short.get("days_to_cover"),
-            "mom_change_pct": short.get("mom_change_pct"),
-            "pcr_oi": opts.get("pcr_oi"),
-            "prev_day_vol":        None,
-            "vol_3d_total":        None,
-            "prev_day_net_inflow": None,
-            "avg_3d_net_inflow":   None,
-            "adr_premium_pct":     None,
-            "error": vol.get("error") or short.get("error") or opts.get("error"),
-        }
-        if _is_tw:
-            tw_id = t.upper().removesuffix(".TW")
-            adr = _fetch_adr_premium(tw_id)
-            if adr.get("available"):
-                result["adr_premium_pct"] = adr["premium_pct"]
-            # Populate 外資流向 from DB (read-only, no network call)
-            try:
-                from pathlib import Path as _Path
-                from data_sources.tw.db import TaiwanStockDB as _TWDB
-                _db_path = str(_Path(__file__).parent / "tw_stock.db")
-                with _TWDB(_db_path) as _db_conn:
-                    _flow_rows = _db_conn.get_institutional_flow_with_prices(tw_id, days=5)
-                if _flow_rows:
-                    _flow_rows.sort(key=lambda r: r["date"])
-                    result["prev_day_foreign_net"] = _flow_rows[-1].get("foreign_net")
-                    _last3 = _flow_rows[-3:]
-                    result["avg_3d_foreign_net"] = (
-                        sum(r.get("foreign_net") or 0 for r in _last3) / len(_last3)
-                        if _last3 else None
-                    )
-            except Exception:
-                pass
-        return t, result
-
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        futs = {ex.submit(_fetch, t): t for t in tickers}
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+UI_DIR = ROOT_DIR / "UI"
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from agent.policy_monitoring import PolicyMonitoringAgent  # noqa: E402
+from agent.llm_client import get_llm_client  # noqa: E402
+from config import settings  # noqa: E402
+
+_CACHE: dict[str, Any] = {"ts": None, "events": []}
+_CACHE_TTL_SECONDS = 300
+
+
+def _wants_ai(query: dict[str, list[str]]) -> bool:
+    raw = (query.get("ai", ["off"]) or ["off"])[0].strip().lower()
+    return raw in {"on", "1", "true", "yes"}
+
+
+def _extract_text_payload(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for block in content:
+            text = getattr(block, "text", None)
+            if isinstance(text, str):
+                parts.append(text)
+            elif isinstance(block, dict) and isinstance(block.get("text"), str):
+                parts.append(block["text"])
+        return "\n".join(parts)
+    return ""
+
+
+def _parse_first_json_array(text: str) -> list[dict[str, Any]] | None:
+    if not text:
+        return None
+    fenced = re.findall(r"```(?:json)?\s*([\s\S]*?)```", text, flags=re.IGNORECASE)
+    candidates = fenced + [text]
+    for candidate in candidates:
+        start = candidate.find("[")
+        end = candidate.rfind("]")
+        if start == -1 or end == -1 or end <= start:
+            continue
+        snippet = candidate[start : end + 1]
         try:
-            for fut in as_completed(futs, timeout=90):
-                try:
-                    t, data = fut.result()
-                    results[t] = data
-                except Exception as exc:
-                    t = futs[fut]
-                    results[t] = {"ticker": t, "error": str(exc)}
-        except FuturesTimeoutError:
-            pass
-
-    items = [results.get(t, {"ticker": t, "error": "timeout"}) for t in tickers]
-    return jsonify(_sanitize_nan({"items": items}))
-
-
-@app.route("/api/backlog/search")
-def backlog_search() -> Response:
-    """Search for tickers by symbol or company name."""
-    q = request.args.get("q", "").strip()
-    if not q:
-        return jsonify({"results": []})
-    return jsonify({"results": backlog_search_ticker(q)})
-
-@app.route("/api/backlog/valuation/<ticker>")
-def backlog_valuation(ticker: str) -> Response:
-    """Compute predicted valuation prices for a ticker using yfinance TTM PE and EPS."""
-    from services.backlog.valuation import fetch_valuation
-    t = ticker.strip().upper()
-    if not t or len(t) > 20:
-        return jsonify({"error": "invalid ticker"}), 400
-    return jsonify(fetch_valuation(t))
-
-
-@app.route("/api/analyze", methods=["POST"])
-def analyze() -> Response:
-    body = request.get_json(silent=True) or {}
-    query = (body.get("query") or "").strip()
-    if not query:
-        return jsonify({"error": "query is required"}), 400
-
-    # 6-3: Submit to AsyncRunner and return immediately.
-    # Frontend polls GET /api/analyze/status/<job_id> until status == "done".
-    job_id = async_runner.submit(investment_run_analysis, query)
-    return jsonify({"job_id": job_id, "status": "running"})
-
-
-@app.route("/api/analyze/status/<job_id>")
-def analyze_status(job_id: str) -> Response:
-    """6-3: Poll analysis job status.
-
-    Returns:
-        running:  {"status": "running", "message": "started"}
-        done:     {"status": "done", "result": "<analysis text>"}
-        error:    {"status": "error", "message": "<reason>"}
-        not_found:{"status": "not_found"}
-    """
-    return jsonify(async_runner.get_status(job_id))
-
-
-# ── Screener endpoints ────────────────────────────────────────────────────────
-
-from services.screener import runner as _screener_runner  # noqa: E402
-
-_SCREENER_VALID_MARKETS = {"SP500", "NASDAQ100", "DAX40", "TW50", "CN_CSI300", "CN_SZ100", "CN_GEM", "CN_STAR"}
-
-
-@app.route("/api/screener/start", methods=["POST"])
-def screener_start() -> Response:
-    """Start (or resume) a screener job for a given market.
-
-    Request JSON: {"market": "SP500" | "NASDAQ100" | "DAX40" | "TW50"}
-    Response:     {"job_id": "<uuid>", "status": "running" | "done"}
-    """
-    data = request.get_json(silent=True) or {}
-    market = (data.get("market") or "").strip().upper()
-    force  = bool(data.get("force", False))
-    if market not in _SCREENER_VALID_MARKETS:
-        return jsonify({"error": f"Invalid market: {market!r}. Choose from {sorted(_SCREENER_VALID_MARKETS)}"}), 400
-    try:
-        job_id = _screener_runner.start_screener(market, force=force)
-        state = _screener_runner.get_screener_status(job_id)
-        return jsonify({"job_id": job_id, "status": state.get("status", "running")})
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
-
-
-@app.route("/api/screener/pause/<job_id>", methods=["POST"])
-def screener_pause(job_id: str) -> Response:
-    """Pause a running screener job."""
-    ok = _screener_runner.pause_screener(job_id)
-    if not ok:
-        return jsonify({"error": "Job not found or not in running state"}), 404
-    return jsonify({"ok": True})
-
-
-@app.route("/api/screener/resume/<job_id>", methods=["POST"])
-def screener_resume(job_id: str) -> Response:
-    """Resume a paused screener job."""
-    ok = _screener_runner.resume_screener(job_id)
-    if not ok:
-        return jsonify({"error": "Job not found or not in paused state"}), 404
-    return jsonify({"ok": True})
-
-
-@app.route("/api/screener/cancel/<job_id>", methods=["POST"])
-def screener_cancel(job_id: str) -> Response:
-    """Cancel a running or paused screener job."""
-    ok = _screener_runner.cancel_screener(job_id)
-    return jsonify({"ok": ok})
-
-
-@app.route("/api/screener/status/<job_id>")
-def screener_status(job_id: str) -> Response:
-    """Get the current status of a screener job."""
-    state = _screener_runner.get_screener_status(job_id)
-    return jsonify(state)
-
-
-
-
-@app.route("/api/ashare/concept_tags/<ticker>")
-def ashare_concept_tags(ticker: str) -> Response:
-    """Return A-share concept/sector tags for a ticker. Lazy-builds cache on first call."""
-    from services.ashare.concept_tags import get_concept_tags
-    tags = get_concept_tags(ticker.upper())
-    return jsonify({"ticker": ticker.upper(), "tags": tags})
-
-
-@app.route("/api/policy", methods=["GET"])
-def policy() -> Response:
-    jurisdiction = request.args.get("jurisdiction", "ALL")
-    keyword = request.args.get("keyword", "")
-    from_date = request.args.get("from_date", "2024-01-01")
-    to_date = request.args.get("to_date", "2026-12-31")
-    limit = int(request.args.get("limit", "10"))
-
-    if not keyword:
-        return jsonify({"error": "keyword is required"}), 400
-
-    try:
-        events = _policy_agent.query_updates(jurisdiction, keyword, from_date, to_date, limit)
-        return jsonify({
-            "count": len(events),
-            "events": [
-                {
-                    "id": e.id,
-                    "source": e.source,
-                    "title": e.title,
-                    "published_at": e.published_at.isoformat(),
-                    "jurisdictions": e.jurisdictions,
-                    "url": e.url,
-                    "summary": e.summary,
-                }
-                for e in events
-            ],
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-# ── Policy Outlook & Sentiment Feed (UI sidebar) ─────────────────────────────
-
-from UI.app_server import (  # noqa: E402
-    _build_policy_outlook,
-    _build_sentiment_feed,
-    _load_events,
-    _ai_rewrite_items,
-    _now_utc,
-    _sample_events,
-    _wants_ai,
-)
-
-
-@app.route("/api/policy-outlook")
-def policy_outlook() -> Response:
-    keyword = (request.args.get("keyword") or "ai regulation")
-    days = int(request.args.get("days") or 180)
-    limit = int(request.args.get("limit") or 20)
-    ai_enabled = _wants_ai({"ai": [request.args.get("ai", "off")]})
-    try:
-        events = _load_events(keyword=keyword, days=days, limit=limit)
-    except Exception as exc:
-        events = _sample_events()
-        deterministic = _build_policy_outlook(events)
-        rewritten_items, ai_meta = _ai_rewrite_items("policy", deterministic["items"], ai_enabled)
-        return jsonify({"items": rewritten_items, "updated_at": _now_utc().isoformat(), "warning": str(exc), "ai": ai_meta})
-    payload = _build_policy_outlook(events)
-    payload["items"], payload["ai"] = _ai_rewrite_items("policy", payload["items"], ai_enabled)
-    return jsonify(payload)
-
-
-@app.route("/api/sentiment-feed")
-def sentiment_feed() -> Response:
-    keyword = (request.args.get("keyword") or "ai regulation")
-    days = int(request.args.get("days") or 180)
-    limit = int(request.args.get("limit") or 20)
-    ai_enabled = _wants_ai({"ai": [request.args.get("ai", "off")]})
-    try:
-        events = _load_events(keyword=keyword, days=days, limit=limit)
-    except Exception as exc:
-        events = _sample_events()
-        deterministic = _build_sentiment_feed(events)
-        rewritten_items, ai_meta = _ai_rewrite_items("sentiment", deterministic["items"], ai_enabled)
-        return jsonify({"items": rewritten_items, "updated_at": _now_utc().isoformat(), "warning": str(exc), "ai": ai_meta})
-    payload = _build_sentiment_feed(events)
-    payload["items"], payload["ai"] = _ai_rewrite_items("sentiment", payload["items"], ai_enabled)
-    return jsonify(payload)
-
-
-
-
-# ── Taiwan Market Endpoints ──────────────────────────────────────────────────
-
-@app.route("/api/tw/dashboard/summary")
-def tw_dashboard_summary() -> Response:
-    """Taiwan stock dashboard summary."""
-    ticker = (request.args.get("ticker") or "").strip()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = tw_build_dashboard_summary(ticker)
-    status_code = 200 if "error" not in result.get("summary", {}) else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/tw/market/overview")
-def tw_market_overview() -> Response:
-    """Taiwan market overview (TAIEX, OTC)."""
-    result = tw_build_market_index()
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/tw/dashboard/management")
-def tw_dashboard_management() -> Response:
-    """Taiwan stock management quality metrics."""
-    ticker = (request.args.get("ticker") or "").strip()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = tw_build_management_snapshot(ticker)
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/tw/documents/recent-announcements")
-def tw_recent_announcements() -> Response:
-    """Taiwan stock recent announcements/news."""
-    ticker = (request.args.get("ticker") or "").strip()
-    limit = int(request.args.get("limit", "10"))
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = build_recent_announcements(ticker, limit=limit)
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/tw/documents/financial-statements")
-def tw_financial_statements() -> Response:
-    """Taiwan stock financial statements (年報/季報)."""
-    ticker = (request.args.get("ticker") or "").strip()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = build_financial_statements(ticker)
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-@app.route("/api/tw/documents/annual-report")
-def tw_annual_report() -> Response:
-    """Taiwan stock annual report summary (年報摘要)."""
-    ticker = (request.args.get("ticker") or "").strip()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    result = build_annual_report_summary(ticker)
-    status_code = 200 if "error" not in result else 502
-    return jsonify(result), status_code
-
-
-_ADR_CACHE_TTL    = 900   # 15 minutes
-_TW_CHIPS_TTL     = 3600  # 1 hour — data updates once daily after market close
-
-
-def _fetch_adr_premium(tw_id: str) -> dict:
-    """Fetch ADR premium data for a Taiwan stock.
-
-    Returns a dict with available=True and price/premium fields, or
-    available=False with a reason string when data cannot be computed.
-    Caches results for _ADR_CACHE_TTL seconds using utils.cache.
-    """
-    import yfinance as yf
-    import time as _t
-    from utils.cache import get as _cache_get, set as _cache_set
-
-    cached = _cache_get("adr_premium", tw_id)
-    if cached is not None:
-        return cached
-
-    mapping = TW_ADR_MAP.get(tw_id)
-    if not mapping:
-        result = {"available": False, "reason": "no_adr_mapping"}
-        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
-        return result
-    if mapping["ratio"] is None:
-        result = {"available": False, "reason": "ratio_unconfirmed",
-                  "adr": mapping["adr"], "name": mapping["name"]}
-        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
-        return result
-
-    try:
-        adr_info   = yf.Ticker(mapping["adr"]).fast_info
-        tw_info    = yf.Ticker(f"{tw_id}.TW").fast_info
-        fx_info    = yf.Ticker("USDTWD=X").fast_info
-
-        adr_price  = adr_info.get("last_price") or adr_info.get("previousClose")
-        tw_price   = tw_info.get("last_price") or tw_info.get("previousClose")
-        usdtwd     = fx_info.get("last_price") or fx_info.get("previousClose")
-
-        if not all([adr_price, tw_price, usdtwd]):
-            result = {"available": False, "reason": "price_unavailable",
-                      "adr": mapping["adr"], "name": mapping["name"]}
-            _cache_set("adr_premium", tw_id, result, 60)  # short TTL on error
-            return result
-
-        ratio         = mapping["ratio"]
-        adr_twd_equiv = adr_price * usdtwd / ratio
-        premium_pct   = (adr_twd_equiv / tw_price - 1) * 100
-
-        result = {
-            "available":      True,
-            "tw_id":          tw_id,
-            "name":           mapping["name"],
-            "adr":            mapping["adr"],
-            "exchange":       mapping["exchange"],
-            "ratio":          ratio,
-            "adr_price_usd":  round(adr_price, 4),
-            "usdtwd":         round(usdtwd, 4),
-            "adr_twd_equiv":  round(adr_twd_equiv, 2),
-            "tw_price":       round(tw_price, 2),
-            "premium_pct":    round(premium_pct, 2),
-            "fetched_at":     int(_t.time()),
-        }
-        _cache_set("adr_premium", tw_id, result, _ADR_CACHE_TTL)
-        return result
-
-    except Exception as exc:
-        result = {"available": False, "reason": "fetch_error", "detail": str(exc),
-                  "adr": mapping.get("adr"), "name": mapping.get("name")}
-        _cache_set("adr_premium", tw_id, result, 60)
-        return result
-
-
-@app.route("/api/tw/adr-premium")
-def tw_adr_premium() -> Response:
-    """Return ADR premium/discount data for a Taiwan stock.
-
-    Query param: ticker — bare TW ticker (e.g. '2330') or with suffix ('2330.TW').
-    Response fields when available=True:
-      adr, exchange, ratio, adr_price_usd, usdtwd, adr_twd_equiv, tw_price,
-      premium_pct (positive = ADR trades at premium over TW share).
-    """
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-    tw_id = ticker.removesuffix(".TW")
-    result = _sanitize_nan(_fetch_adr_premium(tw_id))
-    return jsonify(result)
-
-
-@app.route("/api/tw/chips/institutional")
-def tw_chips_institutional() -> Response:
-    """Return 籌碼訊號矩陣 for a Taiwan stock.
-
-    Query params:
-      ticker  — bare or .TW suffix (e.g. '2330' or '2330.TW')
-      days    — history window in trading days (default 60, max 90)
-      refresh — '1' to force re-fetch even if cache is warm
-
-    First call for a new stock triggers TWSE T86 historical fetch (~1 min).
-    Subsequent calls are served from SQLite cache.
-    """
-    from utils.cache import get as _cache_get, set as _cache_set
-    from services.tw.chips.institutional import (
-        ensure_institutional_data, compute_tw_chips_signals,
-    )
-
-    ticker  = (request.args.get("ticker") or "").strip().upper()
-    days    = min(int(request.args.get("days", 120)), 150)
-    refresh = request.args.get("refresh", "0") == "1"
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    tw_id = ticker.removesuffix(".TW")
-
-    # Check in-memory cache
-    cache_key = f"tw_chips_{tw_id}_{days}"
-    if not refresh:
-        cached = _cache_get("tw_chips_inst", cache_key)
-        if cached is not None:
-            return jsonify(_sanitize_nan(cached))
-
-    # Ensure enough data is in DB (may trigger TWSE fetch — first call ~120s)
-    ensure_result = ensure_institutional_data(tw_id, target_days=days, force_refresh=refresh)
-
-    if ensure_result.get("days_available", 0) < 3:
-        return jsonify({
-            "available": False,
-            "reason": "insufficient_data",
-            "days_available": ensure_result.get("days_available", 0),
-            "stock_id": tw_id,
-        }), 200
-
-    result = compute_tw_chips_signals(tw_id, days=days)
-    _cache_set("tw_chips_inst", cache_key, result, _TW_CHIPS_TTL)
-    return jsonify(_sanitize_nan(result))
-
-
-@app.route("/api/tw/chips/margin")
-def tw_chips_margin() -> Response:
-    """Return 融資融券背離訊號 for a Taiwan stock.
-
-    Query params:
-      ticker  — bare or .TW suffix (e.g. '2330' or '2330.TW')
-      days    — history window in trading days (default 60, max 120)
-      refresh — '1' to force re-fetch even if cache is warm
-
-    First call for a new stock triggers TWSE MI_MARGN historical fetch (~120s).
-    Subsequent calls served from SQLite cache (1-hour TTL).
-    """
-    from utils.cache import get as _cache_get, set as _cache_set
-    from services.tw.chips.margin import ensure_margin_data, compute_tw_margin_signals
-
-    ticker  = (request.args.get("ticker") or "").strip().upper()
-    days    = min(int(request.args.get("days", 60)), 120)
-    refresh = request.args.get("refresh", "0") == "1"
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    tw_id = ticker.removesuffix(".TW")
-    if not tw_id.isdigit():
-        return jsonify({"error": "invalid Taiwan ticker"}), 400
-
-    cache_key = f"tw_margin_{tw_id}_{days}"
-    if not refresh:
-        cached = _cache_get("tw_chips_margin", cache_key)
-        if cached is not None:
-            return jsonify(_sanitize_nan(cached))
-
-    ensure_result = ensure_margin_data(tw_id, target_days=120, force_refresh=refresh)
-
-    if ensure_result.get("days_available", 0) < 5:
-        return jsonify({
-            "available": False,
-            "reason": "insufficient_data",
-            "days_available": ensure_result.get("days_available", 0),
-            "stock_id": tw_id,
-        }), 200
-
-    result = compute_tw_margin_signals(tw_id, days=days)
-    _cache_set("tw_chips_margin", cache_key, result, _TW_CHIPS_TTL)
-    return jsonify(_sanitize_nan(result))
-
-
-# ── Financial Health ─────────────────────────────────────────────────────────
-
-# In-memory cache: {ticker: {data, scores, cached_at}}
-_fh_data_cache = {}
-_FH_CACHE_TTL = 1800  # 30 minutes
-
-import time as _time
-
-
-def _fh_cache_get(ticker: str):
-    entry = _fh_data_cache.get(ticker.upper())
-    if entry and (_time.time() - entry["cached_at"]) < _FH_CACHE_TTL:
-        return entry
+            parsed = json.loads(snippet)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, list):
+            clean = [x for x in parsed if isinstance(x, dict)]
+            return clean
     return None
 
 
-_TICKER_RE = re.compile(r'^[A-Z0-9.]{1,10}$')
+def _ai_rewrite_items(kind: str, items: list[dict[str, Any]], enabled: bool) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if not enabled:
+        return items, {"mode": "deterministic", "ai_used": False}
 
-
-def _sanitize_nan(obj):
-    """Recursively replace float NaN/Inf with None for valid JSON serialization."""
-    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
-        return None
-    if isinstance(obj, dict):
-        return {k: _sanitize_nan(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_sanitize_nan(v) for v in obj]
-    return obj
-
-
-_fx_cache: dict = {}
-
-# (symbol, invert, key): if invert=True, rate = 1/raw; key is cache/response key
-_FX_PAIRS = [
-    ('EURUSD=X',  True,  'EURUSD'),   # raw = USD per EUR → invert to get USD→EUR
-    ('USDTWD=X',  False, 'USDTWD'),   # raw = TWD per USD
-    ('USDCNY=X',  False, 'USDCNY'),   # raw = CNY per USD
-]
-
-
-@app.route("/api/exchange-rate")
-def exchange_rate() -> Response:
-    """Return exchange rates (USD→EUR, USD→TWD, USD→CNY) via yfinance. Cached 10 min."""
-    import yfinance as yf
-    import time as _t
-
-    now = _t.time()
-    pairs: dict = {}
-
-    for yf_sym, invert, key in _FX_PAIRS:
-        cached = _fx_cache.get(key)
-        if cached and (now - cached['at']) < 600:
-            pairs[key] = cached['rate']
-            continue
-        try:
-            info = yf.Ticker(yf_sym).fast_info
-            raw = float(info.get('lastPrice') or info.get('last_price') or 0)
-            rate = (1.0 / raw if raw else 1.0) if invert else (raw or 1.0)
-        except Exception:
-            rate = (_fx_cache.get(key) or {}).get('rate', 1.0)
-        _fx_cache[key] = {'rate': rate, 'at': now}
-        pairs[key] = rate
-
-    payload = {
-        'pairs': {k: round(v, 6) for k, v in pairs.items()},
-        # backward-compat: keep top-level 'rate' = EURUSD rate
-        'base': 'USD', 'quote': 'EUR', 'rate': round(pairs.get('EURUSD', 1.0), 6),
-    }
-    return jsonify(payload)
-
-
-@app.route("/api/financial_health/transcript/<ticker>")
-def fh_transcript(ticker: str) -> Response:
-    """Fetch latest earnings transcript for a ticker (FMP → HF cache → EDGAR)."""
-    from tools.earnings_transcript import EarningsTranscriptTool
-    t = ticker.strip().upper()
-    if not _TICKER_RE.match(t):
-        return jsonify({"error": "invalid_ticker"}), 400
-    return jsonify(EarningsTranscriptTool().execute({"ticker": t}))
-
-
-@app.route("/api/financial_health/data")
-def financial_health_data() -> Response:
-    """Fetch + score financial health data for a ticker."""
-    ticker = (request.args.get("ticker") or "").strip().upper()
-    lang   = (request.args.get("lang") or "en").strip().lower()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    cached = _fh_cache_get(ticker)
-    if cached:
-        return jsonify({**cached["payload"], "cached": True}), 200
-
-    raw = fetch_financial_health(ticker)
-    if raw.get("error"):
-        return jsonify(raw), 502
-
-    scoring = score_financial_health(raw["fundamentals"])
-    year_scores = score_financial_health_multiyear(raw["fundamentals"], raw["years"])
-
-    # Deduplicate year_scores: keep only the first entry per year (newest quarter).
-    # Prevents duplicate year labels when quarterly CN data slips through.
-    _seen_years: set = set()
-    year_scores_deduped = []
-    for ys in year_scores:
-        yr = ys.get("year")
-        if yr not in _seen_years:
-            _seen_years.add(yr)
-            year_scores_deduped.append(ys)
-
-    payload = {
-        "ticker":       raw["ticker"],
-        "years":        raw["years"],
-        "fundamentals": raw["fundamentals"],
-        "info":         raw["info"],
-        "scores":       scoring["indicator_scores"],
-        "group_scores": scoring["group_scores"],
-        "weighted_100": scoring["weighted_100"],
-        "year_scores":  year_scores_deduped[:5],
-        "data_source":  raw.get("data_source", "yfinance"),
-        "cached":       False,
-    }
-    clean = _sanitize_nan(payload)
-    _fh_data_cache[ticker] = {"payload": clean, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
-    return jsonify(clean), 200
-
-
-@app.route("/api/financial_health/summary", methods=["POST"])
-def financial_health_summary() -> Response:
-    """LLM financial health summary for a ticker."""
-    body   = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    lang   = (body.get("lang") or "en").strip().lower()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    cached = _fh_cache_get(ticker)
-    if cached:
-        raw     = cached["raw"]
-        scoring = cached["scoring"]
-    else:
-        raw = fetch_financial_health(ticker)
-        if raw.get("error"):
-            return jsonify(raw), 502
-        scoring = score_financial_health(raw["fundamentals"])
-        _fh_data_cache[ticker] = {"payload": {}, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
-
-    result = fh_health_summary(ticker, raw["fundamentals"], raw["years"], scoring, lang)
-    return jsonify(result), 200
-
-
-@app.route("/api/financial_health/drilldown", methods=["POST"])
-def financial_health_drilldown() -> Response:
-    """LLM contribution drill-down analysis for a ticker."""
-    body   = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    lang   = (body.get("lang") or "en").strip().lower()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    cached = _fh_cache_get(ticker)
-    if cached:
-        raw = cached["raw"]
-    else:
-        raw = fetch_financial_health(ticker)
-        if raw.get("error"):
-            return jsonify(raw), 502
-        scoring = score_financial_health(raw["fundamentals"])
-        _fh_data_cache[ticker] = {"payload": {}, "raw": raw, "scoring": scoring, "cached_at": _time.time()}
-
-    # Try to get latest transcript excerpt (graceful fallback)
-    transcript_excerpt = None
     try:
-        from data_sources.transcripts.hf_cache import get_cached_transcript
-        tc = get_cached_transcript(ticker)
-        if "error" not in tc:
-            transcript_excerpt = tc.get("content_excerpt") or tc.get("content")
+        client = get_llm_client()
     except Exception:
-        pass
+        return items, {"mode": "ai", "ai_used": False, "warning": "LLM client is not configured."}
 
-    result = fh_drilldown_analysis(ticker, raw["fundamentals"], raw["years"], transcript_excerpt, lang)
-    return jsonify(result), 200
+    if kind == "policy":
+        instruction = (
+            "Rewrite each policy card for an institutional audience. "
+            "Return ONLY a JSON array with the same length and keys: "
+            "title (string), windowPct (integer 0-100), expires (string), severity ('high'|'medium')."
+        )
+    else:
+        instruction = (
+            "Rewrite each sentiment item with sharper risk/opportunity phrasing. "
+            "Return ONLY a JSON array with the same length and keys: "
+            "label (string), tone ('positive'|'negative'|'alert'), time (string), tag (string), headline (string)."
+        )
 
-
-# ── Competitor Comparison routes ──────────────────────────────────────────────
-
-_peers_cache: dict = {}
-_PEERS_CACHE_TTL = 300  # 5 minutes
-
-
-@app.route("/api/fh/peers/<path:ticker>")
-def fh_peers(ticker: str) -> Response:
-    """Return up to 5 peer tickers for a given stock with 5-minute in-memory cache."""
-    from services.financial_health.competitor import get_peers
-    t = ticker.strip().upper()
-    if not t:
-        return jsonify({"error": "ticker required"}), 400
-
-    entry = _peers_cache.get(t)
-    if entry and (_time.time() - entry["cached_at"]) < _PEERS_CACHE_TTL:
-        return jsonify(entry["data"]), 200
-
-    data = get_peers(t)
-    _peers_cache[t] = {"data": data, "cached_at": _time.time()}
-    return jsonify(data), 200
-
-
-@app.route("/api/fh/competitor_compare", methods=["POST"])
-def fh_competitor_compare() -> Response:
-    """Compare main company against up to 4 competitors across multiple dimensions."""
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-    from services.financial_health.competitor import (
-        get_company_profile,
-        get_price_history,
-        get_analyst_ratings,
-        get_competitor_fh_scores,
-        get_linkedin_jobs,
-        get_llm_business_diff,
-    )
-
-    body = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    competitors_raw = body.get("competitors") or []
-
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-    if not isinstance(competitors_raw, list) or not competitors_raw:
-        return jsonify({"error": "competitors must be a non-empty list"}), 400
-
-    # Validate and clean competitor tickers
-    competitors = []
-    for c in competitors_raw:
-        c = str(c).strip().upper()
-        if c and c != ticker and c not in competitors and not c.isdigit():
-            competitors.append(c)
-    competitors = competitors[:4]
-
-    if not competitors:
-        return jsonify({"error": "no valid competitor tickers provided"}), 400
-
-    all_tickers = [ticker] + competitors
-
-    # Parallel fetch: profile, price_history, analyst_ratings, fh_scores
-    profiles_result = {}
-    price_result = {}
-    analyst_result = {}
-    fh_result = {}
-    linkedin_result = {}
-
-    def _fetch_profiles():
-        return get_company_profile(all_tickers)
-
-    def _fetch_prices():
-        return get_price_history(all_tickers, period="1y")
-
-    def _fetch_analysts():
-        return get_analyst_ratings(all_tickers)
-
-    def _fetch_fh():
-        return get_competitor_fh_scores(all_tickers, _fh_data_cache)
-
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        f_profiles  = ex.submit(_fetch_profiles)
-        f_prices    = ex.submit(_fetch_prices)
-        f_analysts  = ex.submit(_fetch_analysts)
-        f_fh        = ex.submit(_fetch_fh)
-
-        try:
-            for f in as_completed([f_profiles, f_prices, f_analysts, f_fh], timeout=60):
-                pass  # wait for all; individual result() calls below handle per-future errors
-        except TimeoutError:
-            pass  # some futures didn't finish in 60s; result(timeout=1) below will surface errors
-
+    items_to_rewrite = items[:8]
+    estimated_max_tokens = min(120 * len(items_to_rewrite) + 200, 2000)
     try:
-        profiles_result = f_profiles.result(timeout=1)
-    except Exception as e:
-        logger.warning("Profiles fetch failed: %s", e)
-
-    try:
-        price_result = f_prices.result(timeout=1)
-    except Exception as e:
-        logger.warning("Price history fetch failed: %s", e)
-
-    try:
-        analyst_result = f_analysts.result(timeout=1)
-    except Exception as e:
-        logger.warning("Analyst ratings fetch failed: %s", e)
-
-    try:
-        fh_result = f_fh.result(timeout=1)
-    except Exception as e:
-        logger.warning("FH scores fetch failed: %s", e)
-
-    # LinkedIn (best-effort, serial — fragile scraping)
-    company_names = {t: (profiles_result.get(t) or {}).get("companyName") or t for t in all_tickers}
-    try:
-        linkedin_result = get_linkedin_jobs(all_tickers, company_names)
-    except Exception as e:
-        logger.warning("LinkedIn jobs failed: %s", e)
-        linkedin_result = {t: {"count": None, "source": "unavailable"} for t in all_tickers}
-
-    # LLM business diff (depends on profiles)
-    business_diff = {"summary": None, "key_diffs": [], "ai_generated": True}
-    try:
-        business_diff = get_llm_business_diff(ticker, competitors, profiles_result)
-    except Exception as e:
-        logger.warning("LLM business diff failed: %s", e)
-
-    # Assemble response
-    def _company_data(t: str) -> dict:
-        return {
-            "ticker":    t,
-            "profile":   profiles_result.get(t) or {},
-            "fh_score":  fh_result.get(t) or {"total_score": None, "group_scores": None, "indicator_scores": None},
-            "analyst":   analyst_result.get(t) or {},
-            "linkedin":  linkedin_result.get(t) or {"count": None, "source": "unavailable"},
-        }
-
-    response_data = {
-        "main": _company_data(ticker),
-        "competitors": [
-            {**_company_data(c), "price_history": price_result.get(c) or []}
-            for c in competitors
-        ],
-        "price_history_main": price_result.get(ticker) or [],
-        "business_diff": business_diff,
-    }
-
-    return jsonify(response_data), 200
-
-
-# ── Supply Chain routes ────────────────────────────────────────────────────────
-
-_SC_DISCOVER_CACHE: dict = {}
-_SC_DISCOVER_TTL = 21600   # 6 hours — supply chain structure rarely changes
-_SC_ANALYZE_CACHE: dict = {}
-_SC_ANALYZE_TTL  = 1800    # 30 minutes
-
-
-@app.route("/api/supply_chain/discover", methods=["POST"])
-def supply_chain_discover() -> Response:
-    """LLM-powered supply chain discovery for a ticker."""
-    body   = request.get_json(silent=True) or {}
-    ticker = (body.get("ticker") or "").strip().upper()
-    lang   = (body.get("lang") or "en").strip().lower()
-    if not ticker:
-        return jsonify({"error": "ticker is required"}), 400
-
-    cache_key = f"{ticker}:{lang}"
-    entry = _SC_DISCOVER_CACHE.get(cache_key)
-    if entry and (_time.time() - entry["cached_at"]) < _SC_DISCOVER_TTL:
-        return jsonify({**entry["data"], "cached": True}), 200
-
-    data = sc_discover(ticker, lang)
-    if data.get("error") and not data.get("nodes"):
-        return jsonify(data), 502
-
-    _SC_DISCOVER_CACHE[cache_key] = {"data": data, "cached_at": _time.time()}
-    return jsonify({**data, "cached": False}), 200
-
-
-@app.route("/api/supply_chain/analyze_node", methods=["POST"])
-def supply_chain_analyze_node() -> Response:
-    """LLM read-through analysis for a specific supply chain node."""
-    body          = request.get_json(silent=True) or {}
-    center_ticker = (body.get("center_ticker") or "").strip().upper()
-    center_name   = (body.get("center_name") or center_ticker).strip()
-    node_ticker   = (body.get("node_ticker") or "").strip().upper()
-    node_name     = (body.get("node_name") or node_ticker).strip()
-    relation      = (body.get("relation") or "peer").strip().lower()
-    lang          = (body.get("lang") or "en").strip().lower()
-    if not center_ticker or not node_ticker:
-        return jsonify({"error": "center_ticker and node_ticker are required"}), 400
-
-    cache_key = f"{center_ticker}:{node_ticker}:{lang}"
-    entry = _SC_ANALYZE_CACHE.get(cache_key)
-    if entry and (_time.time() - entry["cached_at"]) < _SC_ANALYZE_TTL:
-        return jsonify({**entry["data"], "cached": True}), 200
-
-    # Optional: pull transcript excerpt for the center company
-    transcript_excerpt = None
-    try:
-        from data_sources.transcripts.hf_cache import get_cached_transcript
-        tc = get_cached_transcript(center_ticker)
-        if "error" not in tc:
-            transcript_excerpt = tc.get("content_excerpt") or tc.get("content")
-            if transcript_excerpt:
-                transcript_excerpt = transcript_excerpt[:4000]
-    except Exception:
-        pass
-
-    # Optional: pull financial summary from FH cache
-    financial_summary = None
-    fh_entry = _fh_data_cache.get(center_ticker)
-    if fh_entry and fh_entry.get("raw"):
-        raw_fh = fh_entry["raw"]
-        funda  = raw_fh.get("fundamentals", {})
-        years  = raw_fh.get("years", [])
-        score  = fh_entry.get("scoring", {}).get("weighted_100")
-        lines  = [f"Health Score: {score}/100"] if score else []
-        for metric in ("revenueGrowth", "grossProfitMargin", "returnOnEquity", "freeCashFlowGrowth", "DebtToEquity"):
-            vals = funda.get(metric)
-            if vals:
-                try:
-                    v = float(vals[0])
-                    yr = years[0] if years else ""
-                    lines.append(f"  {metric} ({yr}): {v*100:.1f}%" if abs(v) < 50 else f"  {metric} ({yr}): {v:.2f}")
-                except Exception:
-                    pass
-        financial_summary = "\n".join(lines) if lines else None
-
-    result = sc_analyze_node(
-        center_ticker, center_name, node_ticker, node_name, relation,
-        transcript_excerpt, financial_summary, lang
-    )
-    if not result.get("error"):
-        _SC_ANALYZE_CACHE[cache_key] = {"data": result, "cached_at": _time.time()}
-    return jsonify(result), 200
-
-
-@app.route("/api/llm/status")
-def llm_status() -> Response:
-    """Return current LLM provider status — useful for health monitoring and debugging."""
-    from agent.llm_client import get_provider_status
-    return jsonify(get_provider_status()), 200
-
-
-# ── Chip Analysis ──────────────────────────────────────────────────────────────
-
-def _is_tw(ticker: str) -> bool:
-    return ticker.upper().endswith(".TW")
-
-
-@app.route("/api/chips/summary/<ticker>")
-def chips_summary(ticker: str) -> Response:
-    """Level 1 fast data: volume (RVOL/VWAP) + short interest."""
-    from services.ashare import is_cn
-    if is_cn(ticker):
-        from services.ashare.chips.dispatcher import fetch_cn_chips_summary
-        return jsonify(fetch_cn_chips_summary(ticker)), 200
-
-    if _is_tw(ticker):
-        # TW stocks: volume/short from yfinance is unreliable; return market flag
-        return jsonify({
-            "ticker": ticker.upper(),
-            "market": "TW",
-            "volume": {"available": False, "reason": "tw_use_institutional_endpoint"},
-            "short":  {"available": False, "reason": "tw_no_short_market"},
-        }), 200
-
-    from services.chips.volume import fetch_volume_data
-    from services.chips.short_interest import fetch_short_interest
-
-    vol = fetch_volume_data(ticker)
-    short = fetch_short_interest(ticker)
-    return jsonify({"ticker": ticker.upper(), "volume": vol, "short": short}), 200
-
-
-@app.route("/api/chips/options/<ticker>")
-def chips_options(ticker: str) -> Response:
-    """Level 2 options flow: PCR, Max Pain, OI distribution."""
-    from services.ashare import is_cn
-    if is_cn(ticker):
-        return jsonify({
-            "ticker": ticker.upper(), "market": "CN_A",
-            "available": False, "reason": "no_options_market",
-        }), 200
-
-    from services.chips.options_flow import fetch_options_flow
-    return jsonify(fetch_options_flow(ticker)), 200
-
-
-@app.route("/api/chips/institutional/<ticker>")
-def chips_institutional(ticker: str) -> Response:
-    """Level 2-3 institutional data: 13F holders, Form 4 insider trades, ETF holders."""
-    from services.ashare import is_cn
-    if is_cn(ticker):
-        from services.ashare.chips.dispatcher import fetch_cn_chips_institutional
-        return jsonify(fetch_cn_chips_institutional(ticker)), 200
-
-    if _is_tw(ticker):
-        # TW stocks use /api/tw/chips/institutional — this endpoint returns a redirect hint
-        return jsonify({
-            "ticker": ticker.upper(),
-            "market": "TW",
-            "institutional": {"available": False, "reason": "use_tw_chips_endpoint"},
-            "insider":       {"available": False},
-            "etf":           {"available": False},
-        }), 200
-
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-    from services.chips.institutional import fetch_institutional
-    from services.chips.insider import fetch_insider
-    from services.chips.etf_flow import fetch_etf_holders
-
-    results = {}
-    tasks = {
-        "institutional": (fetch_institutional, ticker),
-        "insider": (fetch_insider, ticker),
-        "etf": (fetch_etf_holders, ticker),
-    }
-
-    with ThreadPoolExecutor(max_workers=3) as ex:
-        future_map = {ex.submit(fn, t): key for key, (fn, t) in tasks.items()}
-        for future in as_completed(future_map, timeout=15):
-            key = future_map[future]
-            try:
-                results[key] = future.result()
-            except Exception as e:
-                results[key] = {"error": str(e)}
-
-    return jsonify({"ticker": ticker.upper(), **results}), 200
-
-
-@app.route("/api/company/news")
-def company_news() -> Response:
-    """Fetch and categorise recent company news via yfinance."""
-    ticker = request.args.get("ticker", "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "ticker required", "items": []})
-    try:
-        import yfinance as yf
-        raw = yf.Ticker(ticker).news or []
-        _CATS: dict[str, list[str]] = {
-            "legal":     ["lawsuit", "sue", "legal", "court", "litigation", "settlement",
-                          "verdict", "penalty", "fine", "regulatory", "class action",
-                          "investigation", "antitrust", "ftc charges", "sec charges"],
-            "product":   ["launch", "release", "unveil", "new product", "introduces",
-                          "debut", "ships", "rolls out", "announces new"],
-            "tech":      ["ai ", "artificial intelligence", "chip", "software", "hardware",
-                          "patent", "algorithm", "innovation", "breakthrough", "model"],
-            "financial": ["earnings", "revenue", "profit", "loss", "quarterly", "eps",
-                          "dividend", "buyback", "guidance", "forecast", "outlook"],
-            "deal":      ["acquire", "merger", "acquisition", "deal", "partnership",
-                          "joint venture", "invest", "stake"],
-        }
-
-        def _cat(title: str) -> str:
-            tl = title.lower()
-            for k, kws in _CATS.items():
-                if any(w in tl for w in kws):
-                    return k
-            return "general"
-
-        items = [
-            {
-                "title": n.get("title", ""),
-                "publisher": n.get("publisher", ""),
-                "link": n.get("link", ""),
-                "published_at": n.get("providerPublishTime", 0),
-                "category": _cat(n.get("title", "")),
+        response = client.chat.completions.create(
+            model=settings.MODEL,
+            messages=[
+                {"role": "system", "content": "You are a financial policy and market narrative editor."},
+                {
+                    "role": "user",
+                    "content": (
+                        f"{instruction}\n"
+                        "Do not add commentary. Output raw JSON array only.\n"
+                        f"Input items JSON:\n{json.dumps(items_to_rewrite, ensure_ascii=True)}"
+                    ),
+                },
+            ],
+            max_tokens=estimated_max_tokens,
+            timeout=min(max(settings.API_TIMEOUT, 8), 45),
+        )
+        usage = getattr(response, "usage", None)
+        content = _extract_text_payload(response.choices[0].message.content if response.choices else "")
+        rewritten = _parse_first_json_array(content)
+        if rewritten and len(rewritten) >= max(1, len(items_to_rewrite) // 2):
+            merged = rewritten + items_to_rewrite[len(rewritten):]
+            merged += items[len(items_to_rewrite):]
+            return merged[:len(items)], {
+                "mode": "ai",
+                "ai_used": True,
+                "prompt_tokens": getattr(usage, "prompt_tokens", 0) if usage else 0,
+                "completion_tokens": getattr(usage, "completion_tokens", 0) if usage else 0,
+                "total_tokens": getattr(usage, "total_tokens", 0) if usage else 0,
             }
-            for n in raw[:20]
-        ]
-        return jsonify({"ticker": ticker, "items": items,
-                        "fetched_at": datetime.now().isoformat()[:19]})
+        return items, {
+            "mode": "ai",
+            "ai_used": False,
+            "warning": f"AI response was not valid JSON array (got {len(rewritten) if rewritten else 0}/{len(items_to_rewrite)} items); kept deterministic content.",
+        }
     except Exception as exc:
-        return jsonify({"error": str(exc), "items": [], "ticker": ticker})
+        return items, {
+            "mode": "ai",
+            "ai_used": False,
+            "warning": f"AI rewrite failed: {exc}",
+        }
+
+
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _quarter_label(dt: datetime) -> str:
+    return f"{dt.year}-Q{((dt.month - 1) // 3) + 1}"
+
+
+def _window_pct(effective_to: str | None) -> int:
+    if not effective_to:
+        return 50
+    try:
+        expires = datetime.fromisoformat(effective_to.replace("Z", "+00:00"))
+        remaining_days = (expires - _now_utc()).days
+        return max(0, min(100, int((remaining_days / 365) * 100)))
+    except Exception:
+        return 50
+
+
+def _time_label(iso_dt: str) -> str:
+    try:
+        dt = datetime.fromisoformat(iso_dt.replace("Z", "+00:00"))
+        return dt.strftime("%H:%M UTC")
+    except Exception:
+        return "Unknown"
+
+
+def _tag_from_event(ev: dict[str, Any]) -> str:
+    topics = ev.get("topics") or []
+    topics_text = " ".join(topics).lower()
+    if "ai" in topics_text or "digital" in topics_text or "market_structure" in topics_text:
+        return "tech"
+    if ev.get("source") in ("SEC", "FEDERAL_REGISTER"):
+        return "policy"
+    return "macro"
+
+
+def _load_events(keyword: str, days: int, limit: int) -> list[dict[str, Any]]:
+    now = _now_utc()
+    ts = _CACHE.get("ts")
+    if ts and (now - ts).total_seconds() < _CACHE_TTL_SECONDS and _CACHE.get("events"):
+        return _CACHE["events"]
+
+    from_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
+    to_date = now.strftime("%Y-%m-%d")
+
+    agent = PolicyMonitoringAgent()
+    events = agent.query_updates(
+        jurisdiction="ALL",
+        keyword=keyword,
+        from_date=from_date,
+        to_date=to_date,
+        limit=limit,
+    )
+    payload = [e.to_dict() for e in events]
+    _CACHE["ts"] = now
+    _CACHE["events"] = payload
+    return payload
+
+
+def _sample_events() -> list[dict[str, Any]]:
+    now = _now_utc()
+    return [
+        {
+            "id": "sample-1",
+            "source": "FEDERAL_REGISTER",
+            "title": "Trade Tariff Exemption 4-A",
+            "summary": "Temporary exemption window extended for critical semiconductor imports.",
+            "published_at": now.isoformat(),
+            "effective_to": (now + timedelta(days=280)).isoformat(),
+            "topics": ["market_structure"],
+        },
+        {
+            "id": "sample-2",
+            "source": "SEC",
+            "title": "Semiconductor Subsidy Phase 2",
+            "summary": "Second phase implementation notice introduces narrower eligibility criteria.",
+            "published_at": (now - timedelta(days=1)).isoformat(),
+            "effective_to": (now + timedelta(days=120)).isoformat(),
+            "topics": ["ai_regulation"],
+        },
+        {
+            "id": "sample-3",
+            "source": "EUR_LEX",
+            "title": "EU AI Act Compliance Window",
+            "summary": "Compliance obligations enter final pre-enforcement phase for high-risk models.",
+            "published_at": (now - timedelta(days=2)).isoformat(),
+            "effective_to": (now + timedelta(days=60)).isoformat(),
+            "topics": ["ai_regulation", "data_privacy"],
+        },
+    ]
+
+
+def _build_policy_outlook(events: list[dict[str, Any]]) -> dict[str, Any]:
+    cards = []
+    for ev in events[:3]:
+        pct = _window_pct(ev.get("effective_to"))
+        severity = "high" if pct <= 25 else "medium"
+        expires = "Ongoing"
+        if ev.get("effective_to"):
+            try:
+                dt = datetime.fromisoformat(ev["effective_to"].replace("Z", "+00:00"))
+                expires = _quarter_label(dt)
+            except Exception:
+                expires = "Ongoing"
+        cards.append(
+            {
+                "title": ev.get("title", "Untitled Policy Event"),
+                "windowPct": pct,
+                "expires": expires,
+                "severity": severity,
+            }
+        )
+
+    return {"items": cards, "updated_at": _now_utc().isoformat()}
+
+
+def _build_sentiment_feed(events: list[dict[str, Any]]) -> dict[str, Any]:
+    from agent.policy_monitoring.rules import classify_impact
+    from agent.policy_monitoring.schemas import PolicyEvent
+
+    feed = []
+    for ev in events[:12]:
+        try:
+            model = PolicyEvent(**ev)
+            cls = classify_impact(model)
+            if cls.impact == "opportunity":
+                label, tone = "Positive", "positive"
+            elif cls.impact == "constraint":
+                label, tone = "Negative", "negative"
+            else:
+                label, tone = "Alert", "alert"
+        except Exception:
+            label, tone = "Alert", "alert"
+
+        feed.append(
+            {
+                "label": label,
+                "tone": tone,
+                "time": _time_label(ev.get("published_at", "")),
+                "tag": _tag_from_event(ev),
+                "headline": ev.get("summary") or ev.get("title") or "No summary available.",
+            }
+        )
+
+    return {"items": feed, "updated_at": _now_utc().isoformat()}
+
+
+class UiApiHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(UI_DIR), **kwargs)
+
+    def _send_json(self, payload: dict[str, Any], status: int = 200) -> None:
+        body = json.dumps(payload, ensure_ascii=True).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_html(self, content: str, status: int = 200) -> None:
+        body = content.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        
+        # Health check
+        if parsed.path == "/api/health":
+            self._send_json({"status": "ok", "timestamp": _now_utc().isoformat()})
+            return
+
+        # Exchange rate (stub)
+        if parsed.path == "/api/exchange-rate":
+            self._send_json({
+                "rates": {
+                    "USD": 1.0,
+                    "EUR": 0.92,
+                    "GBP": 0.79,
+                    "JPY": 149.5,
+                    "CNY": 7.25,
+                },
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Policy outlook
+        if parsed.path == "/api/policy-outlook":
+            query = parse_qs(parsed.query)
+            keyword = (query.get("keyword", ["ai regulation"]) or ["ai regulation"])[0]
+            days = int((query.get("days", ["180"]) or ["180"])[0])
+            limit = int((query.get("limit", ["20"]) or ["20"])[0])
+            ai_enabled = _wants_ai(query)
+            try:
+                events = _load_events(keyword=keyword, days=days, limit=limit)
+            except Exception as exc:
+                events = _sample_events()
+                deterministic = _build_policy_outlook(events)
+                rewritten_items, ai_meta = _ai_rewrite_items("policy", deterministic["items"], ai_enabled)
+                self._send_json({
+                    "items": rewritten_items,
+                    "updated_at": _now_utc().isoformat(),
+                    "warning": f"Fallback sample data used: {exc}",
+                    "ai": ai_meta
+                })
+                return
+            payload = _build_policy_outlook(events)
+            payload["items"], ai_meta = _ai_rewrite_items("policy", payload["items"], ai_enabled)
+            payload["ai"] = ai_meta
+            self._send_json(payload)
+            return
+
+        # Sentiment feed
+        if parsed.path == "/api/sentiment-feed":
+            query = parse_qs(parsed.query)
+            keyword = (query.get("keyword", ["ai regulation"]) or ["ai regulation"])[0]
+            days = int((query.get("days", ["180"]) or ["180"])[0])
+            limit = int((query.get("limit", ["20"]) or ["20"])[0])
+            ai_enabled = _wants_ai(query)
+            try:
+                events = _load_events(keyword=keyword, days=days, limit=limit)
+            except Exception as exc:
+                events = _sample_events()
+                deterministic = _build_sentiment_feed(events)
+                rewritten_items, ai_meta = _ai_rewrite_items("sentiment", deterministic["items"], ai_enabled)
+                self._send_json({
+                    "items": rewritten_items,
+                    "updated_at": _now_utc().isoformat(),
+                    "warning": f"Fallback sample data used: {exc}",
+                    "ai": ai_meta
+                })
+                return
+            payload = _build_sentiment_feed(events)
+            payload["items"], ai_meta = _ai_rewrite_items("sentiment", payload["items"], ai_enabled)
+            payload["ai"] = ai_meta
+            self._send_json(payload)
+            return
+
+        # Taiwan chips margin data
+        if parsed.path.startswith("/api/tw/chips/margin"):
+            query = parse_qs(parsed.query)
+            ticker = (query.get("ticker", ["2330.TW"]) or ["2330.TW"])[0]
+            self._send_json({
+                "ticker": ticker,
+                "margin": 32.5,
+                "period": "Q3 2026",
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Taiwan chips institutional data
+        if parsed.path.startswith("/api/tw/chips/institutional"):
+            query = parse_qs(parsed.query)
+            ticker = (query.get("ticker", ["2330.TW"]) or ["2330.TW"])[0]
+            days = int((query.get("days", ["60"]) or ["60"])[0])
+            self._send_json({
+                "ticker": ticker,
+                "days": days,
+                "institutional_holdings": [
+                    {"date": (_now_utc() - timedelta(days=i)).isoformat(), "percentage": 30 + i*0.1}
+                    for i in range(min(5, days))
+                ],
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Financial health data
+        if parsed.path.startswith("/api/financial_health/data"):
+            query = parse_qs(parsed.query)
+            ticker = (query.get("ticker", ["AAPL"]) or ["AAPL"])[0]
+            lang = (query.get("lang", ["en"]) or ["en"])[0]
+            self._send_json({
+                "ticker": ticker,
+                "language": lang,
+                "health_score": 78,
+                "components": {
+                    "liquidity": 85,
+                    "profitability": 72,
+                    "growth": 68,
+                    "leverage": 65
+                },
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Taiwan dashboard redirect
+        if parsed.path == "/dashboard/tw":
+            self._send_html("<html><head><title>Taiwan Dashboard</title></head><body>Taiwan Dashboard - Coming Soon</body></html>")
+            return
+
+        # Static files - serve from UI_DIR
+        if parsed.path.startswith("/static/"):
+            return super().do_GET()
+
+        # Serve index.html for root and HTML files
+        if parsed.path in ("/", "/index.html"):
+            return super().do_GET()
+
+        # Default static file serving
+        return super().do_GET()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+        
+        try:
+            payload = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            payload = {}
+
+        # Screener start endpoint
+        if parsed.path == "/api/screener/start":
+            self._send_json({
+                "status": "initiated",
+                "screener_id": "scr_" + _now_utc().isoformat(),
+                "message": "Screener analysis started",
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Supply chain discover endpoint
+        if parsed.path == "/api/supply_chain/discover":
+            self._send_json({
+                "status": "discovering",
+                "discovery_id": "disc_" + _now_utc().isoformat(),
+                "results": [],
+                "message": "Supply chain discovery in progress",
+                "updated_at": _now_utc().isoformat()
+            })
+            return
+
+        # Fallback: 404
+        self._send_json({"error": "Endpoint not found"}, status=404)
+
+
+def run() -> None:
+    import os
+    port = int(os.getenv("PORT", "8080"))
+    server = ThreadingHTTPServer(("0.0.0.0", port), UiApiHandler)
+    print(f"UI + API server running at http://0.0.0.0:{port}/index.html")
+    print("Endpoints: /api/policy-outlook, /api/sentiment-feed, /api/health, /api/exchange-rate, /api/tw/chips/*, /api/financial_health/data, POST /api/screener/start, POST /api/supply_chain/discover")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    print(f"\n  OpenOctopus running -> http://localhost:{port}\n")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    run()
